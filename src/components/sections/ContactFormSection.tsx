@@ -7,6 +7,7 @@ import { submitEnquiry } from '@/lib/cmsClient';
 import PhoneInputWithCountry from '@/components/ui/PhoneInputWithCountry';
 import { Country, DEFAULT_COUNTRY } from '@/lib/countryCodes';
 import { cleanName, validateName, cleanEmail, validateEmail, validatePhone } from '@/lib/formValidation';
+import SubmissionThankYouModal from '@/components/ui/SubmissionThankYouModal';
 import {
   Select,
   SelectTrigger,
@@ -26,6 +27,7 @@ export default function ContactFormSection() {
   const [errors, setErrors] = useState<{ name?: string; email?: string; phone?: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submittedInfo, setSubmittedInfo] = useState<{ name: string; phone: string }>({ name: '', phone: '' });
 
   const handleNameChange = (val: string) => {
     const cleaned = cleanName(val);
@@ -68,22 +70,25 @@ export default function ContactFormSection() {
       return;
     }
 
+    const currentName = formData.name.trim();
+    const currentPhone = `${selectedCountry.dialCode} ${formData.phone.trim()}`;
+    setSubmittedInfo({ name: currentName, phone: currentPhone });
+
     setIsSubmitting(true);
     try {
       await submitEnquiry({
-        name: formData.name.trim(),
-        phone: `${selectedCountry.dialCode} ${formData.phone.trim()}`,
+        name: currentName,
+        phone: currentPhone,
         email: formData.email.trim(),
         message: formData.inquiry ? `Inquiry regarding: ${formData.inquiry}` : 'General Inquiry',
         source: 'Website Contact Section',
       });
       setSubmitted(true);
-      alert('Thank you for your inquiry! Our sales team will reach out shortly.');
       setFormData({ name: '', email: '', phone: '', inquiry: '' });
       setSelectedCountry(DEFAULT_COUNTRY);
       setErrors({});
     } catch {
-      alert('Thank you for your inquiry! Our sales team will reach out shortly.');
+      setSubmitted(true);
       setFormData({ name: '', email: '', phone: '', inquiry: '' });
       setErrors({});
     } finally {
@@ -131,7 +136,7 @@ export default function ContactFormSection() {
                   </h2>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} noValidate className="space-y-6">
                   {/* Row 1: Name and Email */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
@@ -141,6 +146,12 @@ export default function ContactFormSection() {
                         placeholder="Your Name*"
                         value={formData.name}
                         onChange={(e) => handleNameChange(e.target.value)}
+                        onBlur={() => {
+                          setErrors((prev) => ({
+                            ...prev,
+                            name: validateName(formData.name).error,
+                          }));
+                        }}
                         suppressHydrationWarning
                         className={`w-full h-14 rounded-full border px-6 text-sm font-semibold text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 transition-all ${
                           errors.name
@@ -163,12 +174,10 @@ export default function ContactFormSection() {
                         value={formData.email}
                         onChange={(e) => handleEmailChange(e.target.value)}
                         onBlur={() => {
-                          if (formData.email) {
-                            setErrors((prev) => ({
-                              ...prev,
-                              email: validateEmail(formData.email, true).error,
-                            }));
-                          }
+                          setErrors((prev) => ({
+                            ...prev,
+                            email: validateEmail(formData.email, true).error,
+                          }));
                         }}
                         pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.com"
                         title="Email must include '@' and end with '.com' (e.g. name@gmail.com)"
@@ -207,12 +216,10 @@ export default function ContactFormSection() {
                         error={errors.phone}
                         required
                         onBlur={() => {
-                          if (formData.phone) {
-                            setErrors((prev) => ({
-                              ...prev,
-                              phone: validatePhone(formData.phone, selectedCountry, true).error,
-                            }));
-                          }
+                          setErrors((prev) => ({
+                            ...prev,
+                            phone: validatePhone(formData.phone, selectedCountry, true).error,
+                          }));
                         }}
                       />
                     </div>
@@ -277,6 +284,16 @@ export default function ContactFormSection() {
           </div>
         </FadeIn>
       </div>
+
+      {/* Branded Thank You Modal */}
+      <SubmissionThankYouModal
+        isOpen={submitted}
+        onClose={() => setSubmitted(false)}
+        title="Inquiry Received!"
+        message="Thank you for your inquiry! Our senior property advisory team will reach out to you shortly."
+        userName={submittedInfo.name}
+        userPhone={submittedInfo.phone}
+      />
     </section>
   );
 }

@@ -12,18 +12,19 @@ export default function KPNEntryHero() {
   const lockRef = useRef(false);
   const fadeTimerRef = useRef<number | null>(null);
   const unlockTimerRef = useRef<number | null>(null);
+  const lockUntilRef = useRef(0);
 
   /* =========================================================
      PORTAL POSITION
   ========================================================= */
-  const PORTAL_X = "50%";
-  const PORTAL_Y = "49.32%";
+  const PORTAL_X = "49.6%";
+  const PORTAL_Y = "39.9%";
 
   /* =========================================================
      INITIAL VIDEO BOX SIZE
   ========================================================= */
-  const INITIAL_VIDEO_WIDTH = "300px";
-  const INITIAL_VIDEO_HEIGHT = "300px";
+  const INITIAL_VIDEO_WIDTH = "400px";
+  const INITIAL_VIDEO_HEIGHT = "400px";
 
   /* =========================================================
      KEEP REFS IN SYNC & NOTIFY HERO SECTION
@@ -93,9 +94,12 @@ export default function KPNEntryHero() {
 
   /* =========================================================
      LOCK SCROLL
+     Locks scroll briefly (600ms) to absorb initial momentum flick,
+     then unlocks immediately so user can scroll earlier without delay.
   ========================================================= */
-  const lockScroll = (duration: number) => {
+  const lockScroll = (duration: number = 600) => {
     lockRef.current = true;
+    lockUntilRef.current = Date.now() + duration;
     if (unlockTimerRef.current) {
       window.clearTimeout(unlockTimerRef.current);
     }
@@ -109,8 +113,9 @@ export default function KPNEntryHero() {
   ========================================================= */
   const triggerZoomIn = () => {
     if (enteredRef.current) return;
-    // Lock scroll for transition duration
-    lockScroll(1700);
+    // Lock scroll briefly to absorb initial gesture
+    lockScroll(600);
+    window.scrollTo({ top: 0, behavior: "instant" });
     enteredRef.current = true;
     fadedRef.current = true;
     setEntered(true);
@@ -121,8 +126,8 @@ export default function KPNEntryHero() {
      TRIGGER ZOOM OUT (REVERSE ANIMATION)
   ========================================================= */
   const triggerZoomOut = () => {
-    lockScroll(1700);
-
+    lockScroll(600);
+    window.scrollTo({ top: 0, behavior: "instant" });
     fadedRef.current = false;
     enteredRef.current = false;
     setFaded(false);
@@ -133,37 +138,53 @@ export default function KPNEntryHero() {
      WHEEL & TOUCH CONTROL
   ========================================================= */
   useEffect(() => {
+    // Keep window at top while on portal
+    if (!enteredRef.current && !fadedRef.current) {
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }
+
     const handleWheel = (event: WheelEvent) => {
       if (Math.abs(event.deltaY) < 5) {
         return;
       }
 
-      // If transition is currently locked, prevent interruption
+      // While transition is locked, absorb the initial momentum scroll
       if (lockRef.current) {
-        if (!fadedRef.current) {
-          event.preventDefault();
+        event.preventDefault();
+
+        // Release lock as soon as the initial wheel flick settles (180ms pause)
+        // so the user can scroll earlier without having to wait
+        if (unlockTimerRef.current) {
+          window.clearTimeout(unlockTimerRef.current);
+        }
+
+        const remaining = Math.max(0, lockUntilRef.current - Date.now());
+        const settleDelay = Math.min(180, remaining);
+
+        if (settleDelay <= 0) {
+          lockRef.current = false;
+        } else {
+          unlockTimerRef.current = window.setTimeout(() => {
+            lockRef.current = false;
+          }, settleDelay);
         }
         return;
       }
 
       /* =====================================================
-         SCROLL DOWN:
-         PORTAL ZOOM + SIMULTANEOUS FADE TO HERO SECTION
+         INITIAL PORTAL SCREEN (NOT ENTERED / NOT FADED):
+         Always prevent page scroll and trigger zoom-in on scroll down
       ===================================================== */
-      if (event.deltaY > 0) {
-        // At initial opening: trigger zoom in and simultaneous fade
-        if (!enteredRef.current && !fadedRef.current) {
-          event.preventDefault();
+      if (!enteredRef.current && !fadedRef.current) {
+        event.preventDefault();
+        if (event.deltaY > 0) {
           triggerZoomIn();
-          return;
         }
-
-        // After entered/faded, normal page scrolling works naturally
         return;
       }
 
       /* =====================================================
-         SCROLL UP:
+         SCROLL UP AT TOP OF HERO:
          REVERSE ZOOM OUT TO PORTAL IMAGE
       ===================================================== */
       if (event.deltaY < 0) {
@@ -174,12 +195,19 @@ export default function KPNEntryHero() {
           return;
         }
       }
+
+      // After transition completes, normal page scrolling works naturally
     };
 
     // Touch support for mobile
     let touchStartY = 0;
     const handleTouchStart = (e: TouchEvent) => {
       touchStartY = e.touches[0].clientY;
+    };
+    const handleTouchMove = (e: TouchEvent) => {
+      if (lockRef.current || (!enteredRef.current && !fadedRef.current)) {
+        e.preventDefault();
+      }
     };
     const handleTouchEnd = (e: TouchEvent) => {
       const deltaY = touchStartY - e.changedTouches[0].clientY;
@@ -189,11 +217,13 @@ export default function KPNEntryHero() {
 
     window.addEventListener("wheel", handleWheel, { passive: false });
     window.addEventListener("touchstart", handleTouchStart, { passive: true });
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
     window.addEventListener("touchend", handleTouchEnd, { passive: true });
 
     return () => {
       window.removeEventListener("wheel", handleWheel);
       window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("touchend", handleTouchEnd);
       if (unlockTimerRef.current) window.clearTimeout(unlockTimerRef.current);
     };
@@ -208,7 +238,7 @@ export default function KPNEntryHero() {
       style={{
         pointerEvents: (entered || faded) ? "none" : "auto",
         visibility: (entered || faded) ? "hidden" : "visible",
-        transition: (entered || faded) ? "visibility 0s 1.5s" : "visibility 0s 0s",
+        transition: (entered || faded) ? "visibility 0s 0.6s" : "visibility 0s 0s",
       }}
       className="fixed inset-0 z-[200] h-screen w-full overflow-hidden bg-white"
       onClick={() => {
@@ -359,7 +389,7 @@ export default function KPNEntryHero() {
           "
         >
           <img
-            src="/entry/entryportal.original.png"
+            src="/entry/testtry.png"
             alt="KPN Architecture Portal"
             draggable={false}
             className="
@@ -416,7 +446,7 @@ export default function KPNEntryHero() {
             "
           >
             <img
-              src="/images/kpn_logo.webp"
+              src="/images/newlogoo.jpeg"
               alt="KPN Promoters"
               draggable={false}
               className="

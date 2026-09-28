@@ -40,7 +40,7 @@ export default function BlogsClient({ initialPosts }: BlogsClientProps) {
       <Navbar variant="hero" />
       <InnerPageHero
         title="Blogs"
-        breadcrumb="News"
+        breadcrumb="Blogs"
         description="Stay updated with the latest real estate trends, architectural insights, and community news."
         image="/images/blog/blog_1.jpg"
       />

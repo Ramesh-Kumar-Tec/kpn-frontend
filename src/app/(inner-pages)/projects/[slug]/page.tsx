@@ -440,7 +440,7 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
     const cleaned = cleanName(val);
     setInquiryFirstName(cleaned);
     if (inquiryFieldErrors.firstName) {
-      setInquiryFieldErrors((prev) => ({ ...prev, firstName: validateName(cleaned).error }));
+      setInquiryFieldErrors((prev) => ({ ...prev, firstName: validateName(cleaned, 'First name').error }));
     }
   };
 
@@ -448,7 +448,7 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
     const cleaned = cleanName(val);
     setInquiryLastName(cleaned);
     if (inquiryFieldErrors.lastName && cleaned) {
-      setInquiryFieldErrors((prev) => ({ ...prev, lastName: validateName(cleaned).error }));
+      setInquiryFieldErrors((prev) => ({ ...prev, lastName: validateName(cleaned, 'Last name').error }));
     }
   };
 
@@ -456,7 +456,7 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
     const cleaned = cleanEmail(val);
     setInquiryEmail(cleaned);
     if (inquiryFieldErrors.email) {
-      setInquiryFieldErrors((prev) => ({ ...prev, email: validateEmail(cleaned, false).error }));
+      setInquiryFieldErrors((prev) => ({ ...prev, email: validateEmail(cleaned, true).error }));
     }
   };
 
@@ -472,9 +472,9 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
     e.preventDefault();
     setInquiryError(null);
 
-    const firstNameRes = validateName(inquiryFirstName);
-    const lastNameRes = inquiryLastName.trim() ? validateName(inquiryLastName) : { isValid: true, error: '' };
-    const emailRes = validateEmail(inquiryEmail, false);
+    const firstNameRes = validateName(inquiryFirstName, 'First name');
+    const lastNameRes = inquiryLastName.trim() ? validateName(inquiryLastName, 'Last name') : { isValid: true, error: '' };
+    const emailRes = validateEmail(inquiryEmail, true);
     const phoneRes = validatePhone(inquiryPhone, inquiryCountry, true);
 
     const newErrors = {
@@ -725,9 +725,10 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
             </div>
 
             {/* Centered Book Now CTA Button (Step 2: After Image & Before Project Description) */}
-            <div className="my-8 flex flex-col items-center justify-center text-center">
+            <div className="my-8 flex flex-col items-center justify-center text-center" suppressHydrationWarning>
               <button
                 type="button"
+                suppressHydrationWarning
                 onClick={() => setIsBookingModalOpen(true)}
                 className="group relative inline-flex items-center gap-3 rounded-full bg-[#f12131] px-9 py-4 text-sm sm:text-base font-black text-white shadow-xl shadow-red-500/25 hover:bg-[#d81928] hover:shadow-2xl hover:shadow-red-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 cursor-pointer"
               >
@@ -803,39 +804,6 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
                     <span><strong className="text-slate-800">Pricing:</strong> {project.budget}.</span>
                   </li>
                 </ul>
-
-                <div className="pt-3 space-y-2.5">
-                  <button
-                    type="button"
-                    onClick={() => setIsBookingModalOpen(true)}
-                    className="group flex w-full items-center justify-center gap-2.5 rounded-2xl bg-[#29247c] py-3.5 px-5 text-sm font-bold text-white shadow-md transition duration-300 hover:bg-[#1f1b63] hover:shadow-lg active:scale-[0.99] cursor-pointer"
-                  >
-                    <Building className="h-4 w-4 text-red-400 group-hover:scale-110 transition-transform" />
-                    <span>Book Unit / Check Availability</span>
-                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                  </button>
-
-                  {Boolean(project.brochureUrl && project.brochureUrl.trim() !== '') && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        window.dispatchEvent(
-                          new CustomEvent('kpn_open_brochure_modal', {
-                            detail: {
-                              brochureUrl: project.brochureUrl,
-                              projectName: project.name,
-                            },
-                          })
-                        );
-                      }}
-                      className="group flex w-full items-center justify-center gap-2.5 rounded-2xl bg-[#f12131] py-3.5 px-5 text-sm font-bold text-white shadow-md transition duration-300 hover:bg-red-600 hover:shadow-lg active:scale-[0.99] cursor-pointer"
-                    >
-                      <FileText className="h-4 w-4" />
-                      <span>Download Official Brochure</span>
-                      <Download className="h-4 w-4 transition-transform group-hover:translate-y-0.5" />
-                    </button>
-                  )}
-                </div>
               </div>
             </div>
           </div>
@@ -1470,8 +1438,9 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
                 <iframe
                   title={`${project.name} Location Map`}
                   src={
-                    project.mapEmbedUrl ||
-                    "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3889.7854619438317!2d80.06316277578278!3d12.857147717326888!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a52f77864f14c27%3A0x882a1708f519543e!2sUrapakkam%2C%20Chennai%2C%20Tamil%20Nadu!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin"
+                    project.mapEmbedUrl && !project.mapEmbedUrl.includes('!6m8')
+                      ? project.mapEmbedUrl
+                      : "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3889.7854619438317!2d80.06316277578278!3d12.857147717326888!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a52f77864f14c27%3A0x882a1708f519543e!2sUrapakkam%2C%20Chennai%2C%20Tamil%20Nadu!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin"
                   }
                   width="100%"
                   height="100%"
@@ -1507,6 +1476,7 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
                   </p>
                   <button
                     type="button"
+                    suppressHydrationWarning
                     onClick={() => {
                       setInquirySubmitted(false);
                       setInquiryFirstName('');
@@ -1521,7 +1491,7 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
                   </button>
                 </div>
               ) : (
-                <form onSubmit={handleInquirySubmit} className="space-y-5 text-left">
+                <form onSubmit={handleInquirySubmit} noValidate className="space-y-5 text-left">
                   {inquiryError && (
                     <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-xs font-semibold text-red-700">
                       {inquiryError}
@@ -1536,6 +1506,12 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
                         placeholder="First Name*"
                         value={inquiryFirstName}
                         onChange={(e) => handleInquiryFirstNameChange(e.target.value)}
+                        onBlur={() => {
+                          setInquiryFieldErrors((prev) => ({
+                            ...prev,
+                            firstName: validateName(inquiryFirstName, 'First name').error,
+                          }));
+                        }}
                         suppressHydrationWarning
                         className={`h-14 w-full rounded-full border px-7 text-sm font-semibold text-slate-800 outline-none placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-[#f12131]/30 ${
                           inquiryFieldErrors.firstName
@@ -1556,6 +1532,14 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
                         placeholder="Last Name"
                         value={inquiryLastName}
                         onChange={(e) => handleInquiryLastNameChange(e.target.value)}
+                        onBlur={() => {
+                          if (inquiryLastName.trim()) {
+                            setInquiryFieldErrors((prev) => ({
+                              ...prev,
+                              lastName: validateName(inquiryLastName, 'Last name').error,
+                            }));
+                          }
+                        }}
                         suppressHydrationWarning
                         className={`h-14 w-full rounded-full border px-7 text-sm font-semibold text-slate-800 outline-none placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-[#f12131]/30 ${
                           inquiryFieldErrors.lastName
@@ -1590,12 +1574,10 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
                         error={inquiryFieldErrors.phone}
                         required
                         onBlur={() => {
-                          if (inquiryPhone) {
-                            setInquiryFieldErrors((prev) => ({
-                              ...prev,
-                              phone: validatePhone(inquiryPhone, inquiryCountry, true).error,
-                            }));
-                          }
+                          setInquiryFieldErrors((prev) => ({
+                            ...prev,
+                            phone: validatePhone(inquiryPhone, inquiryCountry, true).error,
+                          }));
                         }}
                       />
                     </div>
@@ -1603,16 +1585,15 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
                     <div>
                       <input
                         type="email"
-                        placeholder="Email Address (e.g. name@gmail.com)"
+                        required
+                        placeholder="Email Address* (e.g. name@gmail.com)"
                         value={inquiryEmail}
                         onChange={(e) => handleInquiryEmailChange(e.target.value)}
                         onBlur={() => {
-                          if (inquiryEmail) {
-                            setInquiryFieldErrors((prev) => ({
-                              ...prev,
-                              email: validateEmail(inquiryEmail, false).error,
-                            }));
-                          }
+                          setInquiryFieldErrors((prev) => ({
+                            ...prev,
+                            email: validateEmail(inquiryEmail, true).error,
+                          }));
                         }}
                         pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.com"
                         title="Email must include '@' and end with '.com' (e.g. name@gmail.com)"

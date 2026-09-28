@@ -11,6 +11,7 @@ import { submitEnquiry } from '@/lib/cmsClient';
 import PhoneInputWithCountry from '@/components/ui/PhoneInputWithCountry';
 import { Country, DEFAULT_COUNTRY } from '@/lib/countryCodes';
 import { cleanName, validateName, cleanEmail, validateEmail, validatePhone } from '@/lib/formValidation';
+import SubmissionThankYouModal from '@/components/ui/SubmissionThankYouModal';
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -23,12 +24,14 @@ export default function ContactPage() {
   const [selectedCountry, setSelectedCountry] = useState<Country>(DEFAULT_COUNTRY);
   const [errors, setErrors] = useState<{ firstName?: string; lastName?: string; phone?: string; email?: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showThankYou, setShowThankYou] = useState(false);
+  const [submittedInfo, setSubmittedInfo] = useState<{ name: string; phone: string }>({ name: '', phone: '' });
 
   const handleFirstNameChange = (val: string) => {
     const cleaned = cleanName(val);
     setFormData((prev) => ({ ...prev, firstName: cleaned }));
     if (errors.firstName) {
-      setErrors((prev) => ({ ...prev, firstName: validateName(cleaned).error }));
+      setErrors((prev) => ({ ...prev, firstName: validateName(cleaned, 'First name').error }));
     }
   };
 
@@ -36,7 +39,7 @@ export default function ContactPage() {
     const cleaned = cleanName(val);
     setFormData((prev) => ({ ...prev, lastName: cleaned }));
     if (errors.lastName && cleaned) {
-      setErrors((prev) => ({ ...prev, lastName: validateName(cleaned).error }));
+      setErrors((prev) => ({ ...prev, lastName: validateName(cleaned, 'Last name').error }));
     }
   };
 
@@ -58,8 +61,8 @@ export default function ContactPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const firstNameRes = validateName(formData.firstName);
-    const lastNameRes = formData.lastName.trim() ? validateName(formData.lastName) : { isValid: true, error: '' };
+    const firstNameRes = validateName(formData.firstName, 'First name');
+    const lastNameRes = formData.lastName.trim() ? validateName(formData.lastName, 'Last name') : { isValid: true, error: '' };
     const emailRes = validateEmail(formData.email, true);
     const phoneRes = validatePhone(formData.phone, selectedCountry, true);
 
@@ -75,16 +78,20 @@ export default function ContactPage() {
       return;
     }
 
+    const currentName = `${formData.firstName} ${formData.lastName}`.trim();
+    const currentPhone = `${selectedCountry.dialCode} ${formData.phone.trim()}`;
+    setSubmittedInfo({ name: currentName, phone: currentPhone });
+
     setIsSubmitting(true);
     try {
       await submitEnquiry({
-        name: `${formData.firstName} ${formData.lastName}`.trim(),
-        phone: `${selectedCountry.dialCode} ${formData.phone.trim()}`,
+        name: currentName,
+        phone: currentPhone,
         email: formData.email.trim(),
         message: formData.message.trim(),
         source: 'Contact Page',
       });
-      alert('Thank you for contacting us! We will get back to you shortly.');
+      setShowThankYou(true);
       setFormData({
         firstName: '',
         lastName: '',
@@ -95,7 +102,7 @@ export default function ContactPage() {
       setSelectedCountry(DEFAULT_COUNTRY);
       setErrors({});
     } catch {
-      alert('Thank you for contacting us! We will get back to you shortly.');
+      setShowThankYou(true);
     } finally {
       setIsSubmitting(false);
     }
@@ -234,6 +241,8 @@ export default function ContactPage() {
               {/* Form */}
               <form
                 onSubmit={handleSubmit}
+                noValidate
+                suppressHydrationWarning
                 className="space-y-6"
               >
 
@@ -246,6 +255,12 @@ export default function ContactPage() {
                       placeholder="First Name*"
                       value={formData.firstName}
                       onChange={(e) => handleFirstNameChange(e.target.value)}
+                      onBlur={() => {
+                        setErrors((prev) => ({
+                          ...prev,
+                          firstName: validateName(formData.firstName, 'First name').error,
+                        }));
+                      }}
                       suppressHydrationWarning
                       className={`h-[54px] w-full rounded-full border px-7 text-sm font-semibold text-slate-800 outline-none placeholder:text-slate-500 transition ${
                         errors.firstName
@@ -266,6 +281,14 @@ export default function ContactPage() {
                       placeholder="Last Name"
                       value={formData.lastName}
                       onChange={(e) => handleLastNameChange(e.target.value)}
+                      onBlur={() => {
+                        if (formData.lastName.trim()) {
+                          setErrors((prev) => ({
+                            ...prev,
+                            lastName: validateName(formData.lastName, 'Last name').error,
+                          }));
+                        }
+                      }}
                       suppressHydrationWarning
                       className={`h-[54px] w-full rounded-full border px-7 text-sm font-semibold text-slate-800 outline-none placeholder:text-slate-500 transition ${
                         errors.lastName
@@ -301,12 +324,10 @@ export default function ContactPage() {
                       error={errors.phone}
                       required
                       onBlur={() => {
-                        if (formData.phone) {
-                          setErrors((prev) => ({
-                            ...prev,
-                            phone: validatePhone(formData.phone, selectedCountry, true).error,
-                          }));
-                        }
+                        setErrors((prev) => ({
+                          ...prev,
+                          phone: validatePhone(formData.phone, selectedCountry, true).error,
+                        }));
                       }}
                     />
                   </div>
@@ -319,12 +340,10 @@ export default function ContactPage() {
                       value={formData.email}
                       onChange={(e) => handleEmailChange(e.target.value)}
                       onBlur={() => {
-                        if (formData.email) {
-                          setErrors((prev) => ({
-                            ...prev,
-                            email: validateEmail(formData.email, true).error,
-                          }));
-                        }
+                        setErrors((prev) => ({
+                          ...prev,
+                          email: validateEmail(formData.email, true).error,
+                        }));
                       }}
                       pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.com"
                       title="Email must include '@' and end with '.com' (e.g. name@gmail.com)"
@@ -343,10 +362,9 @@ export default function ContactPage() {
                   </div>
                 </div>
 
-                {/* Message */}
+                {/* Message Textarea */}
                 <textarea
-                  required
-                  rows={6}
+                  rows={4}
                   placeholder="Message..."
                   value={formData.message}
                   onChange={(e) =>
@@ -355,6 +373,7 @@ export default function ContactPage() {
                       message: e.target.value,
                     }))
                   }
+                  suppressHydrationWarning
                   className="
                     min-h-[170px]
                     w-full
@@ -378,6 +397,8 @@ export default function ContactPage() {
                 {/* Submit Button */}
                 <button
                   type="submit"
+                  disabled={isSubmitting}
+                  suppressHydrationWarning
                   className="
                     group
                     flex
@@ -397,9 +418,10 @@ export default function ContactPage() {
                     transition-all
                     hover:shadow-md
                     active:scale-98
+                    disabled:opacity-50
                   "
                 >
-                  <span>Submit</span>
+                  <span>{isSubmitting ? 'Submitting...' : 'Submit'}</span>
 
                   <span
                     className="
@@ -489,7 +511,7 @@ export default function ContactPage() {
             >
               <iframe
                 title="KPN Promoters Contact Map"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3889.7854619438317!2d80.06316277578278!3d12.857147717326888!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a52f77864f14c27%3A0x882a1708f519543e!2sUrapakkam%2C%20Chennai%2C%20Tamil%20Nadu!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1944.8927309719153!2d80.07172777610008!3d12.859373099999999!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a52f647c2f9b237%3A0xe23caa8bd97601c3!2sKPN%20Promoters%20Pvt%20Ltd!5e0!3m2!1sen!2sin!4v1710000000000!5m2!1sen!2sin"
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}
@@ -501,6 +523,16 @@ export default function ContactPage() {
           </div>
 
         </div>
+
+        {/* Branded Thank You Modal */}
+        <SubmissionThankYouModal
+          isOpen={showThankYou}
+          onClose={() => setShowThankYou(false)}
+          title="Message Received!"
+          message="Thank you for contacting KPN Promoters! Our customer advisory team will get in touch with you shortly."
+          userName={submittedInfo.name}
+          userPhone={submittedInfo.phone}
+        />
       </section>
     </>
   );

@@ -7,7 +7,36 @@ export type BotActionType =
   | 'BOOK_VISIT'
   | 'CALCULATE_EMI'
   | 'CALL_ADVISOR'
-  | 'DOWNLOAD_BROCHURE';
+  | 'DOWNLOAD_BROCHURE'
+  | 'LANDMARK_SEARCH';
+
+export interface EmiDetails {
+  loanAmountLakhs: number;
+  tenureYears: number;
+  interestRate: number;
+  monthlyEmi: number;
+  totalInterestLakhs: number;
+  totalPayableLakhs: number;
+}
+
+export interface BrochureDetails {
+  projectName: string;
+  brochureUrl: string;
+  title: string;
+}
+
+export interface LandmarkDetails {
+  landmarkName: string;
+  description: string;
+  nearbyProjects: Array<{
+    name: string;
+    distance: string;
+    slug: string;
+    budget: string;
+    type: string;
+    image: string;
+  }>;
+}
 
 export interface BotAction {
   type: BotActionType;
@@ -23,7 +52,9 @@ export interface BotAction {
     location?: string;
   };
   suggestedAlternative?: string;
-  brochureUrl?: string;
+  emiDetails?: EmiDetails;
+  brochureDetails?: BrochureDetails;
+  landmarkDetails?: LandmarkDetails;
 }
 
 export interface QuickChip {

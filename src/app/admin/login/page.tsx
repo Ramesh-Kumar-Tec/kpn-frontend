@@ -79,9 +79,9 @@ export default function AdminLoginPage() {
             <div className="mx-auto mb-4 flex items-center justify-center">
               <Link href="/">
                 <img
-                  src="/images/kpn_logo.webp"
+                  src="/images/newlogoo.jpeg"
                   alt="KPN Promoters"
-                  className="h-12 w-auto object-contain transition hover:opacity-90"
+                  className="h-14 w-auto object-contain transition hover:opacity-90"
                 />
               </Link>
             </div>

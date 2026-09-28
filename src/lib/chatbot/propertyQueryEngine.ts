@@ -195,7 +195,11 @@ export function executePropertyQuery(userMessage: string): PropertyQueryResult {
     }
 
     // Location match
-    if (location && !p.location.toLowerCase().includes(location) && !p.address.toLowerCase().includes(location)) {
+    if (
+      location &&
+      !p.location.toLowerCase().includes(location) &&
+      (!p.address || !p.address.toLowerCase().includes(location))
+    ) {
       return false;
     }
 

@@ -41,7 +41,7 @@ const DEFAULT_MENU_ITEMS = [
     ],
   },
   { label: 'Projects', href: '/projects', order: 4, isEnabled: true, children: [] },
-  { label: 'News', href: '/blogs', order: 5, isEnabled: true, children: [] },
+  { label: 'Blogs', href: '/blogs', order: 5, isEnabled: true, children: [] },
   { label: 'Contact', href: '/contact-us', order: 6, isEnabled: true, children: [] },
 ];
 

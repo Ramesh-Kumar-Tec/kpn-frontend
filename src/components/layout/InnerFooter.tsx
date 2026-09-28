@@ -130,13 +130,13 @@ export default function InnerFooter() {
 
               <Link href="/" className="inline-block transition-transform duration-300 hover:scale-105">
                 <img
-                  src="/images/kpn_logo.webp"
+                  src="/images/newlogoo.jpeg"
                   alt="KPN Promoters Pvt Ltd"
-                  className="h-14 w-auto object-contain"
+                  className="h-[88px] sm:h-[104px] lg:h-[105px] w-auto object-contain"
                 />
               </Link>
 
-              <p className="mt-20 max-w-[350px] text-sm leading-relaxed text-slate-400">
+              <p className="mt-8 sm:mt-10 max-w-[350px] text-sm leading-relaxed text-slate-400">
                 {data.companyDescription}
               </p>
 

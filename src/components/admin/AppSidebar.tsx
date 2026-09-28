@@ -115,9 +115,9 @@ export function AppSidebar() {
           ) : (
             <div className="flex items-center justify-between w-full">
               <img
-                src="/images/kpn_logo.webp"
+                src="/images/newlogoo.jpeg"
                 alt="KPN Promoters"
-                className="h-9 w-auto object-contain"
+                className="h-10 w-auto object-contain"
               />
               <span className="text-[10px] font-black uppercase tracking-wider text-[#f12131] bg-rose-50 border border-rose-200/60 px-2 py-0.5 rounded-full font-heading">
                 CMS

@@ -25,7 +25,7 @@ export const navigationLinks = [
   },
   // { label: 'Services', href: '#services' },
   { label: 'Projects', href: '/projects' },
-  { label: 'News', href: '/blogs' },
+  { label: 'Blogs', href: '/blogs' },
   { label: 'Contact', href: '/contact-us' },
 ];
 

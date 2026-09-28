@@ -5,6 +5,7 @@ import WhatsAppFloatingButton from './WhatsAppFloatingButton';
 import KpnChatbot from './KpnChatbot';
 import ScrollQuoteModal from './ScrollQuoteModal';
 import BrochureDownloadModal from './BrochureDownloadModal';
+import FloatingActionBar from './FloatingActionBar';
 
 export default function PublicWidgets() {
   const pathname = usePathname();
@@ -20,6 +21,7 @@ export default function PublicWidgets() {
       <KpnChatbot />
       <ScrollQuoteModal />
       <BrochureDownloadModal />
+      <FloatingActionBar />
     </>
   );
 }

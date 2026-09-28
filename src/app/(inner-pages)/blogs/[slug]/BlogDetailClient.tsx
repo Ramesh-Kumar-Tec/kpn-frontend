@@ -41,7 +41,7 @@ export default function BlogDetailClient({
       <Navbar variant="hero" />
       <InnerPageHero
         title={post.title}
-        breadcrumb={`News • ${post.category} • ${post.title}`}
+        breadcrumb={`Blogs • ${post.category} • ${post.title}`}
         description="Read detailed analysis, market updates, and expert real estate commentary."
         image={post.bannerImage || post.image || '/images/blog/blog_1.jpg'}
       />

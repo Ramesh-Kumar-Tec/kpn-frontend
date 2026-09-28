@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   MessageSquare,
   X,
@@ -16,6 +17,14 @@ import {
   Building2,
   Home,
   MapPin,
+  Compass,
+  ArrowRight,
+  AlertCircle,
+  Calculator,
+  FileText,
+  Download,
+  Mic,
+  MicOff,
 } from 'lucide-react';
 import { ChatMessage } from '@/data/chatbotKnowledge';
 import { ProjectItem } from '@/data/siteData';
@@ -24,12 +33,15 @@ import { Country, DEFAULT_COUNTRY } from '@/lib/countryCodes';
 import { cleanName, validateName, validatePhone } from '@/lib/formValidation';
 
 export default function KpnChatbot() {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [hasPrompted, setHasPrompted] = useState(false);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
 
   // Lead capture states
   const [leadName, setLeadName] = useState('');
@@ -39,12 +51,67 @@ export default function KpnChatbot() {
   const [leadSubmitted, setLeadSubmitted] = useState(false);
   const [isSubmittingLead, setIsSubmittingLead] = useState(false);
 
+  // Setup browser Web Speech Recognition
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-IN';
+
+        recognition.onresult = (event: any) => {
+          const transcript = event.results?.[0]?.[0]?.transcript;
+          if (transcript) {
+            setInputMessage((prev) => (prev ? `${prev} ${transcript}` : transcript));
+          }
+          setIsListening(false);
+        };
+
+        recognition.onerror = () => setIsListening(false);
+        recognition.onend = () => setIsListening(false);
+
+        recognitionRef.current = recognition;
+      }
+    }
+  }, []);
+
+  const toggleVoiceInput = () => {
+    if (!recognitionRef.current) {
+      alert('Voice search is not supported on this browser. You can type your question directly.');
+      return;
+    }
+
+    if (isListening) {
+      try {
+        recognitionRef.current.stop();
+      } catch {}
+      setIsListening(false);
+    } else {
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+      } catch (err) {
+        setIsListening(false);
+      }
+    }
+  };
+
   const initialGreeting: ChatMessage = {
     id: 'welcome-1',
     role: 'assistant',
     content:
-      'Hello! 👋 I am your **KPN AI Real Estate Assistant**.\n\nLooking for apartments, villas, or DTCP/RERA approved plots in Chennai? Ask me anything about:\n• **Homes in Urapakkam** starting from ₹19 Lakhs\n• **Approved Plots** starting from ₹999/sq.ft\n• **Booking a Free Site Visit** with our property experts!',
+      'Hello! 👋 I am your **KPN AI Real Estate Assistant**.\n\nLooking for apartments, villas, or DTCP/RERA approved plots in Chennai? You can ask me to:\n• "Open projects page"\n• "Show apartments under 35L" or "under 12L"\n• "What is the EMI for 25 Lakhs loan?"\n• "Download brochure for Monica Residency"\n• "Which projects are near Kilambakkam?"',
     timestamp: 'Just now',
+    quickChips: [
+      { label: '💰 Check Loan EMI', query: 'What is the EMI for 25 Lakhs loan?' },
+      { label: '📄 Download Brochures', query: 'download brochure for Monica Residency' },
+      { label: '📍 Near Kilambakkam', query: 'Which projects are near Kilambakkam Bus Terminus?' },
+      { label: '🏢 Homes Under 35L', query: 'Show me apartments under 35 Lakhs' },
+      { label: '🏡 Approved Plots (< 15L)', query: 'What approved plots are available under 15 Lakhs?' },
+      { label: '📍 Open Projects Page', query: 'open projects page' },
+    ],
   };
 
   const [messages, setMessages] = useState<ChatMessage[]>([initialGreeting]);
@@ -109,6 +176,8 @@ export default function KpnChatbot() {
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         recommendedProjects: data.recommendedProjects,
         showLeadForm: data.showLeadForm,
+        action: data.action,
+        quickChips: data.quickChips,
       };
 
       setMessages((prev) => [...prev, botMsg]);
@@ -405,6 +474,190 @@ export default function KpnChatbot() {
 
                 <span className="mt-1 px-1 text-[10px] text-slate-400">{msg.timestamp}</span>
 
+                {/* Interactive Navigation Action Card */}
+                {msg.action?.type === 'NAVIGATE' && msg.action.url && (
+                  <div className="mt-2.5 w-full rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-50/95 via-white to-blue-50/90 p-3.5 shadow-xs">
+                    <div className="flex items-start gap-2.5">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-[#29247c] to-[#3f38aa] text-white shadow-xs">
+                        <Compass className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="inline-block rounded-full bg-indigo-100 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-indigo-700">
+                          Direct Navigation
+                        </span>
+                        <h4 className="mt-0.5 text-xs font-bold text-slate-800">
+                          {msg.action.pageTitle || 'Target Page'}
+                        </h4>
+                        {msg.action.description && (
+                          <p className="mt-0.5 text-[11px] text-slate-600 leading-snug">
+                            {msg.action.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mt-3 flex items-center justify-between gap-2 border-t border-indigo-100/80 pt-2.5">
+                      <span className="text-[10px] font-medium text-slate-500">
+                        Ready to view?
+                      </span>
+                      <button
+                        onClick={() => {
+                          if (msg.action?.url) {
+                            router.push(msg.action.url);
+                            setIsOpen(false);
+                          }
+                        }}
+                        className="inline-flex items-center gap-1.5 rounded-full bg-[#29247c] px-3.5 py-1.5 text-xs font-bold text-white shadow-xs transition hover:bg-[#1e1966] active:scale-95 cursor-pointer"
+                      >
+                        <span>Open {msg.action.pageTitle || 'Page'}</span>
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Interactive EMI Loan Calculator Card */}
+                {msg.action?.type === 'CALCULATE_EMI' && msg.action.emiDetails && (
+                  <div className="mt-2.5 w-full rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50/95 via-white to-teal-50/80 p-3.5 shadow-xs">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-2xs">
+                          <Calculator className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <span className="text-[9px] font-extrabold uppercase tracking-wider text-emerald-700">Home Loan Estimate</span>
+                          <h4 className="text-xs font-bold text-slate-800">₹{msg.action.emiDetails.loanAmountLakhs} Lakhs Loan</h4>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[10px] text-slate-400 font-medium">Monthly EMI</span>
+                        <p className="text-sm font-extrabold text-emerald-700">₹{msg.action.emiDetails.monthlyEmi.toLocaleString('en-IN')}</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 grid grid-cols-3 gap-1.5 rounded-xl bg-emerald-100/50 p-2 text-center text-[10px]">
+                      <div>
+                        <span className="text-slate-500 block">Tenure</span>
+                        <strong className="font-bold text-slate-800">{msg.action.emiDetails.tenureYears} Yrs</strong>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 block">Interest Rate</span>
+                        <strong className="font-bold text-slate-800">{msg.action.emiDetails.interestRate}% p.a.</strong>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 block">Total Interest</span>
+                        <strong className="font-bold text-slate-800">₹{msg.action.emiDetails.totalInterestLakhs}L</strong>
+                      </div>
+                    </div>
+
+                    <div className="mt-2.5 flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-emerald-100">
+                      <span>Approved: SBI • HDFC • LIC • Axis</span>
+                      <span className="font-bold text-emerald-700">80-90% Loan Approved</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Interactive PDF Brochure Download Card */}
+                {msg.action?.type === 'DOWNLOAD_BROCHURE' && msg.action.brochureDetails && (
+                  <div className="mt-2.5 w-full rounded-2xl border border-rose-200 bg-gradient-to-br from-rose-50/95 via-white to-red-50/80 p-3.5 shadow-xs">
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#f12131] text-white shadow-xs">
+                        <FileText className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="inline-block rounded-full bg-rose-100 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-[#f12131]">
+                          Official PDF Brochure
+                        </span>
+                        <h4 className="mt-0.5 text-xs font-bold text-slate-800 truncate">
+                          {msg.action.brochureDetails.projectName}
+                        </h4>
+                        <p className="mt-0.5 text-[11px] text-slate-500 line-clamp-1">
+                          {msg.action.brochureDetails.title}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 pt-2.5 border-t border-rose-100 flex items-center justify-between gap-2">
+                      <span className="text-[10px] text-slate-500">Floor plans & layout maps</span>
+                      <a
+                        href={msg.action.brochureDetails.brochureUrl}
+                        download
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-full bg-[#f12131] px-3.5 py-1.5 text-xs font-bold text-white shadow-xs transition hover:bg-[#d01927] active:scale-95 cursor-pointer"
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                        <span>Download PDF</span>
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {/* Interactive Landmark Proximity Card */}
+                {msg.action?.type === 'LANDMARK_SEARCH' && msg.action.landmarkDetails && (
+                  <div className="mt-2.5 w-full rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50/90 via-white to-indigo-50/80 p-3.5 shadow-xs">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 text-white">
+                        <MapPin className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[9px] font-extrabold uppercase tracking-wider text-blue-700">Transit Connectivity</span>
+                        <h4 className="text-xs font-bold text-slate-800 truncate">{msg.action.landmarkDetails.landmarkName}</h4>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5 mt-2">
+                      {msg.action.landmarkDetails.nearbyProjects.map((p, pIdx) => (
+                        <div key={pIdx} className="flex items-center justify-between rounded-xl bg-white p-2 border border-slate-100 shadow-2xs">
+                          <div className="min-w-0 flex-1">
+                            <h5 className="text-xs font-bold text-[#29247c] truncate">{p.name}</h5>
+                            <span className="text-[10px] text-slate-500">{p.type} • {p.budget}</span>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-extrabold text-blue-700">
+                              {p.distance}
+                            </span>
+                            <Link
+                              href={`/projects/${p.slug}`}
+                              onClick={() => setIsOpen(false)}
+                              className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-slate-700 hover:bg-[#29247c] hover:text-white transition"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                            </Link>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Zero-Result Budget Alert */}
+                {msg.action?.type === 'NOT_FOUND_SUGGEST' && (
+                  <div className="mt-2 w-full flex items-start gap-2 rounded-xl border border-amber-200/90 bg-amber-50/80 p-2.5 text-[11px] text-amber-900 shadow-2xs">
+                    <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
+                    <div className="leading-snug">
+                      <strong className="font-bold">Budget Advisory:</strong> Our closest available apartment and high-value approved plots are shown below.
+                    </div>
+                  </div>
+                )}
+
+                {/* Dynamic Contextual Quick Action Chips */}
+                {msg.quickChips && msg.quickChips.length > 0 && (
+                  <div className="mt-2 w-full">
+                    <div className="flex flex-wrap gap-1.5">
+                      {msg.quickChips.map((chip, cIdx) => (
+                        <button
+                          key={cIdx}
+                          onClick={() => handleSendMessage(chip.query)}
+                          className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-bold text-slate-700 shadow-2xs transition hover:border-[#29247c] hover:bg-indigo-50/60 hover:text-[#29247c] active:scale-95 cursor-pointer"
+                        >
+                          <span>{chip.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Recommended Property Cards Grid */}
                 {msg.recommendedProjects && msg.recommendedProjects.length > 0 && (
                   <div className="mt-2.5 w-full space-y-2">
@@ -460,7 +713,7 @@ export default function KpnChatbot() {
                       Drop your phone number to receive project details and schedule your visit.
                     </p>
 
-                    <form onSubmit={handleLeadSubmit} className="space-y-2.5">
+                    <form onSubmit={handleLeadSubmit} noValidate className="space-y-2.5">
                       <div>
                         <input
                           type="text"
@@ -471,6 +724,11 @@ export default function KpnChatbot() {
                             setLeadName(cleaned);
                             if (leadErrors.name) {
                               setLeadErrors((prev) => ({ ...prev, name: validateName(cleaned).error }));
+                            }
+                          }}
+                          onBlur={() => {
+                            if (leadName.trim()) {
+                              setLeadErrors((prev) => ({ ...prev, name: validateName(leadName).error }));
                             }
                           }}
                           suppressHydrationWarning
@@ -512,12 +770,10 @@ export default function KpnChatbot() {
                           error={leadErrors.phone}
                           required
                           onBlur={() => {
-                            if (leadPhone) {
-                              setLeadErrors((prev) => ({
-                                ...prev,
-                                phone: validatePhone(leadPhone, leadCountry, true).error,
-                              }));
-                            }
+                            setLeadErrors((prev) => ({
+                              ...prev,
+                              phone: validatePhone(leadPhone, leadCountry, true).error,
+                            }));
                           }}
                         />
                       </div>
@@ -575,13 +831,32 @@ export default function KpnChatbot() {
               type="text"
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              placeholder="Ask about prices, BHK, location..."
-              className="h-10 flex-1 rounded-full border border-slate-200 bg-slate-50 px-4 text-xs font-medium text-slate-800 outline-none transition focus:border-[#29247c] focus:bg-white"
+              placeholder={isListening ? "🎙️ Listening... Speak your message..." : "Ask prices, BHK, loan EMI, brochure..."}
+              className={`h-10 flex-1 rounded-full border px-4 text-xs font-medium text-slate-800 outline-none transition ${
+                isListening
+                  ? 'border-red-400 bg-red-50/60 ring-2 ring-red-400/30'
+                  : 'border-slate-200 bg-slate-50 focus:border-[#29247c] focus:bg-white'
+              }`}
             />
+
+            {/* Speech-to-text Voice Microphone Button */}
+            <button
+              type="button"
+              onClick={toggleVoiceInput}
+              title={isListening ? "Stop listening" : "Speak your question"}
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition cursor-pointer ${
+                isListening
+                  ? 'bg-[#f12131] text-white animate-pulse shadow-md ring-2 ring-[#f12131]/30'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800'
+              }`}
+            >
+              {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+            </button>
+
             <button
               type="submit"
               disabled={!inputMessage.trim() || isLoading}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#29247c] text-white transition hover:bg-[#1e1966] disabled:opacity-40"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#29247c] text-white transition hover:bg-[#1e1966] disabled:opacity-40 cursor-pointer"
             >
               <Send className="h-4 w-4" />
             </button>

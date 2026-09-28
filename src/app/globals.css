@@ -103,6 +103,11 @@ body {
   font-family: var(--font-switzer);
 }
 
+body[data-scroll-locked] {
+  overflow: visible !important;
+  margin-right: 0px !important;
+}
+
 
 /* =========================================================
    HEADINGS

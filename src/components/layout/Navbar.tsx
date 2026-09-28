@@ -145,16 +145,16 @@ export default function Navbar({
           "
         >
           <Image
-            src="/images/kpn_logo.webp"
+            src="/images/newlogoo.jpeg"
             alt="KPN Promoters Logo"
-            width={160}
-            height={52}
+            width={200}
+            height={131}
             className="
-              h-[44px]
+              h-[52px]
               w-auto
               object-contain
-              sm:h-[48px]
-              lg:h-[54px]
+              sm:h-[62px]
+              lg:h-[74px]
             "
             priority
           />

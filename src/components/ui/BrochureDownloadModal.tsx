@@ -92,7 +92,7 @@ export default function BrochureDownloadModal() {
     const cleaned = cleanEmail(val);
     setFormData((prev) => ({ ...prev, email: cleaned }));
     if (errors.email) {
-      setErrors((prev) => ({ ...prev, email: validateEmail(cleaned, false).error }));
+      setErrors((prev) => ({ ...prev, email: validateEmail(cleaned, true).error }));
     }
   };
 
@@ -107,7 +107,7 @@ export default function BrochureDownloadModal() {
     e.preventDefault();
 
     const nameRes = validateName(formData.name);
-    const emailRes = validateEmail(formData.email, false);
+    const emailRes = validateEmail(formData.email, true);
     const phoneRes = validatePhone(formData.phone, selectedCountry, true);
 
     const newErrors = {
@@ -218,7 +218,7 @@ export default function BrochureDownloadModal() {
                 </p>
               </motion.div>
             ) : (
-              <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+              <form onSubmit={handleSubmit} noValidate className="mt-6 space-y-4">
                 {/* Full Name */}
                 <div>
                   <input
@@ -228,6 +228,12 @@ export default function BrochureDownloadModal() {
                     placeholder="Enter your full name *"
                     value={formData.name}
                     onChange={(e) => handleNameChange(e.target.value)}
+                    onBlur={() => {
+                      setErrors((prev) => ({
+                        ...prev,
+                        name: validateName(formData.name).error,
+                      }));
+                    }}
                     className={`h-13 w-full rounded-2xl border bg-slate-50/70 px-5 text-sm font-semibold text-slate-900 placeholder:text-slate-400 outline-none transition hover:border-slate-300 focus:bg-white focus:ring-4 ${
                       errors.name
                         ? 'border-red-400 bg-red-50/40 text-red-900 focus:border-red-500 focus:ring-red-400/20'
@@ -259,12 +265,10 @@ export default function BrochureDownloadModal() {
                     error={errors.phone}
                     required
                     onBlur={() => {
-                      if (formData.phone) {
-                        setErrors((prev) => ({
-                          ...prev,
-                          phone: validatePhone(formData.phone, selectedCountry, true).error,
-                        }));
-                      }
+                      setErrors((prev) => ({
+                        ...prev,
+                        phone: validatePhone(formData.phone, selectedCountry, true).error,
+                      }));
                     }}
                   />
                 </div>
@@ -273,17 +277,16 @@ export default function BrochureDownloadModal() {
                 <div>
                   <input
                     type="email"
+                    required
                     suppressHydrationWarning
-                    placeholder="Email Address (e.g. name@gmail.com)"
+                    placeholder="Email Address* (e.g. name@gmail.com)"
                     value={formData.email}
                     onChange={(e) => handleEmailChange(e.target.value)}
                     onBlur={() => {
-                      if (formData.email) {
-                        setErrors((prev) => ({
-                          ...prev,
-                          email: validateEmail(formData.email, false).error,
-                        }));
-                      }
+                      setErrors((prev) => ({
+                        ...prev,
+                        email: validateEmail(formData.email, true).error,
+                      }));
                     }}
                     pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.com"
                     title="Email must include '@' and end with '.com' (e.g. name@gmail.com)"

@@ -162,9 +162,9 @@ export default function Footer() {
           <div className="pt-12 flex flex-col items-center justify-center gap-6">
             <Link href="/" className="flex items-center justify-center transition-transform duration-300 hover:scale-105">
               <img
-                src="/images/kpn_logo.webp"
+                src="/images/newlogoo.jpeg"
                 alt="KPN Promoters"
-                className="h-12 sm:h-14 w-auto object-contain"
+                className="h-[80px] sm:h-[96px] lg:h-[105px] w-auto object-contain"
               />
             </Link>
             <p className="text-sm font-bold text-white text-center">

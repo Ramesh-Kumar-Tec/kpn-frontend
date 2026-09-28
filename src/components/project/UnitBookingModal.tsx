@@ -279,7 +279,7 @@ export default function UnitBookingModal({
     const cleaned = cleanEmail(val);
     setEmail(cleaned);
     if (fieldErrors.email) {
-      setFieldErrors((prev) => ({ ...prev, email: validateEmail(cleaned, false).error }));
+      setFieldErrors((prev) => ({ ...prev, email: validateEmail(cleaned, true).error }));
     }
   };
 
@@ -385,7 +385,7 @@ export default function UnitBookingModal({
     e.preventDefault();
 
     const nameRes = validateName(name);
-    const emailRes = validateEmail(email, false);
+    const emailRes = validateEmail(email, true);
     const phoneRes = validatePhone(phone, selectedCountry, true);
 
     const newErrors = {
@@ -906,7 +906,7 @@ export default function UnitBookingModal({
               </div>
 
               {/* Booking Form (Matches Screenshot 2) */}
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} noValidate className="space-y-4">
                 <h4 className="text-xs font-black uppercase tracking-wider text-[#29247c]">
                   SELECT A UNIT TO PROCEED
                 </h4>
@@ -929,6 +929,12 @@ export default function UnitBookingModal({
                       required
                       value={name}
                       onChange={(e) => handleNameChange(e.target.value)}
+                      onBlur={() => {
+                        setFieldErrors((prev) => ({
+                          ...prev,
+                          name: validateName(name).error,
+                        }));
+                      }}
                       placeholder="e.g. Anand Kumar"
                       className={`h-12 w-full rounded-2xl border bg-white pl-11 pr-4 text-xs sm:text-sm font-semibold text-slate-800 outline-none focus:ring-2 shadow-xs ${
                         fieldErrors.name
@@ -965,12 +971,10 @@ export default function UnitBookingModal({
                     error={fieldErrors.phone}
                     required
                     onBlur={() => {
-                      if (phone) {
-                        setFieldErrors((prev) => ({
-                          ...prev,
-                          phone: validatePhone(phone, selectedCountry, true).error,
-                        }));
-                      }
+                      setFieldErrors((prev) => ({
+                        ...prev,
+                        phone: validatePhone(phone, selectedCountry, true).error,
+                      }));
                     }}
                   />
                 </div>
@@ -978,21 +982,20 @@ export default function UnitBookingModal({
                 {/* EMAIL ADDRESS */}
                 <div>
                   <label className="block text-[11px] font-extrabold uppercase tracking-wider text-slate-500 mb-1.5">
-                    EMAIL ADDRESS (OPTIONAL)
+                    EMAIL ADDRESS*
                   </label>
                   <div className="relative">
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                     <input
                       type="email"
+                      required
                       value={email}
                       onChange={(e) => handleEmailChange(e.target.value)}
                       onBlur={() => {
-                        if (email) {
-                          setFieldErrors((prev) => ({
-                            ...prev,
-                            email: validateEmail(email, false).error,
-                          }));
-                        }
+                        setFieldErrors((prev) => ({
+                          ...prev,
+                          email: validateEmail(email, true).error,
+                        }));
                       }}
                       pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.com"
                       title="Email must include '@' and end with '.com' (e.g. name@gmail.com)"
@@ -1031,6 +1034,7 @@ export default function UnitBookingModal({
                 <button
                   type="submit"
                   disabled={isSubmitting}
+                  suppressHydrationWarning
                   className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#f12131] px-6 text-xs sm:text-sm font-black text-white shadow-lg shadow-red-500/25 hover:bg-[#d81928] transition-all disabled:opacity-50 cursor-pointer mt-2"
                 >
                   {isSubmitting ? (

@@ -27,7 +27,7 @@ export interface UnifiedSearchResult {
   id: string;
   title: string;
   subtitle: string;
-  category: 'Projects' | 'Pages' | 'Associate' | 'News';
+  category: 'Projects' | 'Pages' | 'Associate' | 'Blogs';
   badge?: string;
   href: string;
   image?: string;
@@ -48,7 +48,7 @@ export default function SmartSearchModal({
   const itemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
   const router = useRouter();
 
-  const filterCategories = ['All', 'Projects', 'Pages', 'Associate', 'News'];
+  const filterCategories = ['All', 'Projects', 'Pages', 'Associate', 'Blogs'];
 
   // Flatten all site pages from navigationLinks
   const sitePages = useMemo(() => {
@@ -63,7 +63,7 @@ export default function SmartSearchModal({
         list.push({
           label: item.label,
           href: item.href,
-          group: item.label === 'News' ? 'News' : item.label === 'Contact' ? 'Pages' : 'Pages',
+          group: item.label === 'Blogs' || item.label === 'News' ? 'Blogs' : item.label === 'Contact' ? 'Pages' : 'Pages',
           description: `Navigate to ${item.label}`,
         });
       }
@@ -106,19 +106,19 @@ export default function SmartSearchModal({
         id: `page-${idx}`,
         title: page.label,
         subtitle: page.description,
-        category: page.group as 'Pages' | 'Associate' | 'News',
+        category: page.group as 'Pages' | 'Associate' | 'Blogs',
         badge: 'Page',
         href: page.href,
       });
     });
 
-    // 3. Add News / Blogs
+    // 3. Add Blogs
     blogData.forEach((blog: BlogPostItem) => {
       results.push({
         id: `blog-${blog.id}`,
         title: blog.title,
         subtitle: blog.excerpt,
-        category: 'News',
+        category: 'Blogs',
         badge: blog.category,
         href: `/blogs/${blog.slug}`,
         image: blog.image,
@@ -239,6 +239,7 @@ export default function SmartSearchModal({
         return <Building className="h-5 w-5 text-[#f12131]" />;
       case 'Associate':
         return <Users className="h-5 w-5 text-[#29247c]" />;
+      case 'Blogs':
       case 'News':
         return <BookOpen className="h-5 w-5 text-amber-600" />;
       default:

@@ -10,11 +10,11 @@ export function cleanName(value: string): string {
   return value.replace(/[0-9]/g, '');
 }
 
-export function validateName(value: string): { isValid: boolean; error: string } {
+export function validateName(value: string, fieldLabel: string = 'Full name'): { isValid: boolean; error: string } {
   const trimmed = value.trim();
 
   if (!trimmed) {
-    return { isValid: false, error: 'Full name is required' };
+    return { isValid: false, error: `${fieldLabel} is required` };
   }
 
   // Check if any numbers exist
@@ -29,7 +29,7 @@ export function validateName(value: string): { isValid: boolean; error: string }
   }
 
   if (trimmed.length < 2) {
-    return { isValid: false, error: 'Name must be at least 2 characters long' };
+    return { isValid: false, error: `${fieldLabel} must be at least 2 characters long` };
   }
 
   return { isValid: true, error: '' };
