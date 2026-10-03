@@ -17,14 +17,14 @@ export default function KPNEntryHero() {
   /* =========================================================
      PORTAL POSITION
   ========================================================= */
-  const PORTAL_X = "49.6%";
+  const PORTAL_X = "50.6%";
   const PORTAL_Y = "39.9%";
 
   /* =========================================================
      INITIAL VIDEO BOX SIZE
   ========================================================= */
-  const INITIAL_VIDEO_WIDTH = "400px";
-  const INITIAL_VIDEO_HEIGHT = "400px";
+  const INITIAL_VIDEO_WIDTH = "350px";
+  const INITIAL_VIDEO_HEIGHT = "350px";
 
   /* =========================================================
      KEEP REFS IN SYNC & NOTIFY HERO SECTION
@@ -389,7 +389,7 @@ export default function KPNEntryHero() {
           "
         >
           <img
-            src="/entry/testtry.png"
+            src="/entry/kpn-28.png"
             alt="KPN Architecture Portal"
             draggable={false}
             className="
