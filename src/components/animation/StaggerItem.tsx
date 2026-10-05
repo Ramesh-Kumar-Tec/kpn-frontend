@@ -57,7 +57,12 @@ export default function StaggerItem({
   };
 
   return (
-    <motion.div variants={itemVariants} className={className}>
+    <motion.div
+      variants={itemVariants}
+      whileInView="visible"
+      viewport={{ once: true, margin: '0px' }}
+      className={className}
+    >
       {children}
     </motion.div>
   );

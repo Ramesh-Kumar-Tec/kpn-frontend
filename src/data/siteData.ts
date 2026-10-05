@@ -886,19 +886,19 @@ export const projectsData: ProjectItem[] = rawProjectsData.map((p) => {
 
 export const teamData = [
   {
-    name: 'Johan Sanford',
-    role: 'Executive Assistant',
-    image: '/images/team/team-1.jpg',
+    name: 'Mr. V.Kanniyappan',
+    role: 'Founder & Managing Director',
+    image: '/team/kanniyapan.jpg',
   },
   {
-    name: 'Floyd Miles',
-    role: 'Director of Architecture',
-    image: '/images/team/team-2.jpg',
+    name: 'Ms.Krishma',
+    role: 'Chief Executive Officer',
+    image: '/team/krishma.jpg',
   },
   {
-    name: 'Dennis Daniels',
-    role: 'Founder & CEO',
-    image: '/images/team/team-3.jpg',
+    name: 'Mr.Amarnath',
+    role: 'Director',
+    image: '/team/amarnath.jpg',
   },
   {
     name: 'Leslie Alexander',
@@ -1089,74 +1089,95 @@ export const blogData: BlogPostItem[] = [
 
 export interface AwardItem {
   id: string;
+  _id?: string;
   year: string;
   title: string;
   organization: string;
   image: string;
+  description?: string;
+  status?: string;
 }
 
 export const awardsData: AwardItem[] = [
   {
     id: '01',
     year: '2024',
-    title: 'FPA Home Expo 2024',
-    organization: 'By Flat Promoters Association',
+    title: 'Home Expo 2024 Participant Award',
+    organization: 'Flat Promoters Association, Chennai South',
     image: '/images/awards/FPA-Home-Expo-2024.png',
+    description: 'Home Expo 2024 Participant Award presented to KPN Promoters Pvt. Ltd. by Flat Promoters Association, Chennai South.',
+    status: 'Published',
   },
   {
     id: '02',
-    year: '2023',
-    title: 'FPA Home Expo 2023',
-    organization: 'By Flat Promoters Association',
-    image: '/images/awards/FPA-Home-Expo-2023.png',
+    year: '2012',
+    title: 'Best Builder Award 2012',
+    organization: 'Sulekha Properties',
+    image: '/images/awards/Best-Builder-2017.png',
+    description: 'KPN Promoters Pvt. Ltd. was honored with the Best Builder Award 2012 in Guduvanchery and Singaperumal Koil by Sulekha Properties.',
+    status: 'Published',
   },
   {
     id: '03',
-    year: '2025',
-    title: 'Trusted Developer of the Year',
-    organization: 'By Economic Times Achievers of Tamil Nadu',
-    image: '/images/awards/Trusted-Developer-2025.png',
+    year: '2024',
+    title: 'LIC Housing Finance Business Meet 2024',
+    organization: 'LIC Housing Finance Ltd',
+    image: '/images/awards/LIC-Business-Meet-2024.png',
+    description: 'KPN Promoters Pvt. Ltd. was proudly recognized for their active participation at the LIC Housing Finance Business Meet 2024.',
+    status: 'Published',
   },
   {
     id: '04',
-    year: '2017',
-    title: 'Best Builder Award',
-    organization: 'Top Commercial & Residential Builder',
-    image: '/images/awards/Best-Builder-2017.png',
+    year: '2024',
+    title: 'The Tamil Nadu Icon Award for Excellence in Real Estate',
+    organization: 'The Tamil Nadu Icon Awards (Township Developers)',
+    image: '/images/awards/Township-Developers-2024.png',
+    description: 'This award is The Tamil Nadu Icon Award for Excellence in Real Estate - Township Developers for the year 2024, presented to KPN Promoters Pvt Ltd.',
+    status: 'Published',
   },
   {
     id: '05',
-    year: '2019',
-    title: 'Business Growth Award',
-    organization: 'Excellence in Real Estate Development',
+    year: '2018-2019',
+    title: 'HDFC Home Loans Business Growth Award',
+    organization: 'HDFC Home Loans',
     image: '/images/awards/Business-Growth-2019.png',
+    description: 'This award is presented to KPN Promoters by HDFC Home Loans for their valuable contribution to business growth in the Chennai region for the year 2018-2019.',
+    status: 'Published',
   },
   {
     id: '06',
-    year: '2021',
-    title: 'Business Growth Award',
-    organization: 'Outstanding Achievement in Housing',
+    year: '2021-2022',
+    title: 'HDFC Home Loans Business Growth Award',
+    organization: 'HDFC Home Loans',
     image: '/images/awards/Business-Growth-2021.png',
+    description: 'This award is presented to KPN Promoters by HDFC Home Loans for their valuable contribution to business growth during the period 2021-2022.',
+    status: 'Published',
   },
   {
     id: '07',
-    year: '2024',
-    title: 'LIC Business Meet Award',
-    organization: 'Outstanding Performance & Partnership',
-    image: '/images/awards/LIC-Business-Meet-2024.png',
+    year: '2022',
+    title: 'Life Membership Certificate',
+    organization: 'Flat Promoters Association (FPA) – Chennai South',
+    image: '/images/awards/Life-Membership-Certificate.png',
+    description: 'This is a Life Membership Certificate from the Flat Promoters Association (FPA) – Chennai South, awarded to Mr. Kannappan V of KPN Promoters for his valuable contribution, valid since April 1, 2022.',
+    status: 'Published',
   },
   {
     id: '08',
-    year: '2024',
-    title: 'Township Developers of the Year',
-    organization: 'Integrated Township Excellence',
-    image: '/images/awards/Township-Developers-2024.png',
+    year: '2023',
+    title: 'FPA Home Expo 2023 Support Award',
+    organization: 'Flat Promoters Association (FPA) – Chennai South',
+    image: '/images/awards/FPA-Home-Expo-2023.png',
+    description: 'This award is from the Flat Promoters Association (FPA) – Chennai South for supporting the FPA Home Expo 2023, held on October 14 & 15, 2023, at Sri Vasudeva Thirumana Maaligai.',
+    status: 'Published',
   },
   {
     id: '09',
-    year: '2024',
-    title: 'Life Membership Certificate',
-    organization: 'Flat Promoters Association',
-    image: '/images/awards/Life-Membership-Certificate.png',
+    year: '2025',
+    title: 'Trusted Developer of the Year',
+    organization: 'Economic Times Achievers of Tamil Nadu',
+    image: '/images/awards/Trusted-Developer-2025.png',
+    description: 'Presented to KPN Promoters Pvt. Ltd. by Economic Times Achievers of Tamil Nadu for outstanding trust, delivery excellence, and quality infrastructure development.',
+    status: 'Published',
   },
 ];

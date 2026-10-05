@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Trophy, Calendar, Award, ZoomIn, X } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import InnerPageHero from '@/components/sections/InnerPageHero';
 import TestimonialsSection from '@/components/sections/TestimonialsSection';
@@ -13,6 +14,7 @@ import StaggerItem from '@/components/animation/StaggerItem';
 
 export default function OurAwardsPage() {
   const [awards, setAwards] = useState<AwardItem[]>(awardsData);
+  const [selectedImage, setSelectedImage] = useState<{ src: string; title: string } | null>(null);
 
   useEffect(() => {
     async function loadAwards() {
@@ -27,6 +29,7 @@ export default function OurAwardsPage() {
     }
     loadAwards();
   }, []);
+
   return (
     <>
       <Navbar variant="hero" />
@@ -41,7 +44,7 @@ export default function OurAwardsPage() {
       {/* =========================================================
           AWARDS SECTION
       ========================================================== */}
-      <section className="bg-white px-6 py-20 sm:px-8 lg:px-12 lg:py-28">
+      <section className="bg-gradient-to-b from-white via-slate-50/50 to-white px-4 py-16 sm:px-6 lg:px-12 lg:py-24">
         <div className="mx-auto max-w-[1450px]">
 
           {/* =====================================================
@@ -50,158 +53,191 @@ export default function OurAwardsPage() {
           <FadeIn direction="up" className="mx-auto max-w-[850px] text-center">
 
             {/* Small label */}
-            <RunningPillBadge text="AWARDS & RECOGNITIONS" />
+            <RunningPillBadge text="HONORS & RECOGNITION" />
 
             {/* Main heading */}
             <h1
               className="
-                mt-10
-                text-5xl
+                mt-8
+                text-4xl
                 font-extrabold
-                leading-[0.95]
-                tracking-[-0.05em]
+                leading-[1.05]
+                tracking-[-0.04em]
                 text-[#29247c]
-                sm:text-6xl
-                lg:text-[76px]
+                sm:text-5xl
+                lg:text-[68px]
               "
             >
-              Recognitions
+              Celebrating Our
               <br />
-              we got
+              Milestones of Excellence
             </h1>
 
             {/* Description */}
             <p
               className="
                 mx-auto
-                mt-10
+                mt-6
                 max-w-[760px]
-                text-lg
-                font-semibold
+                text-base
+                font-medium
                 leading-relaxed
-                text-slate-700
-                sm:text-xl
+                text-slate-600
+                sm:text-lg
               "
             >
-              We are a developer invested in our customers’ success and
-              improving the communities we serve.
+              For over two decades, KPN Promoters has been honored by leading industry bodies,
+              financial institutions, and developer associations for unwavering commitment to quality and transparency.
             </p>
 
           </FadeIn>
 
 
           {/* =====================================================
-              AWARDS GRID
+              AWARDS SHOWCASE GRID
           ====================================================== */}
-          <StaggerContainer staggerDelay={0.08} className="awards-grid mt-20 lg:mt-24">
+          <StaggerContainer staggerDelay={0.08} className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2 lg:mt-20">
 
-            {(awards || []).map((award) => (
-              <StaggerItem key={award.id}>
-              <article
-                className="
-                  awards-item
-                  group
-                  flex
-                  min-h-[330px]
-                  flex-col
-                  items-center
-                  justify-center
-                  px-6
-                  py-12
-                  text-center
-                  transition-all
-                  duration-300
-                  sm:min-h-[350px]
-                  sm:px-10
-                  lg:min-h-[340px]
-                "
-              >
-
-                {/* =================================================
-                    AWARD IMAGE
-                ================================================== */}
-                <div
+            {(awards || []).map((award, index) => (
+              <StaggerItem key={award.id || award._id || index}>
+                <article
                   className="
+                    group
+                    relative
                     flex
-                    h-[125px]
-                    w-full
+                    h-full
+                    flex-col
+                    sm:flex-row
                     items-center
-                    justify-center
-                  "
-                >
-                  <img
-                    src={award.image}
-                    alt={award.title}
-                    className="
-                      max-h-[115px]
-                      max-w-[150px]
-                      object-contain
-                      opacity-40
-                      grayscale
-                      transition-all
-                      duration-500
-                      group-hover:scale-105
-                      group-hover:opacity-100
-                      group-hover:grayscale-0
-                    "
-                  />
-                </div>
-
-
-                {/* =================================================
-                    YEAR
-                ================================================== */}
-                <p
-                  className="
-                    mt-4
-                    text-base
-                    font-semibold
-                    text-slate-500
-                  "
-                >
-                  {award.year}
-                </p>
-
-
-                {/* =================================================
-                    TITLE
-                ================================================== */}
-                <h2
-                  className="
-                    mt-3
-                    max-w-[360px]
-                    text-2xl
-                    font-extrabold
-                    leading-[1.15]
-                    tracking-[-0.02em]
-                    text-[#29247c]
-                    transition-colors
+                    gap-6
+                    rounded-3xl
+                    border
+                    border-slate-200/80
+                    bg-white
+                    p-6
+                    shadow-[0_4px_24px_rgba(0,0,0,0.04)]
+                    transition-all
                     duration-300
-                    group-hover:text-[#f12131]
-                    sm:text-[28px]
+                    hover:-translate-y-1
+                    hover:border-slate-300
+                    hover:shadow-[0_12px_36px_rgba(41,36,124,0.08)]
+                    sm:p-8
                   "
                 >
-                  {award.title}
-                </h2>
 
+                  {/* =================================================
+                      AWARD IMAGE BOX
+                  ================================================== */}
+                  <div
+                    onClick={() => setSelectedImage({ src: award.image, title: award.title })}
+                    className="
+                      relative
+                      flex
+                      h-[200px]
+                      w-full
+                      sm:w-[170px]
+                      shrink-0
+                      cursor-pointer
+                      items-center
+                      justify-center
+                      rounded-2xl
+                      bg-slate-50
+                      p-4
+                      border
+                      border-slate-100
+                      transition-all
+                      duration-300
+                      group-hover:bg-amber-50/40
+                      group-hover:border-amber-200/60
+                    "
+                    title="Click to view full image"
+                  >
+                    <img
+                      src={award.image}
+                      alt={award.title}
+                      className="
+                        max-h-[170px]
+                        max-w-full
+                        object-contain
+                        drop-shadow-md
+                        transition-transform
+                        duration-500
+                        group-hover:scale-105
+                      "
+                      onError={(e: any) => {
+                        e.target.src = '/images/awards/Trusted-Developer-2025.png';
+                      }}
+                    />
 
-                {/* =================================================
-                    ORGANIZATION
-                ================================================== */}
-                <p
-                  className="
-                    mt-3
-                    max-w-[390px]
-                    text-base
-                    leading-relaxed
-                    text-slate-500
-                    sm:text-lg
-                  "
-                >
-                  {award.organization}
-                </p>
+                    {/* Quick zoom icon */}
+                    <div className="absolute right-2 top-2 rounded-full bg-white/90 p-1.5 text-slate-400 opacity-0 shadow-xs transition-opacity group-hover:opacity-100 hover:text-[#29247c]">
+                      <ZoomIn className="h-3.5 w-3.5" />
+                    </div>
+                  </div>
 
-              </article>
+                  {/* =================================================
+                      AWARD DETAILS & DESCRIPTION
+                  ================================================== */}
+                  <div className="flex flex-1 flex-col justify-between self-stretch">
+                    <div>
+                      {/* Year badge & Category */}
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-0.5 text-[11px] font-extrabold text-[#f12131]">
+                          <Calendar className="h-3 w-3" />
+                          {award.year}
+                        </span>
+                        <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-semibold text-slate-600">
+                          <Award className="h-3 w-3 text-[#29247c]" />
+                          {award.organization}
+                        </span>
+                      </div>
+
+                      {/* Title */}
+                      <h2
+                        className="
+                          mt-3
+                          text-xl
+                          font-extrabold
+                          leading-snug
+                          tracking-tight
+                          text-[#29247c]
+                          transition-colors
+                          duration-300
+                          group-hover:text-[#f12131]
+                          sm:text-[22px]
+                        "
+                      >
+                        {award.title}
+                      </h2>
+
+                      {/* Full Award Description from Reference */}
+                      <p
+                        className="
+                          mt-3
+                          text-sm
+                          leading-relaxed
+                          text-slate-600
+                          sm:text-[15px]
+                        "
+                      >
+                        {award.description || `${award.title} presented to KPN Promoters Pvt. Ltd. by ${award.organization}.`}
+                      </p>
+                    </div>
+
+                    {/* Footer divider and status */}
+                    <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-3 text-xs text-slate-400">
+                      <span className="font-semibold text-slate-500">
+                        KPN Promoters Pvt. Ltd.
+                      </span>
+                      <span className="flex items-center gap-1 text-[11px] font-bold text-amber-600">
+                        <Trophy className="h-3 w-3 text-amber-500" />
+                        Verified Honor
+                      </span>
+                    </div>
+
+                  </div>
+
+                </article>
               </StaggerItem>
             ))}
 
@@ -210,6 +246,38 @@ export default function OurAwardsPage() {
         </div>
       </section>
 
+      {/* =========================================================
+          IMAGE PREVIEW MODAL
+      ========================================================== */}
+      {selectedImage && (
+        <div
+          onClick={() => setSelectedImage(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-xs animate-in fade-in duration-200"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative max-h-[90vh] max-w-2xl rounded-3xl bg-white p-6 shadow-2xl"
+          >
+            <button
+              onClick={() => setSelectedImage(null)}
+              className="absolute right-4 top-4 rounded-full bg-slate-100 p-2 text-slate-600 hover:bg-slate-200"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="flex flex-col items-center">
+              <img
+                src={selectedImage.src}
+                alt={selectedImage.title}
+                className="max-h-[65vh] w-auto object-contain drop-shadow-xl"
+              />
+              <h3 className="mt-4 text-center text-lg font-bold text-[#29247c]">
+                {selectedImage.title}
+              </h3>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* =========================================================
           TESTIMONIALS
