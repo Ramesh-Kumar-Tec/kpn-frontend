@@ -1,7 +1,7 @@
 'use strict';
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
 import InnerPageHero from '@/components/sections/InnerPageHero';
@@ -9,6 +9,7 @@ import { BlogPostItem } from '@/data/siteData';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
 import FadeIn from '@/components/animation/FadeIn';
 import ImageReveal from '@/components/animation/ImageReveal';
+import { cleanName, validateName, cleanEmail, validateEmail } from '@/lib/formValidation';
 
 interface BlogDetailClientProps {
   post: BlogPostItem;
@@ -20,6 +21,17 @@ export default function BlogDetailClient({
   allPosts,
 }: BlogDetailClientProps) {
   const [commentSent, setCommentSent] = useState(false);
+  const [comment, setComment] = useState('');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [website, setWebsite] = useState('');
+  const [saveInfo, setSaveInfo] = useState(false);
+
+  const [errors, setErrors] = useState({
+    comment: '',
+    name: '',
+    email: '',
+  });
 
   // Previous post link
   const postIndex = allPosts.findIndex(
@@ -30,9 +42,81 @@ export default function BlogDetailClient({
       ? allPosts[(postIndex - 1 + allPosts.length) % allPosts.length]
       : null;
 
-  // Comment submission handler
+  // Load saved author info from localStorage if previously saved
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('kpn_comment_author');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.name) setName(parsed.name);
+        if (parsed.email) setEmail(parsed.email);
+        if (parsed.website) setWebsite(parsed.website);
+        setSaveInfo(true);
+      }
+    } catch {}
+  }, []);
+
+  const handleCommentChange = (val: string) => {
+    setComment(val);
+    if (errors.comment && val.trim().length >= 3) {
+      setErrors((prev) => ({ ...prev, comment: '' }));
+    }
+  };
+
+  const handleNameChange = (val: string) => {
+    const cleaned = cleanName(val);
+    setName(cleaned);
+    if (errors.name) {
+      setErrors((prev) => ({ ...prev, name: validateName(cleaned, 'Your name').error }));
+    }
+  };
+
+  const handleEmailChange = (val: string) => {
+    const cleaned = cleanEmail(val);
+    setEmail(cleaned);
+    if (errors.email) {
+      setErrors((prev) => ({ ...prev, email: validateEmail(cleaned, true).error }));
+    }
+  };
+
+  // Comment submission handler with full validation
   const handleCommentSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const trimmedComment = comment.trim();
+    let commentErr = '';
+    if (!trimmedComment) {
+      commentErr = 'Comment is required';
+    } else if (trimmedComment.length < 3) {
+      commentErr = 'Comment must be at least 3 characters long';
+    }
+
+    const nameRes = validateName(name, 'Your name');
+    const emailRes = validateEmail(email, true);
+
+    const newErrors = {
+      comment: commentErr,
+      name: nameRes.error,
+      email: emailRes.error,
+    };
+
+    setErrors(newErrors);
+
+    if (commentErr || !nameRes.isValid || !emailRes.isValid) {
+      return;
+    }
+
+    try {
+      if (saveInfo) {
+        localStorage.setItem(
+          'kpn_comment_author',
+          JSON.stringify({ name, email, website })
+        );
+      } else {
+        localStorage.removeItem('kpn_comment_author');
+      }
+    } catch {}
+
     setCommentSent(true);
   };
 
@@ -167,36 +251,101 @@ export default function BlogDetailClient({
                 <p className="text-sm mt-1">Your reply has been submitted and will appear once approved.</p>
               </div>
             ) : (
-              <form onSubmit={handleCommentSubmit} className="space-y-6">
+              <form onSubmit={handleCommentSubmit} noValidate className="space-y-6">
                 {/* Comment Textarea */}
-                <textarea
-                  required
-                  rows={6}
-                  placeholder="Comment"
-                  className="w-full resize-none rounded-[28px] border-0 bg-slate-100/80 p-7 text-sm font-semibold text-slate-800 outline-none placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-[#f12131]/30 transition-all"
-                />
+                <div>
+                  <textarea
+                    required
+                    rows={6}
+                    value={comment}
+                    onChange={(e) => handleCommentChange(e.target.value)}
+                    onBlur={() => {
+                      const trimmed = comment.trim();
+                      if (!trimmed) {
+                        setErrors((prev) => ({ ...prev, comment: 'Comment is required' }));
+                      } else if (trimmed.length < 3) {
+                        setErrors((prev) => ({ ...prev, comment: 'Comment must be at least 3 characters long' }));
+                      }
+                    }}
+                    placeholder="Comment *"
+                    className={`w-full resize-none rounded-[28px] border p-7 text-sm font-semibold text-slate-800 outline-none placeholder:text-slate-400 focus:bg-white focus:ring-2 transition-all ${
+                      errors.comment
+                        ? 'border-red-400 bg-red-50/40 text-red-900 focus:ring-red-400/40'
+                        : 'border-transparent bg-slate-100/80 focus:ring-[#f12131]/30'
+                    }`}
+                  />
+                  {errors.comment && (
+                    <p className="mt-1.5 px-4 text-xs font-semibold text-red-600 animate-in fade-in duration-200">
+                      {errors.comment}
+                    </p>
+                  )}
+                </div>
 
                 {/* 3-Column Inputs Row */}
                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-                  <input
-                    type="text"
-                    required
-                    placeholder="Your Name *"
-                    className="h-14 w-full rounded-full border-0 bg-slate-100/80 px-7 text-sm font-semibold text-slate-800 outline-none placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-[#f12131]/30 transition-all"
-                  />
-                  <input
-                    type="email"
-                    required
-                    placeholder="Email Address *"
-                    pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.com"
-                    title="Email must include '@' and end with '.com' (e.g. name@gmail.com)"
-                    className="h-14 w-full rounded-full border-0 bg-slate-100/80 px-7 text-sm font-semibold text-slate-800 outline-none placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-[#f12131]/30 transition-all"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Your Website"
-                    className="h-14 w-full rounded-full border-0 bg-slate-100/80 px-7 text-sm font-semibold text-slate-800 outline-none placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-[#f12131]/30 transition-all"
-                  />
+                  <div>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Your Name *"
+                      value={name}
+                      onChange={(e) => handleNameChange(e.target.value)}
+                      onBlur={() => {
+                        setErrors((prev) => ({
+                          ...prev,
+                          name: validateName(name, 'Your name').error,
+                        }));
+                      }}
+                      className={`h-14 w-full rounded-full border px-7 text-sm font-semibold text-slate-800 outline-none placeholder:text-slate-400 focus:bg-white focus:ring-2 transition-all ${
+                        errors.name
+                          ? 'border-red-400 bg-red-50/40 text-red-900 focus:ring-red-400/40'
+                          : 'border-transparent bg-slate-100/80 focus:ring-[#f12131]/30'
+                      }`}
+                    />
+                    {errors.name && (
+                      <p className="mt-1.5 px-4 text-xs font-semibold text-red-600 animate-in fade-in duration-200">
+                        {errors.name}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <input
+                      type="email"
+                      required
+                      placeholder="Email Address * (e.g. name@gmail.com)"
+                      value={email}
+                      onChange={(e) => handleEmailChange(e.target.value)}
+                      onBlur={() => {
+                        setErrors((prev) => ({
+                          ...prev,
+                          email: validateEmail(email, true).error,
+                        }));
+                      }}
+                      pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.com"
+                      title="Email must include '@' and end with '.com' (e.g. name@gmail.com)"
+                      className={`h-14 w-full rounded-full border px-7 text-sm font-semibold text-slate-800 outline-none placeholder:text-slate-400 focus:bg-white focus:ring-2 transition-all ${
+                        errors.email
+                          ? 'border-red-400 bg-red-50/40 text-red-900 focus:ring-red-400/40'
+                          : 'border-transparent bg-slate-100/80 focus:ring-[#f12131]/30'
+                      }`}
+                    />
+                    {errors.email && (
+                      <p className="mt-1.5 px-4 text-xs font-semibold text-red-600 animate-in fade-in duration-200">
+                        {errors.email}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="Your Website"
+                      value={website}
+                      onChange={(e) => setWebsite(e.target.value)}
+                      className="h-14 w-full rounded-full border border-transparent bg-slate-100/80 px-7 text-sm font-semibold text-slate-800 outline-none placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-[#f12131]/30 transition-all"
+                    />
+                  </div>
                 </div>
 
                 {/* Save info Checkbox */}
@@ -204,11 +353,13 @@ export default function BlogDetailClient({
                   <input
                     type="checkbox"
                     id="save-info"
-                    className="h-4 w-4 rounded border-slate-300 text-[#f12131] focus:ring-[#f12131]"
+                    checked={saveInfo}
+                    onChange={(e) => setSaveInfo(e.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300 text-[#f12131] focus:ring-[#f12131] cursor-pointer"
                   />
                   <label
                     htmlFor="save-info"
-                    className="text-xs font-semibold text-slate-500 cursor-pointer"
+                    className="text-xs font-semibold text-slate-500 cursor-pointer select-none"
                   >
                     Save my name, email, and website in this browser for the next
                     time I comment.
