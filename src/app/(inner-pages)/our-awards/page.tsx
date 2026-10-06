@@ -94,154 +94,121 @@ export default function OurAwardsPage() {
 
 
           {/* =====================================================
-              AWARDS SHOWCASE GRID
+              AWARDS SHOWCASE - DIVIDER GRID (3x3 Layout)
           ====================================================== */}
-          <StaggerContainer staggerDelay={0.08} className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2 lg:mt-20">
+          <div className="mt-16 lg:mt-20">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+              {(awards || []).map((award, index) => {
+                const total = (awards || []).length;
+                const lastRowStartIndex = Math.floor((total - 1) / 3) * 3;
+                const showHorizontalLine = index < lastRowStartIndex;
+                
+                // Explicit desktop & tablet border right rules
+                const hasDesktopBorder = index % 3 !== 2;
+                const hasTabletBorder = index % 2 === 0;
 
-            {(awards || []).map((award, index) => (
-              <StaggerItem key={award.id || award._id || index}>
-                <article
-                  className="
-                    group
-                    relative
-                    flex
-                    h-full
-                    flex-col
-                    sm:flex-row
-                    items-center
-                    gap-6
-                    rounded-3xl
-                    border
-                    border-slate-200/80
-                    bg-white
-                    p-6
-                    shadow-[0_4px_24px_rgba(0,0,0,0.04)]
-                    transition-all
-                    duration-300
-                    hover:-translate-y-1
-                    hover:border-slate-300
-                    hover:shadow-[0_12px_36px_rgba(41,36,124,0.08)]
-                    sm:p-8
-                  "
-                >
-
-                  {/* =================================================
-                      AWARD IMAGE BOX
-                  ================================================== */}
+                return (
                   <div
-                    onClick={() => setSelectedImage({ src: award.image, title: award.title })}
+                    key={award.id || award._id || index}
                     className="
                       relative
                       flex
-                      h-[200px]
-                      w-full
-                      sm:w-[170px]
-                      shrink-0
-                      cursor-pointer
+                      flex-col
                       items-center
-                      justify-center
-                      rounded-2xl
-                      bg-slate-50
-                      p-4
-                      border
-                      border-slate-100
-                      transition-all
+                      text-center
+                      justify-between
+                      p-6
+                      sm:p-8
+                      lg:p-10
+                      transition-colors
                       duration-300
-                      group-hover:bg-amber-50/40
-                      group-hover:border-amber-200/60
+                      hover:bg-slate-50/40
+                      group
                     "
-                    title="Click to view full image"
                   >
-                    <img
-                      src={award.image}
-                      alt={award.title}
-                      className="
-                        max-h-[170px]
-                        max-w-full
-                        object-contain
-                        drop-shadow-md
-                        transition-transform
-                        duration-500
-                        group-hover:scale-105
-                      "
-                      onError={(e: any) => {
-                        e.target.src = '/images/awards/Trusted-Developer-2025.png';
-                      }}
-                    />
+                    {/* Vertical cut divider line on the right */}
+                    {hasDesktopBorder && (
+                      <div className="hidden lg:block absolute right-0 top-10 bottom-10 w-[1px] bg-slate-200" />
+                    )}
+                    {hasTabletBorder && (
+                      <div className="hidden md:block lg:hidden absolute right-0 top-10 bottom-10 w-[1px] bg-slate-200" />
+                    )}
 
-                    {/* Quick zoom icon */}
-                    <div className="absolute right-2 top-2 rounded-full bg-white/90 p-1.5 text-slate-400 opacity-0 shadow-xs transition-opacity group-hover:opacity-100 hover:text-[#29247c]">
-                      <ZoomIn className="h-3.5 w-3.5" />
-                    </div>
-                  </div>
+                    <div className="flex flex-col items-center w-full">
+                      {/* Award Trophy / Certificate Image */}
+                      <div
+                        onClick={() => setSelectedImage({ src: award.image, title: award.title })}
+                        className="
+                          relative
+                          flex
+                          h-[220px]
+                          w-full
+                          cursor-pointer
+                          items-center
+                          justify-center
+                          transition-transform
+                          duration-500
+                          group-hover:scale-105
+                        "
+                        title="Click to view full image"
+                      >
+                        <img
+                          src={award.image}
+                          alt={award.title}
+                          className="
+                            max-h-[200px]
+                            max-w-[200px]
+                            object-contain
+                            drop-shadow-md
+                            transition-transform
+                            duration-300
+                          "
+                          onError={(e: any) => {
+                            e.target.src = '/images/awards/Trusted-Developer-2025.png';
+                          }}
+                        />
 
-                  {/* =================================================
-                      AWARD DETAILS & DESCRIPTION
-                  ================================================== */}
-                  <div className="flex flex-1 flex-col justify-between self-stretch">
-                    <div>
-                      {/* Year badge & Category */}
-                      <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-0.5 text-[11px] font-extrabold text-[#f12131]">
-                          <Calendar className="h-3 w-3" />
-                          {award.year}
-                        </span>
-                        <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-semibold text-slate-600">
-                          <Award className="h-3 w-3 text-[#29247c]" />
-                          {award.organization}
-                        </span>
+                        {/* Subtle zoom indicator on hover */}
+                        <div className="absolute right-2 top-2 rounded-full bg-white/90 p-1.5 text-slate-400 opacity-0 shadow-xs transition-opacity group-hover:opacity-100 hover:text-[#29247c]">
+                          <ZoomIn className="h-4 w-4" />
+                        </div>
                       </div>
 
-                      {/* Title */}
-                      <h2
-                        className="
-                          mt-3
-                          text-xl
-                          font-extrabold
-                          leading-snug
-                          tracking-tight
-                          text-[#29247c]
-                          transition-colors
-                          duration-300
-                          group-hover:text-[#f12131]
-                          sm:text-[22px]
-                        "
-                      >
-                        {award.title}
-                      </h2>
+                      {/* Award Info */}
+                      <div className="mt-6 flex flex-col items-center space-y-2 max-w-[340px]">
+                        {/* Year */}
+                        <span className="text-xs sm:text-sm font-black tracking-widest text-[#29247c]/70">
+                          {award.year}
+                        </span>
 
-                      {/* Full Award Description from Reference */}
-                      <p
-                        className="
-                          mt-3
-                          text-sm
-                          leading-relaxed
-                          text-slate-600
-                          sm:text-[15px]
-                        "
-                      >
-                        {award.description || `${award.title} presented to KPN Promoters Pvt. Ltd. by ${award.organization}.`}
-                      </p>
+                        {/* Title */}
+                        <h2 className="text-xl sm:text-[22px] font-black tracking-tight text-[#29247c] leading-snug group-hover:text-[#f12131] transition-colors">
+                          {award.title}
+                        </h2>
+
+                        {/* Organization */}
+                        <p className="text-xs sm:text-sm font-semibold text-slate-500">
+                          {award.organization}
+                        </p>
+
+                        {/* Description */}
+                        <p className="pt-2 text-xs sm:text-[13px] font-medium leading-relaxed text-slate-600">
+                          {award.description || `${award.title} presented to KPN Promoters Pvt. Ltd. by ${award.organization}.`}
+                        </p>
+                      </div>
                     </div>
 
-                    {/* Footer divider and status */}
-                    <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-3 text-xs text-slate-400">
-                      <span className="font-semibold text-slate-500">
-                        KPN Promoters Pvt. Ltd.
-                      </span>
-                      <span className="flex items-center gap-1 text-[11px] font-bold text-amber-600">
-                        <Trophy className="h-3 w-3 text-amber-500" />
-                        Verified Honor
-                      </span>
+                    {/* Centered horizontal cut divider line under card */}
+                    <div className="w-full pt-8 sm:pt-10">
+                      {showHorizontalLine && (
+                        <div className="w-[70%] max-w-[260px] h-[1px] bg-slate-200 mx-auto" />
+                      )}
                     </div>
-
                   </div>
-
-                </article>
-              </StaggerItem>
-            ))}
-
-          </StaggerContainer>
+                );
+              })}
+            </div>
+          </div>
 
         </div>
       </section>
