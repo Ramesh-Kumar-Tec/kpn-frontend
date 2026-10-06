@@ -116,6 +116,7 @@ export default function KpnChatbot() {
 
   const [messages, setMessages] = useState<ChatMessage[]>([initialGreeting]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const latestAssistantRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom of chat
   const scrollToBottom = () => {
@@ -124,7 +125,12 @@ export default function KpnChatbot() {
 
   useEffect(() => {
     if (isOpen) {
-      scrollToBottom();
+      const latestMessage = messages[messages.length - 1];
+      if (latestMessage?.role === 'assistant') {
+        latestAssistantRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        scrollToBottom();
+      }
       setShowNotification(false);
     }
   }, [messages, isOpen]);
@@ -223,6 +229,10 @@ export default function KpnChatbot() {
       });
       const data = await res.json();
 
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || data.message || 'Unable to save the enquiry');
+      }
+
       setLeadSubmitted(true);
       const confMsg: ChatMessage = {
         id: `lead-conf-${Date.now()}`,
@@ -239,7 +249,14 @@ export default function KpnChatbot() {
         }, 1200);
       }
     } catch (err) {
-      setLeadSubmitted(true);
+      const failureMsg: ChatMessage = {
+        id: `lead-failure-${Date.now()}`,
+        role: 'assistant',
+        content:
+          'I could not save your request right now. Please try again, or contact our advisor directly on WhatsApp at **+91 8925924128**.',
+        timestamp: 'Just now',
+      };
+      setMessages((prev) => [...prev, failureMsg]);
     } finally {
       setIsSubmittingLead(false);
     }
@@ -460,6 +477,7 @@ export default function KpnChatbot() {
             {messages.map((msg) => (
               <div
                 key={msg.id}
+                ref={msg.role === 'assistant' && msg.id === messages[messages.length - 1]?.id ? latestAssistantRef : undefined}
                 className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
               >
                 <div
@@ -476,7 +494,7 @@ export default function KpnChatbot() {
 
                 {/* Interactive Navigation Action Card */}
                 {msg.action?.type === 'NAVIGATE' && msg.action.url && (
-                  <div className="mt-2.5 w-full rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-50/95 via-white to-blue-50/90 p-3.5 shadow-xs">
+                  <div className="order-2 mt-2.5 w-full rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-50/95 via-white to-blue-50/90 p-3.5 shadow-xs">
                     <div className="flex items-start gap-2.5">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-[#29247c] to-[#3f38aa] text-white shadow-xs">
                         <Compass className="h-5 w-5" />
@@ -518,7 +536,7 @@ export default function KpnChatbot() {
 
                 {/* Interactive EMI Loan Calculator Card */}
                 {msg.action?.type === 'CALCULATE_EMI' && msg.action.emiDetails && (
-                  <div className="mt-2.5 w-full rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50/95 via-white to-teal-50/80 p-3.5 shadow-xs">
+                  <div className="order-2 mt-2.5 w-full rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50/95 via-white to-teal-50/80 p-3.5 shadow-xs">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-2xs">
@@ -559,7 +577,7 @@ export default function KpnChatbot() {
 
                 {/* Interactive PDF Brochure Download Card */}
                 {msg.action?.type === 'DOWNLOAD_BROCHURE' && msg.action.brochureDetails && (
-                  <div className="mt-2.5 w-full rounded-2xl border border-rose-200 bg-gradient-to-br from-rose-50/95 via-white to-red-50/80 p-3.5 shadow-xs">
+                  <div className="order-2 mt-2.5 w-full rounded-2xl border border-rose-200 bg-gradient-to-br from-rose-50/95 via-white to-red-50/80 p-3.5 shadow-xs">
                     <div className="flex items-start gap-3">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#f12131] text-white shadow-xs">
                         <FileText className="h-5 w-5" />
@@ -595,7 +613,7 @@ export default function KpnChatbot() {
 
                 {/* Interactive Landmark Proximity Card */}
                 {msg.action?.type === 'LANDMARK_SEARCH' && msg.action.landmarkDetails && (
-                  <div className="mt-2.5 w-full rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50/90 via-white to-indigo-50/80 p-3.5 shadow-xs">
+                  <div className="order-2 mt-2.5 w-full rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50/90 via-white to-indigo-50/80 p-3.5 shadow-xs">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 text-white">
                         <MapPin className="h-4 w-4" />
@@ -633,7 +651,7 @@ export default function KpnChatbot() {
 
                 {/* Zero-Result Budget Alert */}
                 {msg.action?.type === 'NOT_FOUND_SUGGEST' && (
-                  <div className="mt-2 w-full flex items-start gap-2 rounded-xl border border-amber-200/90 bg-amber-50/80 p-2.5 text-[11px] text-amber-900 shadow-2xs">
+                  <div className="order-2 mt-2 w-full flex items-start gap-2 rounded-xl border border-amber-200/90 bg-amber-50/80 p-2.5 text-[11px] text-amber-900 shadow-2xs">
                     <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
                     <div className="leading-snug">
                       <strong className="font-bold">Budget Advisory:</strong> Our closest available apartment and high-value approved plots are shown below.
@@ -643,7 +661,7 @@ export default function KpnChatbot() {
 
                 {/* Dynamic Contextual Quick Action Chips */}
                 {msg.quickChips && msg.quickChips.length > 0 && (
-                  <div className="mt-2 w-full">
+                  <div className="order-3 mt-2 w-full">
                     <div className="flex flex-wrap gap-1.5">
                       {msg.quickChips.map((chip, cIdx) => (
                         <button
@@ -660,7 +678,7 @@ export default function KpnChatbot() {
 
                 {/* Recommended Property Cards Grid */}
                 {msg.recommendedProjects && msg.recommendedProjects.length > 0 && (
-                  <div className="mt-2.5 w-full space-y-2">
+                  <div className="order-1 mt-2.5 w-full space-y-2">
                     <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
                       Recommended Properties:
                     </p>
@@ -702,7 +720,7 @@ export default function KpnChatbot() {
 
                 {/* Inline Lead Capture Form */}
                 {msg.showLeadForm && !leadSubmitted && (
-                  <div className="mt-3 w-full rounded-2xl border border-rose-200 bg-rose-50/60 p-3.5">
+                  <div className="order-4 mt-3 w-full rounded-2xl border border-rose-200 bg-rose-50/60 p-3.5">
                     <div className="flex items-center gap-2 mb-2">
                       <Calendar className="h-4 w-4 text-[#f12131]" />
                       <h4 className="text-xs font-extrabold text-slate-800">

@@ -61,6 +61,7 @@ interface ParsedCriteria {
   maxSqFtRate?: number;
   bhk?: number;
   location?: string;
+  sortBy?: 'price-asc' | 'price-desc';
 }
 
 /**
@@ -116,6 +117,17 @@ export function parsePropertyCriteria(userMessage: string): ParsedCriteria {
   let minBudgetLakhs: number | undefined = undefined;
   let maxSqFtRate: number | undefined = undefined;
 
+  let sortBy: 'price-asc' | 'price-desc' | undefined;
+  if (
+    /\b(low\s*to\s*high|lowest\s*to\s*highest|cheapest|cheapest\s*first|most affordable|lowest price|ascending|asc)\b/.test(text)
+  ) {
+    sortBy = 'price-asc';
+  } else if (
+    /\b(high\s*to\s*low|highest\s*to\s*lowest|most expensive|highest price|costliest\s*first|descending|desc)\b/.test(text)
+  ) {
+    sortBy = 'price-desc';
+  }
+
   // Check sqft rate e.g. "under 2000 sqft", "below 1500 per sqft"
   const sqftMatch = text.match(/(?:under|below|less than|upto|within)\s*([0-9,]+)\s*(?:\/|\s*per\s*)?sq\.?ft/);
   if (sqftMatch) {
@@ -134,15 +146,24 @@ export function parsePropertyCriteria(userMessage: string): ParsedCriteria {
     }
   }
 
-  // Check "between 20 and 40 lakhs"
-  const betweenMatch = text.match(/between\s*([0-9.]+)\s*(?:and|to|-)\s*([0-9.]+)\s*(?:l|lakh|lakhs|lac|lacs)?/);
+  // Check "between/inbetween 20 and 40 lakhs" and "from 20L to 40L"
+  const betweenMatch = text.match(/(?:between|inbetween|from)\s*([0-9.]+)\s*(?:l|lakh|lakhs|lac|lacs)?\s*(?:and|to|-)\s*([0-9.]+)\s*(?:l|lakh|lakhs|lac|lacs)?/);
   if (betweenMatch) {
     minBudgetLakhs = parseFloat(betweenMatch[1]);
     maxBudgetLakhs = parseFloat(betweenMatch[2]);
   }
 
+  // Check minimum budget questions such as "apartments above 40L" or
+  // "plots starting from 2000 per sq.ft".
+  if (minBudgetLakhs === undefined && maxBudgetLakhs === undefined) {
+    const minimumMatch = text.match(/(?:above|over|more than|at least|starting from|from)\s*([0-9.]+)\s*(?:l|lakh|lakhs|lac|lacs)/);
+    if (minimumMatch) {
+      minBudgetLakhs = parseFloat(minimumMatch[1]);
+    }
+  }
+
   // If no under match, check standalone e.g. "12 l apartments", "12 lakhs flat"
-  if (maxBudgetLakhs === undefined) {
+  if (maxBudgetLakhs === undefined && minBudgetLakhs === undefined) {
     const directMatch = text.match(/([0-9.]+)\s*(?:l|lakh|lakhs|lac|lacs)\s*(?:apartment|apartments|flat|flats|home|bhk|budget)?/);
     if (directMatch) {
       const val = parseFloat(directMatch[1]);
@@ -169,26 +190,30 @@ export function parsePropertyCriteria(userMessage: string): ParsedCriteria {
     maxSqFtRate,
     bhk,
     location,
+    sortBy,
   };
 }
 
 /**
  * Execute real estate search and formulate structured response
  */
-export function executePropertyQuery(userMessage: string): PropertyQueryResult {
+export function executePropertyQuery(
+  userMessage: string,
+  catalog: ProjectItem[] = projectsData
+): PropertyQueryResult {
   const criteria = parsePropertyCriteria(userMessage);
 
   if (!criteria.hasFilterIntent) {
     return { isQuery: false, reply: '', matchedProjects: [] };
   }
 
-  const { type, maxBudgetLakhs, minBudgetLakhs, maxSqFtRate, bhk, location } = criteria;
+  const { type, maxBudgetLakhs, minBudgetLakhs, maxSqFtRate, bhk, location, sortBy } = criteria;
 
   // Target property category (default to Apartments if budget in Lakhs or BHK mentioned, otherwise all)
-  const targetType = type || (maxBudgetLakhs !== undefined || bhk !== undefined ? 'Apartments' : undefined);
+  const targetType = type || (maxBudgetLakhs !== undefined || minBudgetLakhs !== undefined || bhk !== undefined ? 'Apartments' : undefined);
 
   // Filter projects
-  const matched = projectsData.filter((p) => {
+  const matched = catalog.filter((p) => {
     // Category match
     if (targetType && p.type.toLowerCase() !== targetType.toLowerCase()) {
       return false;
@@ -211,9 +236,9 @@ export function executePropertyQuery(userMessage: string): PropertyQueryResult {
     }
 
     // Budget match for Apartments / Villas
-    if (maxBudgetLakhs !== undefined && (p.type === 'Apartments' || p.type === 'Villas')) {
+    if ((maxBudgetLakhs !== undefined || minBudgetLakhs !== undefined) && (p.type === 'Apartments' || p.type === 'Villas')) {
       const pLakhs = extractLakhsFromBudget(p.budget);
-      if (pLakhs !== null && pLakhs > maxBudgetLakhs) {
+      if (pLakhs !== null && maxBudgetLakhs !== undefined && pLakhs > maxBudgetLakhs) {
         return false;
       }
       if (minBudgetLakhs !== undefined && pLakhs !== null && pLakhs < minBudgetLakhs) {
@@ -232,16 +257,35 @@ export function executePropertyQuery(userMessage: string): PropertyQueryResult {
     return true;
   });
 
+  if (sortBy) {
+    matched.sort((a, b) => {
+      const aPrice = extractSqFtRate(a.budget) ?? ((extractLakhsFromBudget(a.budget) ?? Number.POSITIVE_INFINITY) * 100000);
+      const bPrice = extractSqFtRate(b.budget) ?? ((extractLakhsFromBudget(b.budget) ?? Number.POSITIVE_INFINITY) * 100000);
+      return sortBy === 'price-asc' ? aPrice - bPrice : bPrice - aPrice;
+    });
+  }
+
   // =========================================================================
   // CASE 1: MATCHES FOUND (> 0)
   // =========================================================================
   if (matched.length > 0) {
     let reply = '';
     const typeLabel = targetType || 'Properties';
-    const budgetLabel = maxBudgetLakhs ? `under ₹${maxBudgetLakhs} Lakhs` : '';
+    const budgetLabel = maxBudgetLakhs
+      ? minBudgetLakhs
+        ? `between ₹${minBudgetLakhs}L and ₹${maxBudgetLakhs}L`
+        : `under ₹${maxBudgetLakhs} Lakhs`
+      : minBudgetLakhs
+        ? `from ₹${minBudgetLakhs} Lakhs`
+        : '';
     const locLabel = location ? `in ${location.toUpperCase()}` : '';
+    const sortLabel = sortBy === 'price-asc'
+      ? 'lowest price first'
+      : sortBy === 'price-desc'
+        ? 'highest price first'
+        : '';
 
-    reply = `Here are our verified **${typeLabel}** ${budgetLabel} ${locLabel}:\n\n`;
+    reply = `Here are our verified **${typeLabel}** ${budgetLabel} ${locLabel}${sortLabel ? `, sorted ${sortLabel}` : ''}:\n\n`;
 
     matched.forEach((p) => {
       reply += `• **${p.name}** (${p.location})\n`;
