@@ -32,45 +32,31 @@ export const navigationLinks = [
 export const servicesData = [
   {
     id: '01',
-    title: 'Sales & Marketing',
-    description: 'Building a real estate development is a complicated task requiring both deep understanding of buyer outreach, strategic branding, and high-conversion sales channels.',
+    title: 'Builders',
+    description: 'We bring architectural visions to life through top-tier construction services. From residential homes to commercial complexes, our experienced team ensures every project is built with precision, high-quality materials, and a commitment to safety and timely delivery.',
     image: '/images/services/service1.jpg',
     href: '/projects',
   },
   {
     id: '02',
-    title: 'Architecture & Design',
-    description: 'We believe good architecture is a crucial foundation that influences the overall performance and long-term structural value of a real estate development.',
+    title: 'Developers',
+    description: 'Transforming raw potential into reality, we manage real estate projects from initial land acquisition and planning to final handover. Our development services focus on creating sustainable, well-planned communities and commercial spaces that deliver long-term value.',
     image: '/images/services/service2.jpg',
     href: '/projects',
   },
   {
     id: '03',
-    title: 'Construction Management',
-    description: 'From design to operations, we love to solve complex challenges and exceed expectations with modern engineering practices and industry-leading safety standards.',
+    title: 'Interiors & Infrastructures',
+    description: 'We bridge the gap between foundational strength and aesthetic appeal. Our infrastructure team builds the robust frameworks that support modern facilities, while our interior design experts craft highly functional, visually stunning indoor spaces tailored to your lifestyle or business needs.',
     image: '/images/services/service3.jpg',
     href: '/projects',
   },
   {
     id: '04',
-    title: 'Investment & Capital',
-    description: 'We are focused on improving the way capital projects get done, ensuring transparent joint ventures, capital security, and maximum investor appreciation.',
+    title: 'Import & Export',
+    description: 'Expanding our reach across borders, we facilitate the seamless global trade of premium goods and materials. Whether we are sourcing specialized, high-quality construction materials from international markets or exporting local products, our robust supply chain ensures efficiency and reliability.',
     image: '/images/services/service4.jpg',
     href: '/investors',
-  },
-  {
-    id: '05',
-    title: 'Project Management',
-    description: 'Our comprehensive estimates and rigorous project management methodologies ensure timely project delivery without compromising on quality or aesthetics.',
-    image: '/images/services/service5.jpg',
-    href: '/projects',
-  },
-  {
-    id: '06',
-    title: 'Real Estate Development',
-    description: 'We offer end-to-end real estate development solutions, crafting integrated community landmarks that deliver lasting value to homeowners and investors.',
-    image: '/images/services/service6.jpg',
-    href: '/projects',
   },
 ];
 export const featuresData = [
