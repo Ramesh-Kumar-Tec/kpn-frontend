@@ -6,7 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { MapPin, ArrowRight } from 'lucide-react';
 import { projectsData } from '@/data/siteData';
-import { getHomepageCMS } from '@/lib/cmsClient';
+import { getHomepageCMS, getProjects } from '@/lib/cmsClient';
 import RunningPillBadge from '../ui/RunningPillBadge';
 
 export default function ProjectsSection() {
@@ -17,10 +17,19 @@ export default function ProjectsSection() {
     let isMounted = true;
     async function loadFeatured() {
       try {
-        const cms = await getHomepageCMS();
-        if (isMounted && cms?.featuredProjectIds && cms.featuredProjectIds.length > 0) {
-          const list = cms.featuredProjectIds
-            .filter(Boolean)
+        const [cms, allProjects] = await Promise.all([
+          getHomepageCMS().catch(() => null),
+          getProjects().catch(() => []),
+        ]);
+
+        if (!isMounted) return;
+
+        let list: any[] = [];
+
+        // 1. If CMS has featured projects, filter valid ones (not deleted/null)
+        if (cms?.featuredProjectIds && Array.isArray(cms.featuredProjectIds)) {
+          list = cms.featuredProjectIds
+            .filter((p: any) => p && (p.name || p.slug || p._id))
             .map((p: any) => ({
               id: p._id || p.id || p.slug,
               name: p.name,
@@ -33,12 +42,48 @@ export default function ProjectsSection() {
               image: p.image || '/images/projects/project_1.jpg',
               address: p.address,
             }));
-          if (list.length > 0) {
-            setFeaturedProjects(list);
+        }
+
+        // 2. If list has fewer than 4 projects (e.g. one was deleted), auto-backfill from live active projects!
+        if (list.length < 4 && Array.isArray(allProjects) && allProjects.length > 0) {
+          const existingSlugs = new Set(list.map((item) => item.slug).filter(Boolean));
+          for (const proj of allProjects) {
+            if (list.length >= 4) break;
+            if (proj && proj.slug && !existingSlugs.has(proj.slug)) {
+              list.push({
+                id: (proj as any).id || (proj as any)._id || proj.slug,
+                name: proj.name,
+                slug: proj.slug,
+                location: proj.location,
+                bhk: proj.bhk,
+                type: (proj as any).propertyType || proj.type || 'Apartments',
+                status: proj.status || 'Ongoing',
+                budget: proj.budget,
+                image: proj.image || '/images/projects/project_1.jpg',
+                address: proj.address,
+              });
+              existingSlugs.add(proj.slug);
+            }
           }
         }
+
+        // 3. Fallback to static projectsData if still less than 4
+        if (list.length < 4) {
+          const existingSlugs = new Set(list.map((item) => item.slug).filter(Boolean));
+          for (const proj of projectsData) {
+            if (list.length >= 4) break;
+            if (proj && proj.slug && !existingSlugs.has(proj.slug)) {
+              list.push(proj);
+              existingSlugs.add(proj.slug);
+            }
+          }
+        }
+
+        if (list.length > 0) {
+          setFeaturedProjects(list.slice(0, 4));
+        }
       } catch (err) {
-        console.warn('Using fallback featured projects');
+        console.warn('Using fallback featured projects', err);
       }
     }
     loadFeatured();
@@ -54,21 +99,18 @@ export default function ProjectsSection() {
   });
 
   // Slowed-down phase transitions with deliberate delay (hold time) on each card before peeling
-  // Phase 1: Card 1 holds in place from 0 -> 0.16 (delay), then slowly peels up to -100% by 0.333
   const y1 = useTransform(
     scrollYProgress,
     [0, 0.16, 0.333, 1],
     ['0%', '0%', '-100%', '-100%']
   );
 
-  // Phase 2: Card 2 holds in place from 0.333 -> 0.493 (delay), then slowly peels up to -100% by 0.666
   const y2 = useTransform(
     scrollYProgress,
     [0, 0.333, 0.493, 0.666, 1],
     ['0%', '0%', '0%', '-100%', '-100%']
   );
 
-  // Phase 3: Card 3 holds in place from 0.666 -> 0.826 (delay), then slowly peels up to -100% by 1.000
   const y3 = useTransform(
     scrollYProgress,
     [0, 0.666, 0.826, 1],
@@ -88,12 +130,13 @@ export default function ProjectsSection() {
       {/* Sticky Screen Viewport (100vh) */}
       <div className="sticky top-0 h-screen w-full overflow-hidden bg-black">
         {featuredProjects.map((project, index) => {
-          const y = yTransforms[index];
-          const zIndex = zIndices[index];
+          const isLast = index === featuredProjects.length - 1;
+          const y = isLast ? null : (yTransforms[index] ?? null);
+          const zIndex = zIndices[index] ?? Math.max(10, (featuredProjects.length - index) * 10);
 
           return (
             <motion.div
-              key={project.id || index}
+              key={project.id || project.slug || index}
               style={y ? { y, zIndex } : { zIndex }}
               className="absolute inset-0 h-full w-full bg-black overflow-hidden shadow-2xl border-t border-neutral-900/60"
             >

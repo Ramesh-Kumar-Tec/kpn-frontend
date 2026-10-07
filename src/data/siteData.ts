@@ -874,12 +874,12 @@ export const teamData = [
   {
     name: 'Mr. V.Kanniyappan',
     role: 'Founder & Managing Director',
-    image: '/team/kanniyapan.jpg',
+    image: '/team/sir1.jpeg',
   },
   {
     name: 'Ms.Krishma',
     role: 'Chief Executive Officer',
-    image: '/team/krishma.jpg',
+    image: '/team/madam.jpeg',
   },
   {
     name: 'Mr.Amarnath',
