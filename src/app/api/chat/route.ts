@@ -1,18 +1,19 @@
 import { NextResponse } from 'next/server';
-import { KPN_SYSTEM_PROMPT, generateLocalBotResponse } from '@/data/chatbotKnowledge';
-import { projectsData, ProjectItem } from '@/data/siteData';
+import { generateLocalBotResponse } from '@/data/chatbotKnowledge';
+import { ProjectItem } from '@/data/siteData';
 import { resolveNavigationIntent } from '@/lib/chatbot/navigationResolver';
 import { executePropertyQuery } from '@/lib/chatbot/propertyQueryEngine';
+import { executeBlogQuery } from '@/lib/chatbot/blogQueryEngine';
 import { resolveEmiIntent } from '@/lib/chatbot/emiCalculator';
 import { resolveBrochureIntent } from '@/lib/chatbot/brochureResolver';
 import { resolveLandmarkIntent } from '@/lib/chatbot/landmarkResolver';
+import { getLiveKnowledge, buildDynamicSystemPrompt } from '@/lib/chatbot/liveKnowledgeService';
 
 const MAX_MESSAGE_LENGTH = 500;
 const MAX_HISTORY_ITEMS = 12;
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX_REQUESTS = 30;
 const requestLog = new Map<string, { startedAt: number; count: number }>();
-const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api').replace(/\/$/, '');
 
 function getClientKey(req: Request) {
   return req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'anonymous';
@@ -29,36 +30,6 @@ function isRateLimited(key: string) {
 
   current.count += 1;
   return current.count > RATE_LIMIT_MAX_REQUESTS;
-}
-
-async function getPublishedCatalog(): Promise<ProjectItem[]> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/projects?limit=100`, {
-      signal: AbortSignal.timeout(2500),
-      cache: 'no-store',
-    });
-
-    if (!response.ok) return projectsData;
-
-    const payload = await response.json();
-    if (!Array.isArray(payload?.data) || payload.data.length === 0) return projectsData;
-
-    const fallbackBySlug = new Map(projectsData.map((project) => [project.slug, project]));
-    return payload.data.map((remote: any) => {
-      const fallback = fallbackBySlug.get(remote.slug);
-      return {
-        ...fallback,
-        ...remote,
-        type: remote.propertyType || remote.type || fallback?.type || 'Apartments',
-        status: remote.status || fallback?.status || 'Ongoing',
-        image: remote.image || fallback?.image || '/images/kpn_logo.webp',
-        description: remote.shortDescription || remote.description || fallback?.description,
-      } as ProjectItem;
-    });
-  } catch (error) {
-    console.warn('[Chatbot] Live project catalog unavailable; using fallback catalog:', error);
-    return projectsData;
-  }
 }
 
 export async function POST(req: Request) {
@@ -82,6 +53,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ reply: 'Please type a question about our projects.' }, { status: 400 });
     }
     const lower = latestText.toLowerCase();
+
+    // 1. Fetch live knowledge from backend (Projects, Blogs, CMS)
+    const { catalog: liveCatalog, blogs: liveBlogs, cms: liveCms } = await getLiveKnowledge();
+
     const conversationHistory = messages
       .slice(-MAX_HISTORY_ITEMS)
       .filter((message: any) =>
@@ -94,12 +69,11 @@ export async function POST(req: Request) {
         text: message.content.slice(0, MAX_MESSAGE_LENGTH),
       }));
 
-    // The client includes the latest user message in `messages`; avoid sending it twice.
     if (conversationHistory.at(-1)?.role === 'user' && conversationHistory.at(-1)?.text === latestText) {
       conversationHistory.pop();
     }
 
-    // 1. Instant Natural Greetings (Instant reply in <5ms)
+    // 2. Instant Natural Greetings
     const cleanGreeting = lower.replace(/[!?.,]/g, '').trim();
     const commonGreetings = [
       'hi', 'hello', 'hey', 'hii', 'hiii', 'helo', 'hello there', 'hi there',
@@ -108,18 +82,18 @@ export async function POST(req: Request) {
 
     if (commonGreetings.includes(cleanGreeting)) {
       return NextResponse.json({
-        reply: `Hello! 👋 Welcome to **KPN Promoters**.\n\nI am your AI Real Estate Assistant. How can I help you today? You can ask me to **open pages**, search **apartments or plots by budget**, **calculate loan EMI**, **download brochures**, or **book a free site visit**!`,
+        reply: `Hello! 👋 Welcome to **KPN Promoters**.\n\nI am your AI Real Estate Assistant. How can I help you today? You can ask me to **search active apartments or plots by budget**, **calculate loan EMI**, **check live unit availability**, **download brochures**, or **book a free site visit**!`,
         quickChips: [
+          { label: '🏡 Available Plots', query: 'how many units available in plots' },
+          { label: '🏢 Available Apartments', query: 'how many units available in apartments' },
           { label: '💰 Check Loan EMI', query: 'What is the EMI for 25 Lakhs loan?' },
-          { label: '📄 Download Brochures', query: 'download brochure for Monica Residency' },
-          { label: '📍 Near Kilambakkam', query: 'Which projects are near Kilambakkam Bus Terminus?' },
-          { label: '🏢 Homes Under 35L', query: 'Show me apartments under 35 Lakhs' },
-          { label: '🏡 Approved Plots (< 15L)', query: 'What approved plots are available under 15 Lakhs?' },
+          { label: '📰 Investment Guides', query: 'show me your latest articles and guides' },
+          { label: '📄 Download Brochures', query: 'download brochure' },
         ],
       });
     }
 
-    // 2. Direct High-Precision Intercept for Cab / Taxi inquiries
+    // 3. Direct High-Precision Intercept for Cab / Taxi inquiries
     if (
       lower.includes('cab') ||
       lower.includes('taxi') ||
@@ -128,7 +102,7 @@ export async function POST(req: Request) {
       lower.includes('transport') ||
       lower.includes('car facility')
     ) {
-      const local = generateLocalBotResponse(latestText);
+      const local = generateLocalBotResponse(latestText, liveCatalog, liveBlogs, liveCms);
       return NextResponse.json({
         ...local,
         quickChips: [
@@ -139,8 +113,8 @@ export async function POST(req: Request) {
       });
     }
 
-    // 3. Navigation Intent Resolver (Instant execution: "open projects page", "go to contact page", etc.)
-    const navMatch = resolveNavigationIntent(latestText);
+    // 4. Navigation Intent Resolver ("open projects page", "go to contact page", etc.)
+    const navMatch = resolveNavigationIntent(latestText, liveCatalog);
     if (navMatch.matched) {
       return NextResponse.json({
         reply: navMatch.reply,
@@ -149,9 +123,7 @@ export async function POST(req: Request) {
       });
     }
 
-    // Contact intent must be handled before the generic knowledge fallback.
-    // Phrases such as "how can I connect" are high-value sales questions,
-    // not property searches.
+    // 5. Contact Intent Resolver
     const isContactQuery =
       /\b(connect|contact|reach|call|speak|talk|phone|whatsapp|advisor|agent|office)\b/.test(lower) &&
       !/\b(connectivity|connected road|road connection)\b/.test(lower);
@@ -160,10 +132,10 @@ export async function POST(req: Request) {
       return NextResponse.json({
         reply:
           'You can connect with our KPN property advisor in any of these ways:\n\n' +
-          '• **Call**: +91 8925924128\n' +
-          '• **WhatsApp**: +91 8925924128\n' +
-          '• **Alternate number**: +91 7338834233\n' +
-          '• **Office**: No. 48, Karanai Puducherry Road, Urapakkam, Chennai - 603210\n\n' +
+          `• **Call**: ${liveCms.phonePrimary}\n` +
+          `• **WhatsApp**: ${liveCms.whatsapp}\n` +
+          `• **Alternate number**: ${liveCms.phoneSecondary}\n` +
+          `• **Office**: ${liveCms.address}\n\n` +
           'You can also request a free guided site visit, and our team will contact you shortly.',
         action: {
           type: 'NAVIGATE',
@@ -178,46 +150,9 @@ export async function POST(req: Request) {
       });
     }
 
-    // 4. Brochure Downloader Intent Resolver ("download brochure", "monica residency brochure", etc.)
-    const brochureMatch = resolveBrochureIntent(latestText);
-    if (brochureMatch.isBrochureQuery) {
-      return NextResponse.json({
-        reply: brochureMatch.reply,
-        action: brochureMatch.action,
-        quickChips: brochureMatch.quickChips,
-        showLeadForm: brochureMatch.showLeadForm,
-      });
-    }
-
-    // 5. In-Chat Loan & EMI Calculator ("What is the EMI for 25 Lakhs", etc.)
-    const emiMatch = resolveEmiIntent(latestText);
-    if (emiMatch.isEmiQuery) {
-      return NextResponse.json({
-        reply: emiMatch.reply,
-        action: emiMatch.action,
-        quickChips: emiMatch.quickChips,
-        showLeadForm: emiMatch.showLeadForm,
-      });
-    }
-
-    // 6. Landmark & Transit Proximity Search ("near Kilambakkam", "near Guduvanchery station", etc.)
-    const landmarkMatch = resolveLandmarkIntent(latestText);
-    if (landmarkMatch.isLandmarkQuery) {
-      return NextResponse.json({
-        reply: landmarkMatch.reply,
-        action: landmarkMatch.action,
-        quickChips: landmarkMatch.quickChips,
-        showLeadForm: landmarkMatch.showLeadForm,
-      });
-    }
-
-    // 7. Intelligent Property Query & Budget Filter Engine
-    // Handles queries like: "show under 12 L apartments", "apartments under 35l", "plots under 2000/sqft"
-    const liveCatalog = await getPublishedCatalog();
-
-    // Availability questions need a count, not a catalogue dump.
+    // 6. Live Unit Inventory & Availability Queries (e.g. "how many units available in plots", "units in flats")
     const asksAvailability =
-      /\b(how many|how much|available|availability|vacant|remaining|left)\b/.test(lower) &&
+      /\b(how many|how much|available|availability|vacant|remaining|left|stock|count)\b/.test(lower) &&
       /\b(plot|plots|land|apartment|apartments|flat|flats|villa|villas|unit|units|project|projects)\b/.test(lower);
 
     if (asksAvailability) {
@@ -236,7 +171,8 @@ export async function POST(req: Request) {
         return lower.includes(projectName) || lower.includes(projectSlug);
       });
       const projects = matchedProject ? [matchedProject] : typedProjects;
-      const availableUnits = projects.reduce((total, project) => {
+
+      const totalUnits = projects.reduce((total, project) => {
         if (typeof project.availableUnits === 'number') return total + project.availableUnits;
         if (Array.isArray(project.plots)) {
           return total + project.plots.filter((plot: any) => !plot.status || plot.status === 'available').length;
@@ -244,28 +180,63 @@ export async function POST(req: Request) {
         return total;
       }, 0);
 
-      const label = requestedType ? requestedType.toLowerCase() : 'properties';
-      const availabilityLabel = matchedProject ? `in **${matchedProject.name}**` : `across **${projects.length} published projects**`;
+      const isPlotType = requestedType === 'Plots';
+      const isAptType = requestedType === 'Apartments';
+      const itemLabel = isPlotType ? 'plots' : isAptType ? 'apartments' : 'units';
+      let reply = '';
+
+      if (projects.length > 0) {
+        if (matchedProject) {
+          const pAvail = typeof matchedProject.availableUnits === 'number'
+            ? matchedProject.availableUnits
+            : Array.isArray(matchedProject.plots)
+              ? matchedProject.plots.filter((plot: any) => !plot.status || plot.status === 'available').length
+              : 0;
+
+          reply = `In **${matchedProject.name}** (${matchedProject.location}), there are currently **${pAvail} ${itemLabel} available** in our live inventory.\n\n` +
+            `• **Property Type**: ${matchedProject.type}\n` +
+            `• **Price / Rate**: ${matchedProject.budget}\n` +
+            `• **Status**: ${matchedProject.status}\n\n` +
+            `Would you like to reserve a plot/unit or schedule a **free guided site visit**?`;
+        } else {
+          reply = `Overall, we currently have **${totalUnits > 0 ? `${totalUnits} ` : ''}available ${itemLabel}** across **${projects.length} active ${requestedType || 'properties'}** in our live database:\n\n`;
+          projects.slice(0, 6).forEach((p) => {
+            let countStr = '';
+            if (typeof p.availableUnits === 'number') {
+              countStr = isPlotType ? `**${p.availableUnits} plots available**` : `**${p.availableUnits} units available**`;
+            } else if (Array.isArray(p.plots)) {
+              const avail = p.plots.filter((plot: any) => !plot.status || plot.status === 'available').length;
+              countStr = `**${avail} plots available**`;
+            } else {
+              countStr = `**Available** (${p.status})`;
+            }
+            reply += `• **${p.name}** (${p.location}) — ${countStr} • ${p.budget}\n`;
+          });
+          reply += `\nWould you like to explore layout maps or schedule a **free guided site visit** for any of these?`;
+        }
+      } else {
+        reply = `We currently don't have active ${itemLabel} in this category in our database. Please contact our advisor at **${liveCms.phonePrimary}** to check new upcoming launches!`;
+      }
+
       return NextResponse.json({
-        reply:
-          availableUnits > 0
-            ? `We currently have approximately **${availableUnits} available ${label} units** ${availabilityLabel}. Availability can change quickly, so please contact our advisor to confirm a specific unit or plot number.`
-            : `I couldn't confirm live availability for ${label} right now. Please contact our advisor and we will check the latest inventory for you.`,
+        reply,
         action: {
           type: 'NAVIGATE',
-          url: '/contact-us',
-          pageTitle: 'Confirm Live Availability',
-          description: 'Our advisor can confirm the latest available units and plot numbers.',
+          url: '/projects',
+          pageTitle: 'View Live Inventory',
+          description: 'Browse all available units and layouts.',
         },
         recommendedProjects: projects.slice(0, 3),
-        showLeadForm: availableUnits === 0,
+        showLeadForm: true,
         quickChips: [
           { label: '📅 Book Site Visit', query: 'I want to book a free site visit' },
           { label: '📞 Speak with Advisor', query: 'how can I connect with you' },
+          { label: '💰 Check Loan EMI', query: 'What is the EMI for 25 Lakhs loan?' },
         ],
       });
     }
 
+    // 7. Intelligent Property Search & Budget Filter Engine
     const propQuery = executePropertyQuery(latestText, liveCatalog);
     if (propQuery.isQuery) {
       return NextResponse.json({
@@ -277,13 +248,58 @@ export async function POST(req: Request) {
       });
     }
 
-    // 5. If Gemini API Key is configured, call Google Gemini with system_instruction
+    // 8. Brochure Downloader Intent Resolver
+    const brochureMatch = resolveBrochureIntent(latestText, liveCatalog);
+    if (brochureMatch.isBrochureQuery) {
+      return NextResponse.json({
+        reply: brochureMatch.reply,
+        action: brochureMatch.action,
+        quickChips: brochureMatch.quickChips,
+        showLeadForm: brochureMatch.showLeadForm,
+      });
+    }
+
+    // 9. In-Chat Loan & EMI Calculator
+    const emiMatch = resolveEmiIntent(latestText);
+    if (emiMatch.isEmiQuery) {
+      return NextResponse.json({
+        reply: emiMatch.reply,
+        action: emiMatch.action,
+        quickChips: emiMatch.quickChips,
+        showLeadForm: emiMatch.showLeadForm,
+      });
+    }
+
+    // 10. Landmark & Transit Proximity Search
+    const landmarkMatch = resolveLandmarkIntent(latestText, liveCatalog);
+    if (landmarkMatch.isLandmarkQuery) {
+      return NextResponse.json({
+        reply: landmarkMatch.reply,
+        action: landmarkMatch.action,
+        quickChips: landmarkMatch.quickChips,
+        showLeadForm: landmarkMatch.showLeadForm,
+      });
+    }
+
+    // 11. Live Blogs & Editorial Guides Resolver (Explicit Blog Queries Only)
+    const blogMatch = executeBlogQuery(latestText, liveBlogs);
+    if (blogMatch.isBlogQuery) {
+      return NextResponse.json({
+        reply: blogMatch.reply,
+        action: blogMatch.action,
+        recommendedBlogs: blogMatch.matchedBlogs,
+        quickChips: blogMatch.quickChips,
+      });
+    }
+
+    // 12. Google Gemini AI with Live Dynamic System Prompt (Live RAG)
     const apiKey = process.env.GEMINI_API_KEY || '';
     if (apiKey && apiKey.trim() !== '') {
       try {
+        const dynamicSystemPrompt = buildDynamicSystemPrompt(liveCatalog, liveBlogs, liveCms);
         const payload = {
           system_instruction: {
-            parts: [{ text: KPN_SYSTEM_PROMPT }],
+            parts: [{ text: dynamicSystemPrompt }],
           },
           contents: [
             ...conversationHistory.map((message) => ({
@@ -349,36 +365,43 @@ export async function POST(req: Request) {
         }
 
         if (geminiReply) {
-          let recs: typeof projectsData = [];
+          let recs: ProjectItem[] = [];
           if (lower.includes('apartment') || lower.includes('flat') || lower.includes('bhk')) {
-            recs = projectsData.filter((p) => p.type === 'Apartments').slice(0, 3);
+            recs = liveCatalog.filter((p) => p.type === 'Apartments').slice(0, 3);
           } else if (lower.includes('plot') || lower.includes('land')) {
-            recs = projectsData.filter((p) => p.type === 'Plots').slice(0, 3);
+            recs = liveCatalog.filter((p) => p.type === 'Plots').slice(0, 3);
+          }
+
+          let matchedBlogCards: typeof liveBlogs = [];
+          if (lower.includes('blog') || lower.includes('article') || lower.includes('guide') || lower.includes('dtcp') || lower.includes('invest')) {
+            matchedBlogCards = liveBlogs.slice(0, 2);
           }
 
           return NextResponse.json({
             reply: geminiReply,
             recommendedProjects: recs.length > 0 ? recs : undefined,
+            recommendedBlogs: matchedBlogCards.length > 0 ? matchedBlogCards : undefined,
             showLeadForm: lower.includes('price') || lower.includes('book') || lower.includes('visit') || lower.includes('contact'),
             quickChips: [
               { label: '🏢 View All Projects', query: 'open projects page' },
+              { label: '📰 View Real Estate Guides', query: 'show me your latest articles and guides' },
               { label: '📅 Book Free Site Visit', query: 'I want to book a free site visit' },
               { label: '📞 Talk to Advisor', query: 'open contact page' },
             ],
           });
         }
       } catch (geminiError) {
-        console.warn('[Chatbot] Gemini API error, using smart fallback:', geminiError);
+        console.warn('[Chatbot] Gemini API error, using dynamic fallback:', geminiError);
       }
     }
 
-    // 6. High-speed smart knowledge engine fallback (Zero API cost)
-    const localResult = generateLocalBotResponse(latestText);
+    // 13. Dynamic Knowledge Engine Fallback (Zero API Cost, 100% live database driven)
+    const localResult = generateLocalBotResponse(latestText, liveCatalog, liveBlogs, liveCms);
     return NextResponse.json({
       ...localResult,
       quickChips: [
         { label: '🏢 View All Projects', query: 'open projects page' },
-        { label: '🏡 Explore Plots', query: 'What DTCP and RERA approved plots do you have available?' },
+        { label: '📰 Real Estate Guides', query: 'show me your latest articles and guides' },
         { label: '📅 Book Site Visit', query: 'I want to book a free site visit' },
         { label: '📞 Contact Us', query: 'open contact page' },
       ],

@@ -25,6 +25,7 @@ import {
   Download,
   Mic,
   MicOff,
+  BookOpen,
 } from 'lucide-react';
 import { ChatMessage } from '@/data/chatbotKnowledge';
 import { ProjectItem } from '@/data/siteData';
@@ -50,6 +51,7 @@ export default function KpnChatbot() {
   const [leadErrors, setLeadErrors] = useState<{ name?: string; phone?: string }>({});
   const [leadSubmitted, setLeadSubmitted] = useState(false);
   const [isSubmittingLead, setIsSubmittingLead] = useState(false);
+  const [activeProjectContext, setActiveProjectContext] = useState<string>('');
 
   // Setup browser Web Speech Recognition
   useEffect(() => {
@@ -102,11 +104,11 @@ export default function KpnChatbot() {
     id: 'welcome-1',
     role: 'assistant',
     content:
-      'Hello! 👋 I am your **KPN AI Real Estate Assistant**.\n\nLooking for apartments, villas, or DTCP/RERA approved plots in Chennai? You can ask me to:\n• "Open projects page"\n• "Show apartments under 35L" or "under 12L"\n• "What is the EMI for 25 Lakhs loan?"\n• "Download brochure for Monica Residency"\n• "Which projects are near Kilambakkam?"',
+      'Hello! 👋 Welcome to **KPN Promoters**.\n\nLooking for apartments, villas, or DTCP/RERA approved plots in Chennai? You can ask me to search active properties by budget, calculate home loan EMI, download brochures, or read our investment guides!',
     timestamp: 'Just now',
     quickChips: [
       { label: '💰 Check Loan EMI', query: 'What is the EMI for 25 Lakhs loan?' },
-      { label: '📄 Download Brochures', query: 'download brochure for Monica Residency' },
+      { label: '📰 Investment Guides', query: 'show me your latest articles and guides' },
       { label: '📍 Near Kilambakkam', query: 'Which projects are near Kilambakkam Bus Terminus?' },
       { label: '🏢 Homes Under 35L', query: 'Show me apartments under 35 Lakhs' },
       { label: '🏡 Approved Plots (< 15L)', query: 'What approved plots are available under 15 Lakhs?' },
@@ -181,12 +183,19 @@ export default function KpnChatbot() {
         content: botReply,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         recommendedProjects: data.recommendedProjects,
+        recommendedBlogs: data.recommendedBlogs,
         showLeadForm: data.showLeadForm,
         action: data.action,
         quickChips: data.quickChips,
       };
 
       setMessages((prev) => [...prev, botMsg]);
+
+      if (data.recommendedProjects && data.recommendedProjects.length > 0) {
+        setActiveProjectContext(data.recommendedProjects[0].name);
+      } else if (data.action?.brochureDetails?.projectName) {
+        setActiveProjectContext(data.action.brochureDetails.projectName);
+      }
     } catch (err) {
       const fallbackMsg: ChatMessage = {
         id: `bot-fallback-${Date.now()}`,
@@ -718,6 +727,49 @@ export default function KpnChatbot() {
                   </div>
                 )}
 
+                {/* Recommended Blog / Article Cards Grid */}
+                {msg.recommendedBlogs && msg.recommendedBlogs.length > 0 && (
+                  <div className="order-1 mt-2.5 w-full space-y-2">
+                    <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                      Helpful Articles & Guides:
+                    </p>
+                    <div className="grid grid-cols-1 gap-2">
+                      {msg.recommendedBlogs.map((b) => (
+                        <div
+                          key={b.id}
+                          className="flex items-center gap-3 overflow-hidden rounded-xl border border-slate-200 bg-white p-2 shadow-xs transition hover:border-[#29247c]"
+                        >
+                          <img
+                            src={b.image || '/images/kpn_logo.webp'}
+                            alt={b.title}
+                            className="h-14 w-16 shrink-0 rounded-lg object-cover"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <span className="inline-block rounded-xs bg-indigo-50 px-1.5 py-0.2 text-[9px] font-extrabold text-[#29247c]">
+                              {b.category}
+                            </span>
+                            <h4 className="truncate text-xs font-bold text-slate-800 mt-0.5">
+                              {b.title}
+                            </h4>
+                            {b.shortDescription && (
+                              <p className="text-[10px] text-slate-500 line-clamp-1">
+                                {b.shortDescription}
+                              </p>
+                            )}
+                          </div>
+                          <Link
+                            href={`/blogs/${b.slug}`}
+                            onClick={() => setIsOpen(false)}
+                            className="shrink-0 flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-slate-700 hover:bg-[#29247c] hover:text-white transition"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </Link>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Inline Lead Capture Form */}
                 {msg.showLeadForm && !leadSubmitted && (
                   <div className="order-4 mt-3 w-full rounded-2xl border border-rose-200 bg-rose-50/60 p-3.5">
@@ -828,7 +880,11 @@ export default function KpnChatbot() {
               Need immediate assistance?
             </span>
             <a
-              href="https://api.whatsapp.com/send?phone=918925924128&text=Hi%2C%20I%20am%20chatting%20from%20www.kpnpromoters.in%20website"
+              href={`https://api.whatsapp.com/send?phone=918925924128&text=${encodeURIComponent(
+                activeProjectContext
+                  ? `Hi, I am chatting from www.kpnpromoters.in and I am interested in ${activeProjectContext}. Please share more details.`
+                  : 'Hi, I am chatting from www.kpnpromoters.in website regarding property details.'
+              )}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 hover:text-emerald-700"

@@ -1,5 +1,5 @@
 import { BotAction, QuickChip } from './types';
-import { projectsData } from '@/data/siteData';
+import { ProjectItem } from '@/data/siteData';
 
 interface NavigationMatch {
   matched: boolean;
@@ -128,9 +128,13 @@ const SITE_ROUTES: RouteDefinition[] = [
 ];
 
 /**
- * Checks if the user message indicates a navigation intent (e.g. "open projects page", "go to contact", etc.)
+ * 100% Pure Dynamic Navigation Intent Resolver
+ * Checks live catalog projects and site pages.
  */
-export function resolveNavigationIntent(message: string): NavigationMatch {
+export function resolveNavigationIntent(
+  message: string,
+  catalog: ProjectItem[] = []
+): NavigationMatch {
   const clean = message.toLowerCase().trim();
 
   // Navigation action indicator words
@@ -141,8 +145,8 @@ export function resolveNavigationIntent(message: string): NavigationMatch {
 
   const hasNavVerb = navTriggers.some((t) => clean.includes(t));
 
-  // 1. Check for specific project direct navigation (e.g., "open lenid", "go to monica residency")
-  for (const proj of projectsData) {
+  // 1. Check for specific project direct navigation dynamically against live catalog
+  for (const proj of catalog) {
     const slugName = proj.name.toLowerCase();
     const shortName = proj.slug.toLowerCase().replace(/-/g, ' ');
 
@@ -171,9 +175,7 @@ export function resolveNavigationIntent(message: string): NavigationMatch {
 
   // 2. Check for site route matches
   for (const route of SITE_ROUTES) {
-    // Direct match if query contains nav verb + keyword, OR explicit "... page" pattern
     const isKeywordMatch = route.keywords.some((kw) => {
-      // If message says "open <keyword>" or "<keyword> page"
       if (clean.includes(kw) && (hasNavVerb || clean.includes('page') || clean === kw)) {
         return true;
       }

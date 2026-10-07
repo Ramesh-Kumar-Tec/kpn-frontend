@@ -1,4 +1,5 @@
 import { ProjectItem } from '@/data/siteData';
+import { LiveBlogItem } from './liveKnowledgeService';
 
 export type BotActionType =
   | 'NAVIGATE'
@@ -8,7 +9,8 @@ export type BotActionType =
   | 'CALCULATE_EMI'
   | 'CALL_ADVISOR'
   | 'DOWNLOAD_BROCHURE'
-  | 'LANDMARK_SEARCH';
+  | 'LANDMARK_SEARCH'
+  | 'VIEW_BLOG';
 
 export interface EmiDetails {
   loanAmountLakhs: number;
@@ -69,7 +71,9 @@ export interface ExtendedChatMessage {
   content: string;
   timestamp: string;
   recommendedProjects?: ProjectItem[];
+  recommendedBlogs?: LiveBlogItem[];
   showLeadForm?: boolean;
   action?: BotAction;
   quickChips?: QuickChip[];
 }
+
