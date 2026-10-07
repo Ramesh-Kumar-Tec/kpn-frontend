@@ -32,6 +32,44 @@ function isRateLimited(key: string) {
   return current.count > RATE_LIMIT_MAX_REQUESTS;
 }
 
+/**
+ * Detects if a user is asking about a specific named project (e.g. "kpn lenid", "monica residency", etc.)
+ */
+function detectSpecificProjectQuery(userMessage: string, catalog: ProjectItem[]) {
+  const clean = userMessage
+    .toLowerCase()
+    .replace(/[!?.,:;'"()]/g, ' ')
+    .trim();
+
+  // 1. Check if matches any active project in live catalog
+  for (const p of catalog) {
+    const pName = p.name.toLowerCase();
+    const pSlug = p.slug.toLowerCase().replace(/-/g, ' ');
+    if (clean.includes(pName) || clean.includes(pSlug)) {
+      return { isSpecificProject: true, isFound: true, project: p, requestedName: p.name };
+    }
+    const words = pName.split(/\s+/).filter((w) => w.length > 3 && !['kpn', 'promoters', 'residency', 'township', 'nagar', 'enclave', 'avenue', 'skyline', 'gardens'].includes(w));
+    if (words.some((w) => clean.split(/\s+/).includes(w))) {
+      return { isSpecificProject: true, isFound: true, project: p, requestedName: p.name };
+    }
+  }
+
+  // 2. Check if user asked about a specific project pattern that is NOT in active catalog (e.g. "kpn lenid", "lenid", etc.)
+  const kpnNamedMatch = clean.match(/\bkpn\s+([a-z0-9]+)\b/);
+  if (kpnNamedMatch && !['promoters', 'project', 'projects', 'apartment', 'apartments', 'flat', 'flats', 'plot', 'plots', 'villa', 'villas', 'office', 'assistant'].includes(kpnNamedMatch[1])) {
+    const requestedName = `KPN ${kpnNamedMatch[1].charAt(0).toUpperCase() + kpnNamedMatch[1].slice(1)}`;
+    return { isSpecificProject: true, isFound: false, requestedName };
+  }
+
+  const singleNameMatch = clean.match(/\b(lenid|monika|serenity|vijayalakshmi|omega|kanagam|thulir|bhavai|ranga)\b/);
+  if (singleNameMatch) {
+    const requestedName = singleNameMatch[1].charAt(0).toUpperCase() + singleNameMatch[1].slice(1);
+    return { isSpecificProject: true, isFound: false, requestedName };
+  }
+
+  return { isSpecificProject: false, isFound: false };
+}
+
 export async function POST(req: Request) {
   try {
     if (isRateLimited(getClientKey(req))) {
@@ -84,7 +122,7 @@ export async function POST(req: Request) {
       return NextResponse.json({
         reply: `Hello! 👋 Welcome to **KPN Promoters**.\n\nI am your AI Real Estate Assistant. How can I help you today? You can ask me to **search active apartments or plots by budget**, **calculate loan EMI**, **check live unit availability**, **download brochures**, or **book a free site visit**!`,
         quickChips: [
-          { label: '🏡 Available Plots', query: 'how many units available in plots' },
+          { label: '🏡 Available Plots', query: 'overall plots how many units available' },
           { label: '🏢 Available Apartments', query: 'how many units available in apartments' },
           { label: '💰 Check Loan EMI', query: 'What is the EMI for 25 Lakhs loan?' },
           { label: '📰 Investment Guides', query: 'show me your latest articles and guides' },
@@ -113,7 +151,78 @@ export async function POST(req: Request) {
       });
     }
 
-    // 4. Navigation Intent Resolver ("open projects page", "go to contact page", etc.)
+    // 4. Specific Named Project Intent & Availability Check (e.g. "kpn lenid available?", "is monica residency available?")
+    const specificProject = detectSpecificProjectQuery(latestText, liveCatalog);
+    if (specificProject.isSpecificProject) {
+      if (specificProject.isFound && specificProject.project) {
+        const p = specificProject.project;
+        let countStr = '';
+        if (typeof p.availableUnits === 'number') {
+          countStr = p.type === 'Plots' ? `**${p.availableUnits} plots available**` : `**${p.availableUnits} units available**`;
+        } else if (Array.isArray(p.plots)) {
+          const avail = p.plots.filter((plot: any) => !plot.status || plot.status === 'available').length;
+          countStr = `**${avail} plots available**`;
+        } else {
+          countStr = `**Available** (${p.status})`;
+        }
+
+        return NextResponse.json({
+          reply:
+            `Yes! **${p.name}** in ${p.location} is **active and available**:\n\n` +
+            `• **Property Type**: ${p.bhk || p.type}\n` +
+            `• **Starting Price**: ${p.budget}\n` +
+            `• **Availability**: ${countStr}\n` +
+            `• **Status**: ${p.status}\n\n` +
+            `Would you like to explore floor plans or schedule a **free guided site visit**?`,
+          action: {
+            type: 'NAVIGATE',
+            url: `/projects/${p.slug}`,
+            pageTitle: p.name,
+            description: `${p.type} in ${p.location} • ${p.budget}`,
+          },
+          recommendedProjects: [p],
+          showLeadForm: true,
+          quickChips: [
+            { label: '📅 Book Free Site Visit', query: `I want to visit ${p.name}` },
+            { label: '📄 Get Brochure', query: `download brochure for ${p.name}` },
+            { label: '💰 Check Loan EMI', query: 'What is the EMI for 25 Lakhs loan?' },
+          ],
+        });
+      } else {
+        // Project was deleted / deactivated from live database
+        const requested = specificProject.requestedName || 'The requested project';
+        const requestedType = lower.includes('plot') || lower.includes('land') ? 'Plots' : 'Apartments';
+        const activeAlts = liveCatalog.filter((p) => p.type === requestedType);
+
+        let reply = `❌ **${requested} is currently not available** in our active database (it is no longer listed in our active catalog or has been completed/sold out).\n\n`;
+
+        if (activeAlts.length > 0) {
+          reply += `🏢 **Here are our verified available ${requestedType} in Chennai:**\n\n`;
+          activeAlts.slice(0, 5).forEach((p) => {
+            reply += `• **${p.name}** (${p.location}) — ${p.budget} (${p.status})\n`;
+          });
+          reply += `\nWould you like to explore any of these active projects or schedule a **free site visit**?`;
+        } else {
+          reply += `Please contact our property advisor at **${liveCms.phonePrimary}** to check new upcoming launches.`;
+        }
+
+        return NextResponse.json({
+          reply,
+          action: {
+            type: 'NOT_FOUND_SUGGEST',
+          },
+          recommendedProjects: activeAlts.slice(0, 3),
+          showLeadForm: true,
+          quickChips: [
+            { label: '🏢 View Active Projects', query: 'open projects page' },
+            { label: '📞 Speak with Advisor', query: 'how can I connect with you' },
+            { label: '📅 Book Site Visit', query: 'I want to book a free site visit' },
+          ],
+        });
+      }
+    }
+
+    // 5. Navigation Intent Resolver ("open projects page", "go to contact page", etc.)
     const navMatch = resolveNavigationIntent(latestText, liveCatalog);
     if (navMatch.matched) {
       return NextResponse.json({
@@ -123,7 +232,7 @@ export async function POST(req: Request) {
       });
     }
 
-    // 5. Contact Intent Resolver
+    // 6. Contact Intent Resolver
     const isContactQuery =
       /\b(connect|contact|reach|call|speak|talk|phone|whatsapp|advisor|agent|office)\b/.test(lower) &&
       !/\b(connectivity|connected road|road connection)\b/.test(lower);
@@ -150,9 +259,9 @@ export async function POST(req: Request) {
       });
     }
 
-    // 6. Live Unit Inventory & Availability Queries (e.g. "how many units available in plots", "units in flats")
+    // 7. General Live Unit Inventory & Availability Queries (e.g. "how many units available in plots", "overall plots how many units available")
     const asksAvailability =
-      /\b(how many|how much|available|availability|vacant|remaining|left|stock|count)\b/.test(lower) &&
+      /\b(how many|how much|available|availability|vacant|remaining|left|stock|count|total|overall)\b/.test(lower) &&
       /\b(plot|plots|land|apartment|apartments|flat|flats|villa|villas|unit|units|project|projects)\b/.test(lower);
 
     if (asksAvailability) {
@@ -236,7 +345,7 @@ export async function POST(req: Request) {
       });
     }
 
-    // 7. Intelligent Property Search & Budget Filter Engine
+    // 8. Intelligent Property Search & Budget Filter Engine
     const propQuery = executePropertyQuery(latestText, liveCatalog);
     if (propQuery.isQuery) {
       return NextResponse.json({
@@ -248,7 +357,7 @@ export async function POST(req: Request) {
       });
     }
 
-    // 8. Brochure Downloader Intent Resolver
+    // 9. Brochure Downloader Intent Resolver
     const brochureMatch = resolveBrochureIntent(latestText, liveCatalog);
     if (brochureMatch.isBrochureQuery) {
       return NextResponse.json({
@@ -259,7 +368,7 @@ export async function POST(req: Request) {
       });
     }
 
-    // 9. In-Chat Loan & EMI Calculator
+    // 10. In-Chat Loan & EMI Calculator
     const emiMatch = resolveEmiIntent(latestText);
     if (emiMatch.isEmiQuery) {
       return NextResponse.json({
@@ -270,7 +379,7 @@ export async function POST(req: Request) {
       });
     }
 
-    // 10. Landmark & Transit Proximity Search
+    // 11. Landmark & Transit Proximity Search
     const landmarkMatch = resolveLandmarkIntent(latestText, liveCatalog);
     if (landmarkMatch.isLandmarkQuery) {
       return NextResponse.json({
@@ -281,7 +390,7 @@ export async function POST(req: Request) {
       });
     }
 
-    // 11. Live Blogs & Editorial Guides Resolver (Explicit Blog Queries Only)
+    // 12. Live Blogs & Editorial Guides Resolver (Explicit Blog Queries Only)
     const blogMatch = executeBlogQuery(latestText, liveBlogs);
     if (blogMatch.isBlogQuery) {
       return NextResponse.json({
@@ -292,7 +401,7 @@ export async function POST(req: Request) {
       });
     }
 
-    // 12. Google Gemini AI with Live Dynamic System Prompt (Live RAG)
+    // 13. Google Gemini AI with Live Dynamic System Prompt (Live RAG)
     const apiKey = process.env.GEMINI_API_KEY || '';
     if (apiKey && apiKey.trim() !== '') {
       try {
@@ -395,7 +504,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // 13. Dynamic Knowledge Engine Fallback (Zero API Cost, 100% live database driven)
+    // 14. Dynamic Knowledge Engine Fallback (Zero API Cost, 100% live database driven)
     const localResult = generateLocalBotResponse(latestText, liveCatalog, liveBlogs, liveCms);
     return NextResponse.json({
       ...localResult,
