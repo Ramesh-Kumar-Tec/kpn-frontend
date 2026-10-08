@@ -1,3 +1,5 @@
+import { compressImage } from './imageCompressor';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 export interface ApiResponse<T = any> {
@@ -79,12 +81,16 @@ export const api = {
   delete: <T = any>(endpoint: string) =>
     request<T>(endpoint, { method: 'DELETE' }),
 
-  // File Upload Helper
+  // File Upload Helper (with auto client-side image compression for large photos)
   upload: async (file: File, folder = 'kpn_promoters'): Promise<{ url: string; publicId?: string }> => {
     const url = `${API_BASE_URL}/upload`;
     const token = getAuthToken();
+
+    // Automatically optimize large camera images (>1.5MB) down to clean web resolution
+    const fileToUpload = await compressImage(file);
+
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', fileToUpload);
     formData.append('folder', folder);
 
     const headers: Record<string, string> = {};
@@ -114,8 +120,12 @@ export const api = {
     if (!files || files.length === 0) return [];
     const url = `${API_BASE_URL}/upload/multiple`;
     const token = getAuthToken();
+
+    // Compress all large images in parallel
+    const compressedFiles = await Promise.all(files.map((f) => compressImage(f)));
+
     const formData = new FormData();
-    files.forEach((file) => formData.append('files', file));
+    compressedFiles.forEach((file) => formData.append('files', file));
     formData.append('folder', folder);
 
     const headers: Record<string, string> = {};
