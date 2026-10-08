@@ -61,14 +61,14 @@ function matchesBudget(projectBudget: string | undefined, filterValue: string): 
 
 // Static filter options
 const STATUS_OPTIONS = [
-  { value: 'All', label: 'Project Status' },
+  { value: 'All', label: 'All' },
   { value: 'Ongoing', label: 'Ongoing' },
   { value: 'Upcoming', label: 'Upcoming' },
   { value: 'Completed', label: 'Completed' },
 ];
 
 const TYPE_OPTIONS = [
-  { value: 'All', label: 'Project Type' },
+  { value: 'All', label: 'All' },
   { value: 'Apartments', label: 'Apartments' },
   { value: 'Plots', label: 'Plots' },
   { value: 'Villas', label: 'Villas' },
@@ -77,7 +77,7 @@ const TYPE_OPTIONS = [
 ];
 
 const LOCATION_OPTIONS = [
-  { value: 'All', label: 'Project Location' },
+  { value: 'All', label: 'All' },
   { value: 'Urapakkam', label: 'Urapakkam, Chennai' },
   { value: 'Guduvanchery', label: 'Guduvanchery, Chennai' },
   { value: 'Karanaipuducheri', label: 'Karanaipuducheri, Chennai' },
@@ -87,7 +87,7 @@ const LOCATION_OPTIONS = [
 ];
 
 const BUDGET_OPTIONS = [
-  { value: 'All', label: 'Project Budget' },
+  { value: 'All', label: 'All' },
   { value: 'Under 30L', label: 'Under ₹30 Lakhs' },
   { value: '20L - 40L', label: '₹20L - ₹40 Lakhs' },
   { value: '40L - 60L', label: '₹40L - ₹60 Lakhs' },
@@ -198,7 +198,7 @@ export default function ProjectsPage() {
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const ITEMS_PER_PAGE = 4;
+  const ITEMS_PER_PAGE = 6;
 
   // Filter dropdown state
   const [filters, setFilters] = useState({
@@ -256,55 +256,11 @@ export default function ProjectsPage() {
   }, []);
 
   const updateFilter = (key: 'status' | 'type' | 'location' | 'budget', val: string) => {
-    const next = { ...filters, [key]: val };
-    setFilters(next);
-    setAppliedFilters(next);
-    setCurrentPage(1);
-    if (key === 'type') {
-      setSelectedCategory(val);
-      try {
-        if (val !== 'All') {
-          sessionStorage.setItem('kpn_project_category', val);
-          window.history.replaceState(null, '', `/projects?type=${encodeURIComponent(val)}`);
-        } else {
-          sessionStorage.removeItem('kpn_project_category');
-          window.history.replaceState(null, '', '/projects');
-        }
-      } catch {}
-    }
-    try {
-      sessionStorage.setItem('kpn_project_filters', JSON.stringify(next));
-    } catch {}
-  };
-
-  const selectTab = (cat: string) => {
-    setSelectedCategory(cat);
-    setCurrentPage(1);
-    const reset = {
-      status: 'All',
-      type: cat,
-      location: 'All',
-      budget: 'All',
-    };
-    setFilters(reset);
-    setAppliedFilters(reset);
-
-    try {
-      if (cat === 'All') {
-        sessionStorage.removeItem('kpn_project_category');
-        sessionStorage.removeItem('kpn_project_filters');
-        window.history.replaceState(null, '', '/projects');
-      } else {
-        sessionStorage.setItem('kpn_project_category', cat);
-        sessionStorage.setItem('kpn_project_filters', JSON.stringify(reset));
-        window.history.replaceState(null, '', `/projects?type=${encodeURIComponent(cat)}`);
-      }
-    } catch {}
+    setFilters((prev) => ({ ...prev, [key]: val }));
   };
 
   const resetFilters = () => {
     const initial = { status: 'All', type: 'All', location: 'All', budget: 'All' };
-    setSelectedCategory('All');
     setFilters(initial);
     setAppliedFilters(initial);
     setCurrentPage(1);
@@ -322,19 +278,19 @@ export default function ProjectsPage() {
     try {
       sessionStorage.setItem('kpn_project_filters', JSON.stringify(filters));
       if (filters.type !== 'All') {
-        sessionStorage.setItem('kpn_project_category', filters.type);
         window.history.replaceState(null, '', `/projects?type=${encodeURIComponent(filters.type)}`);
+      } else {
+        window.history.replaceState(null, '', '/projects');
       }
     } catch {}
   };
 
   const filteredProjects = useMemo(() => {
     return allProjects.filter((project) => {
-      // 1. Type & Category tab filter (kept synchronized)
-      const targetType = appliedFilters.type !== 'All' ? appliedFilters.type : selectedCategory;
-      if (targetType !== 'All') {
+      // 1. Type filter
+      if (appliedFilters.type !== 'All') {
         const pType = (project.type || (project as any).propertyType || '').toLowerCase();
-        const tTerm = targetType.toLowerCase();
+        const tTerm = appliedFilters.type.toLowerCase();
         if (!pType.includes(tTerm) && !tTerm.includes(pType)) {
           return false;
         }
@@ -374,7 +330,7 @@ export default function ProjectsPage() {
 
       return true;
     });
-  }, [allProjects, selectedCategory, appliedFilters]);
+  }, [allProjects, appliedFilters]);
 
   // Paginated Projects slice for current page
   const totalPages = Math.max(1, Math.ceil(filteredProjects.length / ITEMS_PER_PAGE));
@@ -398,58 +354,102 @@ export default function ProjectsPage() {
         <div className="mx-auto max-w-[1500px]">
           
           {/* =========================================================
-              CATEGORY TOGGLE TABS (APARTMENTS & PLOTS)
+              TOP HORIZONTAL FILTER BAR (ROW MODEL)
           ========================================================= */}
-          <FadeIn direction="up" className="mb-12 flex flex-wrap items-center justify-between gap-6 border-b border-slate-100 pb-8">
-            <div className="flex flex-wrap items-center gap-3">
-              {['All', 'Apartments', 'Plots', 'Commercial', 'Industrial', 'Villas'].map((cat) => (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => selectTab(cat)}
-                  className={`h-12 px-7 rounded-full text-sm font-extrabold transition-all duration-300 ${
-                    (appliedFilters.type !== 'All' ? appliedFilters.type : selectedCategory) === cat
-                      ? 'bg-[#f12131] text-white shadow-md scale-105'
-                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900'
-                  }`}
-                >
-                  {cat === 'All' ? 'All Projects' : cat}
-                </button>
-              ))}
-            </div>
+          <FadeIn direction="up" className="mb-12">
+            <div className="rounded-[32px] border border-slate-100 bg-slate-50/90 p-6 sm:p-8 shadow-sm">
+              <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <h3 className="text-xl sm:text-2xl font-extrabold tracking-tight text-[#29247c]">
+                    Filter
+                  </h3>
+                  <span className="hidden sm:inline-block text-xs font-semibold text-slate-400">
+                    Find by status, type, location or budget
+                  </span>
+                </div>
+                <div className="flex items-center gap-5">
+                  <p className="text-xs sm:text-sm font-semibold text-slate-500">
+                    Showing <span className="text-slate-900 font-bold">{paginatedProjects.length}</span> of {filteredProjects.length} Projects (Page {currentPage} of {totalPages})
+                  </p>
+                  {(filters.status !== 'All' || filters.type !== 'All' || filters.location !== 'All' || filters.budget !== 'All' || appliedFilters.status !== 'All' || appliedFilters.type !== 'All' || appliedFilters.location !== 'All' || appliedFilters.budget !== 'All') && (
+                    <button
+                      type="button"
+                      onClick={resetFilters}
+                      className="text-xs font-bold text-[#f12131] hover:underline cursor-pointer transition"
+                    >
+                      Reset all
+                    </button>
+                  )}
+                </div>
+              </div>
 
-            <p className="text-sm font-semibold text-slate-500">
-              Showing <span className="text-slate-900 font-bold">{paginatedProjects.length}</span> of {filteredProjects.length} Projects (Page {currentPage} of {totalPages})
-            </p>
+              <form onSubmit={handleSearch} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-center">
+                {/* Type Dropdown (FIRST) */}
+                <FilterDropdown
+                  value={filters.type}
+                  placeholder="Project Type"
+                  options={TYPE_OPTIONS}
+                  onChange={(val) => updateFilter('type', val)}
+                />
+
+                {/* Status Dropdown */}
+                <FilterDropdown
+                  value={filters.status}
+                  placeholder="Project Status"
+                  options={STATUS_OPTIONS}
+                  onChange={(val) => updateFilter('status', val)}
+                />
+
+                {/* Location Dropdown */}
+                <FilterDropdown
+                  value={filters.location}
+                  placeholder="Project Location"
+                  options={LOCATION_OPTIONS}
+                  onChange={(val) => updateFilter('location', val)}
+                />
+
+                {/* Budget Dropdown */}
+                <FilterDropdown
+                  value={filters.budget}
+                  placeholder="Project Budget"
+                  options={BUDGET_OPTIONS}
+                  onChange={(val) => updateFilter('budget', val)}
+                />
+
+                {/* Search Button */}
+                <button
+                  type="submit"
+                  className="h-14 w-full rounded-full bg-[#f12131] text-base font-extrabold text-white shadow-md transition-all hover:bg-red-600 hover:shadow-lg hover:scale-[1.02] cursor-pointer"
+                >
+                  Search
+                </button>
+              </form>
+            </div>
           </FadeIn>
 
           {/* =========================================================
-              MAIN TWO-COLUMN GRID (PROJECT CARDS + STICKY FILTER)
+              PROJECT CARDS GRID (TWO PROJECTS IN A ROW)
           ========================================================= */}
-          <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 items-start">
-
-            {/* -----------------------------------------------------
-                LEFT COLUMN: PROJECT CARDS LIST
-            ----------------------------------------------------- */}
-            <div id="projects-list" className="space-y-8 lg:col-span-8 min-h-[500px]">
-              {filteredProjects.length === 0 ? (
-                <div className="rounded-[32px] border border-dashed border-slate-300 p-16 text-center">
-                  <h3 className="text-xl font-bold text-slate-800">
-                    No projects found matching your criteria
-                  </h3>
-                  <p className="mt-2 text-sm text-slate-500">
-                    Try clearing filters to see more properties.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={resetFilters}
-                    className="mt-6 rounded-full bg-[#f12131] px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-md cursor-pointer hover:bg-red-600 transition"
-                  >
-                    Reset Filters
-                  </button>
-                </div>
-              ) : (
-                paginatedProjects.map((project) => (
+          <div id="projects-list" className="min-h-[500px]">
+            {filteredProjects.length === 0 ? (
+              <div className="rounded-[32px] border border-dashed border-slate-300 p-16 text-center">
+                <h3 className="text-xl font-bold text-slate-800">
+                  No projects found matching your criteria
+                </h3>
+                <p className="mt-2 text-sm text-slate-500">
+                  Try clearing filters to see more properties.
+                </p>
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  className="mt-6 rounded-full bg-[#f12131] px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-md cursor-pointer hover:bg-red-600 transition"
+                >
+                  Reset Filters
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
+                {paginatedProjects.map((project) => (
                   <Link
                     key={project.id}
                     href={`/projects/${project.slug}`}
@@ -457,7 +457,7 @@ export default function ProjectsPage() {
                       group
                       relative
                       block
-                      h-[390px]
+                      h-[380px]
                       w-full
                       overflow-hidden
                       rounded-[32px]
@@ -466,8 +466,9 @@ export default function ProjectsPage() {
                       transition-all
                       duration-500
                       hover:shadow-2xl
-                      sm:h-[520px]
-                      lg:h-[625px]
+                      sm:h-[430px]
+                      lg:h-[460px]
+                      xl:h-[400px]
                     "
                   >
                     {/* Main project image */}
@@ -497,16 +498,18 @@ export default function ProjectsPage() {
                         right-3
                         top-3
                         z-10
-                        w-[48%]
+                        w-[56%]
                         overflow-hidden
-                        rounded-[30px]
+                        rounded-[26px]
                         border
                         border-white/30
                         shadow-xl
-                        sm:bottom-4
-                        sm:right-4
-                        sm:top-4
-                        sm:w-[48%]
+                        sm:bottom-3.5
+                        sm:right-3.5
+                        sm:top-3.5
+                        sm:w-[54%]
+                        lg:w-[58%]
+                        xl:w-[55%]
                       "
                     >
                       {/* =================================================
@@ -569,22 +572,26 @@ export default function ProjectsPage() {
                           h-full
                           flex-col
                           justify-between
-                          p-6
-                          sm:p-8
-                          lg:p-10
+                          p-4
+                          sm:p-5
+                          lg:p-5
+                          xl:p-6
                         "
                       >
                         {/* TOP BADGE & ACTION BUTTONS */}
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between gap-1.5">
                           <span
                             className="
                               inline-flex
                               items-center
                               rounded-full
                               bg-[#f12131]
-                              px-6
-                              py-3
-                              text-xs
+                              px-3.5
+                              py-1.5
+                              sm:px-4
+                              sm:py-2
+                              text-[11px]
+                              sm:text-xs
                               font-black
                               tracking-wide
                               text-white
@@ -593,13 +600,14 @@ export default function ProjectsPage() {
                               duration-500
                               group-hover:bg-white
                               group-hover:text-black
+                              truncate
                             "
                           >
                             {project.bhk}
                           </span>
 
                           {/* Wishlist & Compare Buttons */}
-                          <div className="flex items-center gap-2 z-20">
+                          <div className="flex items-center gap-1.5 z-20 shrink-0">
                             <button
                               type="button"
                               onClick={(e) => {
@@ -607,14 +615,14 @@ export default function ProjectsPage() {
                                 e.stopPropagation();
                                 toggleWishlist(project.id);
                               }}
-                              className={`flex h-10 w-10 items-center justify-center rounded-full shadow-md backdrop-blur-md transition-all duration-300 ${
+                              className={`flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full shadow-md backdrop-blur-md transition-all duration-300 ${
                                 isInWishlist(project.id)
                                   ? 'bg-[#f12131] text-white scale-110'
                                   : 'bg-white/80 text-slate-800 hover:bg-white hover:text-[#f12131]'
                               }`}
                               title={isInWishlist(project.id) ? 'Remove from Wishlist' : 'Add to Wishlist'}
                             >
-                              <Heart className={`h-5 w-5 ${isInWishlist(project.id) ? 'fill-white' : ''}`} />
+                              <Heart className={`h-4 w-4 ${isInWishlist(project.id) ? 'fill-white' : ''}`} />
                             </button>
 
                             <button
@@ -624,26 +632,26 @@ export default function ProjectsPage() {
                                 e.stopPropagation();
                                 toggleCompare(project.id);
                               }}
-                              className={`flex h-10 w-10 items-center justify-center rounded-full shadow-md backdrop-blur-md transition-all duration-300 ${
+                              className={`flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full shadow-md backdrop-blur-md transition-all duration-300 ${
                                 isInCompare(project.id)
                                   ? 'bg-[#382b88] text-white scale-110'
                                   : 'bg-white/80 text-slate-800 hover:bg-white hover:text-[#382b88]'
                               }`}
                               title={isInCompare(project.id) ? 'Remove from Compare' : 'Add to Compare'}
                             >
-                              <Scale className="h-5 w-5" />
+                              <Scale className="h-4 w-4" />
                             </button>
                           </div>
                         </div>
 
                         {/* BOTTOM CONTENT */}
-                        <div className="space-y-6">
+                        <div className="space-y-3 sm:space-y-3.5">
                           {/* Location */}
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2">
                             <MapPin
                               className="
-                                h-5
-                                w-5
+                                h-4
+                                w-4
                                 shrink-0
                                 text-[#f12131]
                                 transition-colors
@@ -653,15 +661,16 @@ export default function ProjectsPage() {
                             />
                             <span
                               className="
-                                text-base
+                                text-xs
+                                sm:text-sm
                                 font-bold
                                 text-white
                                 drop-shadow-md
                                 transition-colors
                                 duration-500
-                                sm:text-lg
                                 group-hover:text-black
                                 group-hover:drop-shadow-none
+                                truncate
                               "
                             >
                               {project.location}
@@ -683,16 +692,18 @@ export default function ProjectsPage() {
                           {/* Project name */}
                           <h3
                             className="
-                              text-3xl
+                              text-xl
                               font-extrabold
                               tracking-tight
                               text-white
                               drop-shadow-lg
                               transition-colors
                               duration-500
-                              sm:text-4xl
-                              lg:text-[44px]
-                              lg:leading-tight
+                              sm:text-2xl
+                              lg:text-[22px]
+                              xl:text-[24px]
+                              leading-tight
+                              line-clamp-2
                               group-hover:text-black
                               group-hover:drop-shadow-none
                             "
@@ -703,116 +714,51 @@ export default function ProjectsPage() {
                       </div>
                     </div>
                   </Link>
-                ))
-              )}
-
-              {/* Dynamic Pagination Controls */}
-              {filteredProjects.length > 0 && (
-                <div className="flex items-center gap-3 pt-6">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                    <button
-                      key={page}
-                      type="button"
-                      onClick={() => {
-                        setCurrentPage(page);
-                        const listEl = document.getElementById('projects-list');
-                        if (listEl && window.scrollY > listEl.offsetTop) {
-                          window.scrollTo({ top: Math.max(0, listEl.offsetTop - 100), behavior: 'smooth' });
-                        }
-                      }}
-                      className={`flex h-11 w-11 items-center justify-center rounded-full text-sm font-extrabold shadow-md transition-all ${
-                        currentPage === page
-                          ? 'bg-[#f12131] text-white scale-105'
-                          : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  ))}
-
-                  {currentPage < totalPages && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setCurrentPage((prev) => prev + 1);
-                        const listEl = document.getElementById('projects-list');
-                        if (listEl && window.scrollY > listEl.offsetTop) {
-                          window.scrollTo({ top: Math.max(0, listEl.offsetTop - 100), behavior: 'smooth' });
-                        }
-                      }}
-                      className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-sm font-extrabold text-slate-700 shadow-md border border-slate-200 transition-all hover:bg-slate-100"
-                    >
-                      &gt;
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* -----------------------------------------------------
-                RIGHT COLUMN: STICKY FILTER SIDEBAR
-            ----------------------------------------------------- */}
-            <div className="lg:col-span-4 lg:sticky lg:top-28 self-start">
-              <div className="space-y-6 rounded-[32px] border border-slate-100 bg-slate-50/90 p-8 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-2xl font-extrabold tracking-tight text-[#29247c]">
-                    Filter
-                  </h3>
-                  {(filters.status !== 'All' || filters.type !== 'All' || filters.location !== 'All' || filters.budget !== 'All' || selectedCategory !== 'All') && (
-                    <button
-                      type="button"
-                      onClick={resetFilters}
-                      className="text-xs font-bold text-[#f12131] hover:underline cursor-pointer transition"
-                    >
-                      Reset all
-                    </button>
-                  )}
-                </div>
-
-                <form onSubmit={handleSearch} className="space-y-4">
-                  {/* Status Dropdown */}
-                  <FilterDropdown
-                    value={filters.status}
-                    placeholder="Project Status"
-                    options={STATUS_OPTIONS}
-                    onChange={(val) => updateFilter('status', val)}
-                  />
-
-                  {/* Type Dropdown */}
-                  <FilterDropdown
-                    value={filters.type}
-                    placeholder="Project Type"
-                    options={TYPE_OPTIONS}
-                    onChange={(val) => updateFilter('type', val)}
-                  />
-
-                  {/* Location Dropdown */}
-                  <FilterDropdown
-                    value={filters.location}
-                    placeholder="Project Location"
-                    options={LOCATION_OPTIONS}
-                    onChange={(val) => updateFilter('location', val)}
-                  />
-
-                  {/* Budget Dropdown */}
-                  <FilterDropdown
-                    value={filters.budget}
-                    placeholder="Project Budget"
-                    options={BUDGET_OPTIONS}
-                    onChange={(val) => updateFilter('budget', val)}
-                  />
-
-                  {/* Search Button */}
-                  <button
-                    type="submit"
-                    className="h-14 w-full rounded-full bg-[#f12131] text-base font-extrabold text-white shadow-md transition-all hover:bg-red-600 hover:shadow-lg hover:scale-[1.02] cursor-pointer"
-                  >
-                    Search
-                  </button>
-                </form>
+                ))}
               </div>
-            </div>
+            )}
 
+            {/* Dynamic Pagination Controls */}
+            {filteredProjects.length > 0 && (
+              <div className="flex items-center justify-center sm:justify-start gap-3 pt-10">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    type="button"
+                    onClick={() => {
+                      setCurrentPage(page);
+                      const listEl = document.getElementById('projects-list');
+                      if (listEl && window.scrollY > listEl.offsetTop) {
+                        window.scrollTo({ top: Math.max(0, listEl.offsetTop - 100), behavior: 'smooth' });
+                      }
+                    }}
+                    className={`flex h-11 w-11 items-center justify-center rounded-full text-sm font-extrabold shadow-md transition-all ${
+                      currentPage === page
+                        ? 'bg-[#f12131] text-white scale-105'
+                        : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+
+                {currentPage < totalPages && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCurrentPage((prev) => prev + 1);
+                      const listEl = document.getElementById('projects-list');
+                      if (listEl && window.scrollY > listEl.offsetTop) {
+                        window.scrollTo({ top: Math.max(0, listEl.offsetTop - 100), behavior: 'smooth' });
+                      }
+                    }}
+                    className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-sm font-extrabold text-slate-700 shadow-md border border-slate-200 transition-all hover:bg-slate-100"
+                  >
+                    &gt;
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
         </div>
