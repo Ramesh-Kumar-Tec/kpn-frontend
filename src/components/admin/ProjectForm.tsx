@@ -165,6 +165,7 @@ export default function ProjectForm({ initialData, isEdit = false }: ProjectForm
     handoverTimeline: initialData?.handoverTimeline || '',
     commencementDate: initialData?.commencementDate || '',
     projectArea: initialData?.projectArea || initialData?.plotSizes || '',
+    plotSizes: initialData?.plotSizes || initialData?.projectArea || '',
 
     // Building Structure & Unit Status Breakdown
     totalBlocks: initialData?.totalBlocks || 1,
