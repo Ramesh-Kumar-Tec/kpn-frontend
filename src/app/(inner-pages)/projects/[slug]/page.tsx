@@ -45,7 +45,37 @@ import {
   Play,
   HelpCircle,
   ChevronUp,
+  Zap,
+  Car,
+  CheckCircle2,
+  Award,
+  Wifi,
+  Sparkles,
+  Droplets,
+  ExternalLink,
 } from 'lucide-react';
+
+const getAmenityIcon = (iconName?: string, name?: string) => {
+  const norm = `${iconName || ''} ${name || ''}`.toLowerCase();
+  if (norm.includes('shield') || norm.includes('security') || norm.includes('guard') || norm.includes('gated')) return Shield;
+  if (norm.includes('camera') || norm.includes('cctv') || norm.includes('surveillance')) return Camera;
+  if (norm.includes('dumbbell') || norm.includes('gym') || norm.includes('fitness')) return Dumbbell;
+  if (norm.includes('gamepad') || norm.includes('play') || norm.includes('children') || norm.includes('kids')) return Gamepad2;
+  if (norm.includes('wrench') || norm.includes('maintenance')) return Wrench;
+  if (norm.includes('wave') || norm.includes('pool') || norm.includes('swimming') || norm.includes('water')) return Waves;
+  if (norm.includes('flame') || norm.includes('fire')) return Flame;
+  if (norm.includes('tree') || norm.includes('garden') || norm.includes('park') || norm.includes('landscape') || norm.includes('green') || norm.includes('eco')) return Trees;
+  if (norm.includes('light') || norm.includes('lamp') || norm.includes('street light') || norm.includes('power') || norm.includes('electricity') || norm.includes('backup')) return Zap;
+  if (norm.includes('road') || norm.includes('car') || norm.includes('parking') || norm.includes('tar') || norm.includes('black top') || norm.includes('driveway')) return Car;
+  if (norm.includes('document') || norm.includes('file') || norm.includes('clear') || norm.includes('title') || norm.includes('approved') || norm.includes('approval') || norm.includes('dtcp') || norm.includes('cmda')) return FileText;
+  if (norm.includes('building') || norm.includes('club') || norm.includes('community')) return Building;
+  if (norm.includes('wifi') || norm.includes('internet')) return Wifi;
+  if (norm.includes('droplet') || norm.includes('plumbing') || norm.includes('drainage')) return Droplets;
+  if (norm.includes('sparkle') || norm.includes('modern') || norm.includes('luxury')) return Sparkles;
+  if (norm.includes('award') || norm.includes('certified')) return Award;
+
+  return CheckCircle2;
+};
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -70,9 +100,24 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
 
   // Current project lookup
   const projectIndex = projectsData.findIndex((p) => p.slug === slug);
-  const [project, setProject] = useState<any>(
-    projectIndex !== -1 ? projectsData[projectIndex] : projectsData[0]
+  const [project, setProject] = useState<any>(() =>
+    projectIndex !== -1
+      ? projectsData[projectIndex]
+      : {
+          name: slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+          slug,
+          location: 'Chennai, Tamil Nadu',
+          bhk: 'Residential Development',
+          propertyType: 'Plots',
+          type: 'Plots',
+          status: 'Ongoing',
+          budget: 'Price on Request',
+          image: '/images/projects/project_1.jpg',
+        }
   );
+
+  // Dynamic project list for Next / Prev navigation
+  const [allProjectsList, setAllProjectsList] = useState<any[]>(projectsData);
 
   useEffect(() => {
     let isMounted = true;
@@ -101,16 +146,24 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
 
     async function loadProjectDetails() {
       try {
-        const live = await getProjectBySlug(slug);
-        if (isMounted && live) {
-          setProject((prev: any) => ({
-            ...prev,
-            ...live,
-            brochureUrl:
-              live.brochureUrl !== undefined && live.brochureUrl !== null && live.brochureUrl !== ''
-                ? live.brochureUrl
-                : prev?.brochureUrl || projectsData[projectIndex]?.brochureUrl || '',
-          }));
+        const [live, all] = await Promise.all([
+          getProjectBySlug(slug),
+          getProjects(),
+        ]);
+        if (isMounted) {
+          if (Array.isArray(all) && all.length > 0) {
+            setAllProjectsList(all);
+          }
+          if (live) {
+            setProject((prev: any) => ({
+              ...prev,
+              ...live,
+              brochureUrl:
+                live.brochureUrl !== undefined && live.brochureUrl !== null && live.brochureUrl !== ''
+                  ? live.brochureUrl
+                  : prev?.brochureUrl || (projectIndex !== -1 ? projectsData[projectIndex]?.brochureUrl : ''),
+            }));
+          }
         }
       } catch (err) {
         console.warn('Could not load dynamic project from CMS');
@@ -122,24 +175,38 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
     };
   }, [slug, isCategory, categoryName, projectIndex]);
 
-  // Previous and Next navigation
+  // Previous and Next navigation across all live active projects
+  const activeProjectIndex = allProjectsList.findIndex(
+    (p) => (p.slug || '').toLowerCase() === slug || p.id === (project?._id || project?.id)
+  );
+  const safeProjectIndex = activeProjectIndex !== -1 ? activeProjectIndex : (projectIndex !== -1 ? projectIndex : 0);
   const prevProject =
-    projectsData[
-      (projectIndex - 1 + projectsData.length) % projectsData.length
-    ];
+    allProjectsList[
+      (safeProjectIndex - 1 + allProjectsList.length) % allProjectsList.length
+    ] || projectsData[0];
   const nextProject =
-    projectsData[(projectIndex + 1) % projectsData.length];
+    allProjectsList[(safeProjectIndex + 1) % allProjectsList.length] || projectsData[0];
+
+  // Check if current project is an apartment
+  const isApartment = Boolean(
+    ((project?.propertyType || project?.type || '') as string)
+      .toLowerCase()
+      .trim()
+      .includes('apartment')
+  );
 
   // Active Media Tab state: 'Photos' | 'Plans' | 'Video' | 'Street View'
   const [activeMediaTab, setActiveMediaTab] = useState<string>('Photos');
 
   // Dynamic Media Gallery Photos List (Pulls from CMS project.image and project.galleryImages)
-  const rawPhotos: string[] = [
-    ...(project?.image ? [project.image] : []),
-    ...(Array.isArray(project?.galleryImages)
-      ? project.galleryImages.filter((img: string) => img && img !== project.image)
-      : []),
-  ];
+  const rawPhotos: string[] = Array.from(
+    new Set([
+      ...(project?.image && typeof project.image === 'string' && project.image.trim() !== '' ? [project.image] : []),
+      ...(Array.isArray(project?.galleryImages)
+        ? project.galleryImages.filter((img: any) => typeof img === 'string' && img.trim() !== '')
+        : []),
+    ])
+  );
 
   const projectPhotos =
     rawPhotos.length > 0
@@ -148,39 +215,127 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
           title:
             idx === 0
               ? `${project?.name || 'Project'} - Exterior View`
-              : `${project?.name || 'Project'} - Photo ${idx + 1}`,
+              : `${project?.name || 'Project'} - Gallery Photo ${idx + 1}`,
         }))
       : [
-          { src: project?.image || '/images/projects/apt_lenid.jpg', title: `${project?.name || 'Project'} - Exterior View` },
-          { src: '/images/projects/project_2.jpg', title: `${project?.name || 'Project'} - Architectural Detail` },
-          { src: '/images/projects/project_3.jpg', title: `${project?.name || 'Project'} - Terrace & Balcony` },
-          { src: '/images/projects/project_4.jpg', title: `${project?.name || 'Project'} - Living Space` },
-          { src: '/images/projects/project_5.jpg', title: `${project?.name || 'Project'} - Aerial View` },
+          {
+            src: project?.image || '/images/projects/apt_lenid.jpg',
+            title: `${project?.name || 'Project'} - Exterior View`,
+          },
         ];
 
-  // Dynamic Floor Plans List (Pulls from CMS project.floorPlans)
-  const rawPlans: any[] =
-    Array.isArray(project?.floorPlans) && project.floorPlans.length > 0
-      ? project.floorPlans
-      : [];
+  // Dynamic Floor / Layout Plans List (Pulls from CMS project.floorPlans, project.masterPlanUrl, project.layoutImages)
+  const rawPlans: any[] = [
+    ...(project?.masterPlanUrl && typeof project.masterPlanUrl === 'string' && project.masterPlanUrl.trim() !== ''
+      ? [{ imageUrl: project.masterPlanUrl, title: `${project?.name || 'Project'} - Master Plan`, sqft: project?.projectArea || project?.plotSizes || '' }]
+      : []),
+    ...(Array.isArray(project?.floorPlans) ? project.floorPlans : []),
+    ...(Array.isArray(project?.layoutImages)
+      ? project.layoutImages
+          .filter((img: any) => typeof img === 'string' && img.trim() !== '')
+          .map((img: string, idx: number) => ({
+            imageUrl: img,
+            title: `Layout Plan ${idx + 1}`,
+            sqft: '',
+          }))
+      : []),
+  ];
 
-  const projectPlans =
-    rawPlans.length > 0
-      ? rawPlans.map((plan: any, idx: number) => ({
-          src:
-            typeof plan === 'string'
-              ? plan
-              : plan.imageUrl || plan.src || '/images/projects/p1.webp',
-          title:
-            typeof plan === 'object' && plan.title
-              ? `${plan.title}${plan.sqft ? ` (${plan.sqft})` : ''}`
-              : `Floor Plan ${idx + 1}`,
-        }))
+  const projectPlans = rawPlans.map((plan: any, idx: number) => ({
+    src:
+      typeof plan === 'string'
+        ? plan
+        : plan.imageUrl || plan.src || '/images/projects/p1.webp',
+    title:
+      typeof plan === 'object' && plan.title
+        ? `${plan.title}${plan.sqft ? ` (${plan.sqft})` : ''}`
+        : `Floor / Layout Plan ${idx + 1}`,
+  }));
+
+  // Dynamic Amenities List (Pulls from CMS project.amenities)
+  const dynamicAmenities =
+    Array.isArray(project?.amenities) && project.amenities.length > 0
+      ? project.amenities
+          .map((item: any) => {
+            if (typeof item === 'string') {
+              const trimmed = item.trim();
+              return {
+                name: trimmed,
+                icon: trimmed,
+                description: `${trimmed} provided with verified infrastructure.`,
+              };
+            }
+            const name = (item.name || '').trim();
+            const description = (item.description || '').trim();
+            return {
+              name,
+              icon: (item.icon || '').trim() || name,
+              description: description || `${name} provided with verified infrastructure.`,
+            };
+          })
+          .filter((item: any) => Boolean(item.name))
       : [
-          { src: '/images/projects/p1.webp', title: '1 BHK Master Plan (550 Sq. Ft.)' },
-          { src: '/images/projects/p2.webp', title: '2 BHK Luxury Plan (850 Sq. Ft.)' },
-          { src: '/images/projects/p3.webp', title: '3 BHK Premium Plan (1200 Sq. Ft.)' },
-          { src: '/images/projects/p4.webp', title: 'Executive Floor Plan (1500 Sq. Ft.)' },
+          {
+            name: '24x7 Security',
+            icon: 'Shield',
+            description: 'Gated perimeter with round-the-clock trained security personnel.',
+          },
+          {
+            name: 'Surveillance System',
+            icon: 'Camera',
+            description: 'High-definition CCTV surveillance across key vantage points.',
+          },
+          {
+            name: isApartment ? 'Fitness Center' : 'Black Top Roads',
+            icon: isApartment ? 'Dumbbell' : 'Car',
+            description: isApartment
+              ? 'Fully equipped indoor fitness gym with modern training equipment.'
+              : 'Wide well-laid tar roads designed with proper storm water drainage.',
+          },
+          {
+            name: "Children's Play Area",
+            icon: 'Gamepad2',
+            description: 'Dedicated outdoor recreational zone for kids and families.',
+          },
+          {
+            name: isApartment ? 'Power Backup & Maintenance' : 'Street Lighting',
+            icon: isApartment ? 'Wrench' : 'Zap',
+            description: isApartment
+              ? 'Continuous power support and scheduled upkeep of common utilities.'
+              : 'Energy-efficient street lamps lighting all avenue roads.',
+          },
+          {
+            name: isApartment ? 'Water Management' : 'Clear Legal Titles',
+            icon: isApartment ? 'Waves' : 'FileText',
+            description: isApartment
+              ? 'Abundant potable ground water with overhead storage capacity.'
+              : '100% clear parent documentation with DTCP and CMDA clearances.',
+          },
+          {
+            name: isApartment ? 'Fire Safety System' : 'Avenue Plantation',
+            icon: isApartment ? 'Flame' : 'Trees',
+            description: isApartment
+              ? 'Advanced fire safety installations adhering to statutory norms.'
+              : 'Lush avenue trees and greenery promoting clean residential living.',
+          },
+          {
+            name: 'Landscape Garden',
+            icon: 'Trees',
+            description: 'Manicured green spaces and walking tracks for wellness.',
+          },
+        ];
+
+  // Dynamic Nearby Landmarks (Pulls from CMS project.nearbyLocations)
+  const nearbyLandmarks =
+    Array.isArray(project?.nearbyLocations) && project.nearbyLocations.length > 0
+      ? project.nearbyLocations
+      : [
+          { name: 'Supermarket', distance: '500m', description: 'Daily grocery & essentials' },
+          { name: 'Bus Station', distance: '450m', description: 'Metropolitan transport connectivity' },
+          { name: 'Railway Station', distance: '1.7 km', description: 'Suburban train network' },
+          { name: 'Hospital', distance: '1.2 km', description: 'Multi-speciality medical care' },
+          { name: 'Schools & Colleges', distance: '850m', description: 'Leading educational institutions' },
+          { name: 'Airport', distance: '22 km', description: 'Chennai International Airport' },
         ];
 
   // Carousel width & container measurement
@@ -539,6 +694,15 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
     },
   ];
 
+  // Dynamic FAQs (Pulls from CMS project.faqs)
+  const dynamicFaqs =
+    Array.isArray(project?.faqs) && project.faqs.length > 0
+      ? project.faqs.map((f: any) => ({
+          question: f.question,
+          answer: f.answer,
+        }))
+      : projectFaqs;
+
   // Category page view (/projects/apartments, /projects/plots, or /projects/villas)
   if (isCategory) {
     return (
@@ -630,14 +794,6 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
     );
   }
 
-  // Check if current project is an apartment
-  const isApartment = Boolean(
-    ((project?.propertyType || project?.type || '') as string)
-      .toLowerCase()
-      .trim()
-      .includes('apartment')
-  );
-
   return (
     <>
       <Navbar variant="hero" />
@@ -708,7 +864,7 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
                 <div>
                   <p className="text-[11px] font-medium text-slate-400">Commencement date</p>
                   <p className="text-sm font-bold text-[#29247c]">
-                    {project.commencementDate || '28 Jun, 2021'}
+                    {project.commencementDate || project.handoverTimeline || 'Ready for Possession'}
                   </p>
                 </div>
               </div>
@@ -806,7 +962,7 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
                   )}
                   <li className="flex items-start gap-2">
                     <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#f12131]" />
-                    <span><strong className="text-slate-800">Type:</strong> {project.type} ({project.bhk}).</span>
+                    <span><strong className="text-slate-800">Type:</strong> {project.propertyType || project.type} ({project.bhk}).</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#f12131]" />
@@ -915,13 +1071,18 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
           <hr className="my-20 border-t border-slate-100" />
 
           {/* =========================================================
-              FEATURES & AMENITIES (8 CARDS)
+              FEATURES & AMENITIES (DYNAMIC FROM CMS / BACKEND)
           ========================================================= */}
           <div>
             <div className="mb-12 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <h2 className="text-3xl font-extrabold text-[#29247c] sm:text-4xl">
-                Features & amenities
-              </h2>
+              <div>
+                <h2 className="text-3xl font-extrabold text-[#29247c] sm:text-4xl">
+                  Features & amenities
+                </h2>
+                <p className="mt-2 text-xs sm:text-sm text-slate-500 font-medium">
+                  Designed for modern convenience, security, and long-term community value.
+                </p>
+              </div>
 
               {Boolean(project.brochureUrl && project.brochureUrl.trim() !== '') && (
                 <button
@@ -951,87 +1112,89 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
             </div>
 
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-[28px] border border-slate-100 bg-slate-50/70 p-8 text-center transition duration-300 hover:bg-white hover:shadow-lg">
-                <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-[#f12131] text-white shadow-md">
-                  <Shield className="h-6 w-6" />
-                </div>
-                <h3 className="text-lg font-bold text-[#29247c]">24x7 Security</h3>
-                <p className="mt-3 text-xs leading-relaxed text-slate-500">
-                  Sed ut perspiciatis unde omnis iste natus error sit voluptatem.
-                </p>
-              </div>
-
-              <div className="rounded-[28px] border border-slate-100 bg-slate-50/70 p-8 text-center transition duration-300 hover:bg-white hover:shadow-lg">
-                <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-[#f12131] text-white shadow-md">
-                  <Camera className="h-6 w-6" />
-                </div>
-                <h3 className="text-lg font-bold text-[#29247c]">Surveillance System</h3>
-                <p className="mt-3 text-xs leading-relaxed text-slate-500">
-                  Nemo enim ipsam voluptatem quia voluptas sit aspernatur.
-                </p>
-              </div>
-
-              <div className="rounded-[28px] border border-slate-100 bg-slate-50/70 p-8 text-center transition duration-300 hover:bg-white hover:shadow-lg">
-                <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-[#f12131] text-white shadow-md">
-                  <Dumbbell className="h-6 w-6" />
-                </div>
-                <h3 className="text-lg font-bold text-[#29247c]">Fitness Center</h3>
-                <p className="mt-3 text-xs leading-relaxed text-slate-500">
-                  Consectetur quae ab illoinventore veritatis.
-                </p>
-              </div>
-
-              <div className="rounded-[28px] border border-slate-100 bg-slate-50/70 p-8 text-center transition duration-300 hover:bg-white hover:shadow-lg">
-                <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-[#f12131] text-white shadow-md">
-                  <Gamepad2 className="h-6 w-6" />
-                </div>
-                <h3 className="text-lg font-bold text-[#29247c]">Children&apos;s play area</h3>
-                <p className="mt-3 text-xs leading-relaxed text-slate-500">
-                  Totam rem aperiam, eaque ipsa quae ab illo inventore.
-                </p>
-              </div>
-
-              <div className="rounded-[28px] border border-slate-100 bg-slate-50/70 p-8 text-center transition duration-300 hover:bg-white hover:shadow-lg">
-                <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-[#f12131] text-white shadow-md">
-                  <Wrench className="h-6 w-6" />
-                </div>
-                <h3 className="text-lg font-bold text-[#29247c]">24 hour maintenance</h3>
-                <p className="mt-3 text-xs leading-relaxed text-slate-500">
-                  Consectetur quae ab illoinventore veritatis.
-                </p>
-              </div>
-
-              <div className="rounded-[28px] border border-slate-100 bg-slate-50/70 p-8 text-center transition duration-300 hover:bg-white hover:shadow-lg">
-                <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-[#f12131] text-white shadow-md">
-                  <Waves className="h-6 w-6" />
-                </div>
-                <h3 className="text-lg font-bold text-[#29247c]">Swimming Pool</h3>
-                <p className="mt-3 text-xs leading-relaxed text-slate-500">
-                  Totam rem aperiam, eaque ipsa quae ab illo inventore.
-                </p>
-              </div>
-
-              <div className="rounded-[28px] border border-slate-100 bg-slate-50/70 p-8 text-center transition duration-300 hover:bg-white hover:shadow-lg">
-                <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-[#f12131] text-white shadow-md">
-                  <Flame className="h-6 w-6" />
-                </div>
-                <h3 className="text-lg font-bold text-[#29247c]">Firefighting System</h3>
-                <p className="mt-3 text-xs leading-relaxed text-slate-500">
-                  Sed ut perspiciatis unde omnis iste natus error sit voluptatem.
-                </p>
-              </div>
-
-              <div className="rounded-[28px] border border-slate-100 bg-slate-50/70 p-8 text-center transition duration-300 hover:bg-white hover:shadow-lg">
-                <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-[#f12131] text-white shadow-md">
-                  <Trees className="h-6 w-6" />
-                </div>
-                <h3 className="text-lg font-bold text-[#29247c]">Landscape Garden</h3>
-                <p className="mt-3 text-xs leading-relaxed text-slate-500">
-                  Nemo enim ipsam voluptatem quia voluptas sit aspernatur.
-                </p>
-              </div>
+              {dynamicAmenities.map((item: any, idx: number) => {
+                const IconComp = getAmenityIcon(item.icon, item.name);
+                return (
+                  <div
+                    key={`amenity-${idx}`}
+                    className="rounded-[28px] border border-slate-100 bg-slate-50/70 p-8 text-center transition duration-300 hover:bg-white hover:shadow-lg hover:-translate-y-1"
+                  >
+                    <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-[#f12131] text-white shadow-md">
+                      <IconComp className="h-6 w-6" />
+                    </div>
+                    <h3 className="text-lg font-bold text-[#29247c]">{item.name}</h3>
+                    <p className="mt-3 text-xs leading-relaxed text-slate-500">
+                      {item.description}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
           </div>
+
+          {/* =========================================================
+              TECHNICAL SPECIFICATIONS (IF CONFIGURED IN CMS)
+          ========================================================= */}
+          {project.specifications &&
+            typeof project.specifications === 'object' &&
+            Object.entries(project.specifications).some(
+              ([_, val]) => val && String(val).trim() !== ''
+            ) && (
+              <>
+                <hr className="my-20 border-t border-slate-100" />
+                <div>
+                  <div className="mb-10">
+                    <h2 className="text-3xl font-extrabold text-[#29247c] sm:text-4xl">
+                      Technical specifications
+                    </h2>
+                    <p className="mt-2 text-sm text-slate-500 font-medium">
+                      Built with premium structural engineering, branded materials, and rigorous quality standards.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                    {Object.entries(project.specifications)
+                      .filter(([_, val]) => val && String(val).trim() !== '')
+                      .map(([key, val]: [string, any], idx: number) => {
+                        const IconComp =
+                          key === 'structure'
+                            ? Building
+                            : key === 'flooring'
+                            ? Layers
+                            : key === 'doors'
+                            ? Shield
+                            : key === 'windows'
+                            ? Maximize
+                            : key === 'electrical'
+                            ? Zap
+                            : key === 'plumbing'
+                            ? Waves
+                            : key === 'kitchen'
+                            ? Sparkles
+                            : Wrench;
+
+                        const title = key.charAt(0).toUpperCase() + key.slice(1);
+                        return (
+                          <div
+                            key={idx}
+                            className="rounded-[24px] border border-slate-100 bg-white p-6 shadow-xs hover:shadow-md transition"
+                          >
+                            <div className="mb-4 flex items-center gap-3">
+                              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-[#f12131]">
+                                <IconComp className="h-5 w-5" />
+                              </div>
+                              <h4 className="font-extrabold text-[#29247c]">{title}</h4>
+                            </div>
+                            <p className="text-xs leading-relaxed text-slate-600 font-medium">
+                              {String(val)}
+                            </p>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              </>
+            )}
 
           <hr className="my-20 border-t border-slate-100" />
 
@@ -1072,291 +1235,436 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
                 })}
               </div>
             </div>
-
-            {/* TAB 1: PHOTOS CAROUSEL (GLITCH-FREE CONTINUOUS INFINITE STREAM) */}
-            {activeMediaTab === 'Photos' && (() => {
-              const N = projectPhotos.length;
-              const extendedPhotos = [
-                ...projectPhotos,
-                ...projectPhotos,
-                ...projectPhotos,
-              ];
-              const cardWidth =
-                carouselWidth > 0
-                  ? Math.min(800, carouselWidth * 0.72)
-                  : 600;
-              const gap = 24;
-              const baseTranslateX =
-                carouselWidth > 0
-                  ? carouselWidth / 2 -
-                    (photoVirtualIndex * (cardWidth + gap) + cardWidth / 2)
-                  : 0;
-              const finalTranslateX = baseTranslateX + dragOffset;
-
-              return (
-                <div
-                  ref={carouselContainerRef}
-                  onPointerDown={(e) => handlePointerDown(e.clientX)}
-                  onPointerMove={(e) => handlePointerMove(e.clientX)}
-                  onPointerUp={() => handlePointerUp('photos')}
-                  onPointerLeave={() => handlePointerUp('photos')}
-                  onContextMenu={(e) => e.preventDefault()}
-                  className="relative w-full overflow-hidden py-6 select-none cursor-grab active:cursor-grabbing"
-                >
+                       {/* TAB 1: PHOTOS CAROUSEL (GLITCH-FREE CONTINUOUS INFINITE STREAM OR SINGLE PHOTO) */}
+            {activeMediaTab === 'Photos' && (
+              projectPhotos.length <= 1 ? (
+                <div className="relative mx-auto max-w-4xl overflow-hidden rounded-[32px] border border-slate-100 shadow-xl my-4">
                   <div
-                    style={{
-                      transform: `translateX(${finalTranslateX}px)`,
-                      transition:
-                        isDragging || !allowTransition
-                          ? 'none'
-                          : 'transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)',
-                      width: 'max-content',
-                    }}
-                    className="flex gap-6 items-center will-change-transform"
+                    onClick={() => openLightbox(0, 'photos')}
+                    className="group relative h-[380px] sm:h-[480px] lg:h-[520px] w-full cursor-pointer overflow-hidden"
                   >
-                    {extendedPhotos.map((photo, i) => {
-                      const isActive = i === photoVirtualIndex;
-                      const realIndex = i % N;
-
-                      return (
-                        <div
-                          key={`photo-clone-${i}`}
-                          style={{ width: cardWidth }}
-                          onClick={() => {
-                            if (hasDraggedRef.current) return;
-                            if (isActive) {
-                              openLightbox(realIndex, 'photos');
-                            } else {
-                              setPhotoVirtualIndex(i);
-                            }
-                          }}
-                          className={`
-                            relative
-                            shrink-0
-                            h-[360px]
-                            sm:h-[460px]
-                            lg:h-[500px]
-                            rounded-[32px]
-                            overflow-hidden
-                            cursor-pointer
-                            transition-all
-                            duration-500
-                            ${
-                              isActive
-                                ? 'opacity-100 shadow-2xl scale-100 z-10'
-                                : 'opacity-35 hover:opacity-60 scale-[0.95] z-0'
-                            }
-                          `}
-                        >
-                          <img
-                            src={photo.src}
-                            alt={photo.title}
-                            className="h-full w-full object-cover pointer-events-none transition-transform duration-700 hover:scale-105"
-                          />
-
-                          {!isActive && (
-                            <div className="absolute inset-0 bg-white/20 backdrop-blur-[1px] transition-colors" />
-                          )}
-
-                          {isActive && (
-                            <div className="absolute bottom-5 right-5 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow-lg backdrop-blur-xs transition-transform hover:scale-110">
-                              <Maximize className="h-5 w-5" />
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                    <img
+                      src={projectPhotos[0]?.src || project?.image || '/images/projects/apt_lenid.jpg'}
+                      alt={projectPhotos[0]?.title || project?.name}
+                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute bottom-5 right-5 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow-lg backdrop-blur-xs transition-transform group-hover:scale-110">
+                      <Maximize className="h-5 w-5" />
+                    </div>
+                    <div className="absolute bottom-5 left-5 text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-white/80">Click to expand</p>
+                      <p className="text-base font-bold">{projectPhotos[0]?.title || project?.name}</p>
+                    </div>
                   </div>
                 </div>
-              );
-            })()}
+              ) : (() => {
+                const N = projectPhotos.length;
+                const extendedPhotos = [
+                  ...projectPhotos,
+                  ...projectPhotos,
+                  ...projectPhotos,
+                ];
+                const cardWidth =
+                  carouselWidth > 0
+                    ? Math.min(800, carouselWidth * 0.72)
+                    : 600;
+                const gap = 24;
+                const baseTranslateX =
+                  carouselWidth > 0
+                    ? carouselWidth / 2 -
+                      (photoVirtualIndex * (cardWidth + gap) + cardWidth / 2)
+                    : 0;
+                const finalTranslateX = baseTranslateX + dragOffset;
 
-            {/* TAB 2: PLANS CAROUSEL (GLITCH-FREE CONTINUOUS INFINITE STREAM) */}
-            {activeMediaTab === 'Plans' && (() => {
-              const N = projectPlans.length;
-              const extendedPlans = [
-                ...projectPlans,
-                ...projectPlans,
-                ...projectPlans,
-              ];
-              const cardWidth =
-                carouselWidth > 0
-                  ? Math.min(800, carouselWidth * 0.72)
-                  : 600;
-              const gap = 24;
-              const baseTranslateX =
-                carouselWidth > 0
-                  ? carouselWidth / 2 -
-                    (planVirtualIndex * (cardWidth + gap) + cardWidth / 2)
-                  : 0;
-              const finalTranslateX = baseTranslateX + dragOffset;
-
-              return (
-                <div
-                  ref={carouselContainerRef}
-                  onPointerDown={(e) => handlePointerDown(e.clientX)}
-                  onPointerMove={(e) => handlePointerMove(e.clientX)}
-                  onPointerUp={() => handlePointerUp('plans')}
-                  onPointerLeave={() => handlePointerUp('plans')}
-                  onContextMenu={(e) => e.preventDefault()}
-                  className="relative w-full overflow-hidden py-6 select-none cursor-grab active:cursor-grabbing"
-                >
+                return (
                   <div
-                    style={{
-                      transform: `translateX(${finalTranslateX}px)`,
-                      transition:
-                        isDragging || !allowTransition
-                          ? 'none'
-                          : 'transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)',
-                      width: 'max-content',
-                    }}
-                    className="flex gap-6 items-center will-change-transform"
+                    ref={carouselContainerRef}
+                    onPointerDown={(e) => handlePointerDown(e.clientX)}
+                    onPointerMove={(e) => handlePointerMove(e.clientX)}
+                    onPointerUp={() => handlePointerUp('photos')}
+                    onPointerLeave={() => handlePointerUp('photos')}
+                    onContextMenu={(e) => e.preventDefault()}
+                    className="relative w-full overflow-hidden py-6 select-none cursor-grab active:cursor-grabbing"
                   >
-                    {extendedPlans.map((plan, i) => {
-                      const isActive = i === planVirtualIndex;
-                      const realIndex = i % N;
+                    <div
+                      style={{
+                        transform: `translateX(${finalTranslateX}px)`,
+                        transition:
+                          isDragging || !allowTransition
+                            ? 'none'
+                            : 'transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)',
+                        width: 'max-content',
+                      }}
+                      className="flex gap-6 items-center will-change-transform"
+                    >
+                      {extendedPhotos.map((photo, i) => {
+                        const isActive = i === photoVirtualIndex;
+                        const realIndex = i % N;
 
-                      return (
-                        <div
-                          key={`plan-clone-${i}`}
-                          style={{ width: cardWidth }}
-                          onClick={() => {
-                            if (hasDraggedRef.current) return;
-                            if (isActive) {
-                              openLightbox(realIndex, 'plans');
-                            } else {
-                              setPlanVirtualIndex(i);
-                            }
-                          }}
-                          className={`
-                            relative
-                            shrink-0
-                            h-[360px]
-                            sm:h-[460px]
-                            lg:h-[500px]
-                            rounded-[32px]
-                            overflow-hidden
-                            cursor-pointer
-                            transition-all
-                            duration-500
-                            ${
-                              isActive
-                                ? 'opacity-100 shadow-2xl scale-100 z-10'
-                                : 'opacity-35 hover:opacity-60 scale-[0.95] z-0'
-                            }
-                          `}
-                        >
-                          <img
-                            src={plan.src}
-                            alt={plan.title}
-                            className="h-full w-full object-cover pointer-events-none transition-transform duration-700 hover:scale-105"
-                          />
+                        return (
+                          <div
+                            key={`photo-clone-${i}`}
+                            style={{ width: cardWidth }}
+                            onClick={() => {
+                              if (hasDraggedRef.current) return;
+                              if (isActive) {
+                                openLightbox(realIndex, 'photos');
+                              } else {
+                                setPhotoVirtualIndex(i);
+                              }
+                            }}
+                            className={`
+                              relative
+                              shrink-0
+                              h-[360px]
+                              sm:h-[460px]
+                              lg:h-[500px]
+                              rounded-[32px]
+                              overflow-hidden
+                              cursor-pointer
+                              transition-all
+                              duration-500
+                              ${
+                                isActive
+                                  ? 'opacity-100 shadow-2xl scale-100 z-10'
+                                  : 'opacity-35 hover:opacity-60 scale-[0.95] z-0'
+                              }
+                            `}
+                          >
+                            <img
+                              src={photo.src}
+                              alt={photo.title}
+                              className="h-full w-full object-cover pointer-events-none transition-transform duration-700 hover:scale-105"
+                            />
 
-                          {!isActive && (
-                            <div className="absolute inset-0 bg-white/20 backdrop-blur-[1px] transition-colors" />
-                          )}
+                            {!isActive && (
+                              <div className="absolute inset-0 bg-white/20 backdrop-blur-[1px] transition-colors" />
+                            )}
 
-                          {isActive && (
-                            <div className="absolute bottom-5 right-5 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow-lg backdrop-blur-xs transition-transform hover:scale-110">
-                              <Maximize className="h-5 w-5" />
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                            {isActive && (
+                              <div className="absolute bottom-5 right-5 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow-lg backdrop-blur-xs transition-transform hover:scale-110">
+                                <Maximize className="h-5 w-5" />
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()
+            )}
+
+            {/* TAB 2: PLANS CAROUSEL OR EMPTY STATE */}
+            {activeMediaTab === 'Plans' && (
+              projectPlans.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-[32px] border border-slate-100 bg-slate-50/70 p-12 sm:p-16 text-center my-4">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-[#f12131] shadow-md mb-4">
+                    <PlanIcon className="h-8 w-8" />
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-extrabold text-[#29247c]">
+                    Floor Plans & Layout Master Blueprints
+                  </h3>
+                  <p className="mt-2 max-w-md text-sm text-slate-500 leading-relaxed">
+                    Detailed architectural blueprints, layout boundaries, and stage dimensions for {project.name} are available upon request.
+                  </p>
+                  <div className="mt-6 flex flex-wrap justify-center gap-3">
+                    {Boolean(project.brochureUrl && project.brochureUrl.trim() !== '') && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          window.dispatchEvent(
+                            new CustomEvent('kpn_open_brochure_modal', {
+                              detail: {
+                                brochureUrl: project.brochureUrl,
+                                projectName: project.name,
+                              },
+                            })
+                          );
+                        }}
+                        className="inline-flex items-center gap-2 rounded-full bg-[#f12131] px-6 py-3 text-xs font-extrabold text-white shadow-md hover:bg-red-600 transition cursor-pointer"
+                      >
+                        <Download className="h-4 w-4" />
+                        <span>Download Brochure</span>
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setIsBookingModalOpen(true)}
+                      className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-6 py-3 text-xs font-extrabold text-slate-800 shadow-xs hover:bg-slate-50 transition cursor-pointer"
+                    >
+                      <span>Explore Unit Availability</span>
+                    </button>
                   </div>
                 </div>
-              );
-            })()}
+              ) : projectPlans.length === 1 ? (
+                <div className="relative mx-auto max-w-4xl overflow-hidden rounded-[32px] border border-slate-100 shadow-xl my-4">
+                  <div
+                    onClick={() => openLightbox(0, 'plans')}
+                    className="group relative h-[380px] sm:h-[480px] lg:h-[520px] w-full cursor-pointer overflow-hidden bg-slate-50"
+                  >
+                    <img
+                      src={projectPlans[0].src}
+                      alt={projectPlans[0].title}
+                      className="h-full w-full object-contain p-4 transition-transform duration-700 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute bottom-5 right-5 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow-lg backdrop-blur-xs transition-transform group-hover:scale-110">
+                      <Maximize className="h-5 w-5" />
+                    </div>
+                    <div className="absolute bottom-5 left-5 text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-white/80">Click to expand</p>
+                      <p className="text-base font-bold">{projectPlans[0].title}</p>
+                    </div>
+                  </div>
+                </div>
+              ) : (() => {
+                const N = projectPlans.length;
+                const extendedPlans = [
+                  ...projectPlans,
+                  ...projectPlans,
+                  ...projectPlans,
+                ];
+                const cardWidth =
+                  carouselWidth > 0
+                    ? Math.min(800, carouselWidth * 0.72)
+                    : 600;
+                const gap = 24;
+                const baseTranslateX =
+                  carouselWidth > 0
+                    ? carouselWidth / 2 -
+                      (planVirtualIndex * (cardWidth + gap) + cardWidth / 2)
+                    : 0;
+                const finalTranslateX = baseTranslateX + dragOffset;
+
+                return (
+                  <div
+                    ref={carouselContainerRef}
+                    onPointerDown={(e) => handlePointerDown(e.clientX)}
+                    onPointerMove={(e) => handlePointerMove(e.clientX)}
+                    onPointerUp={() => handlePointerUp('plans')}
+                    onPointerLeave={() => handlePointerUp('plans')}
+                    onContextMenu={(e) => e.preventDefault()}
+                    className="relative w-full overflow-hidden py-6 select-none cursor-grab active:cursor-grabbing"
+                  >
+                    <div
+                      style={{
+                        transform: `translateX(${finalTranslateX}px)`,
+                        transition:
+                          isDragging || !allowTransition
+                            ? 'none'
+                            : 'transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)',
+                        width: 'max-content',
+                      }}
+                      className="flex gap-6 items-center will-change-transform"
+                    >
+                      {extendedPlans.map((plan, i) => {
+                        const isActive = i === planVirtualIndex;
+                        const realIndex = i % N;
+
+                        return (
+                          <div
+                            key={`plan-clone-${i}`}
+                            style={{ width: cardWidth }}
+                            onClick={() => {
+                              if (hasDraggedRef.current) return;
+                              if (isActive) {
+                                openLightbox(realIndex, 'plans');
+                              } else {
+                                setPlanVirtualIndex(i);
+                              }
+                            }}
+                            className={`
+                              relative
+                              shrink-0
+                              h-[360px]
+                              sm:h-[460px]
+                              lg:h-[500px]
+                              rounded-[32px]
+                              overflow-hidden
+                              cursor-pointer
+                              transition-all
+                              duration-500
+                              ${
+                                isActive
+                                  ? 'opacity-100 shadow-2xl scale-100 z-10'
+                                  : 'opacity-35 hover:opacity-60 scale-[0.95] z-0'
+                              }
+                            `}
+                          >
+                            <img
+                              src={plan.src}
+                              alt={plan.title}
+                              className="h-full w-full object-cover pointer-events-none transition-transform duration-700 hover:scale-105"
+                            />
+
+                            {!isActive && (
+                              <div className="absolute inset-0 bg-white/20 backdrop-blur-[1px] transition-colors" />
+                            )}
+
+                            {isActive && (
+                              <div className="absolute bottom-5 right-5 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow-lg backdrop-blur-xs transition-transform hover:scale-110">
+                                <Maximize className="h-5 w-5" />
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()
+            )}
 
             {/* TAB 3: VIDEO */}
             {activeMediaTab === 'Video' && (
-              <div className="relative overflow-hidden rounded-[32px] border border-slate-100 shadow-xl">
-                {!isVideoPlaying ? (
-                  <div className="group relative h-[450px] sm:h-[550px] w-full">
-                    <img
-                      src={project.image}
-                      alt="Video cover"
-                      className="h-full w-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black/30" />
-                    
-                    {/* Big Red Play Button */}
-                    <button
-                      onClick={() => setIsVideoPlaying(true)}
-                      aria-label="Play Project Video Walkthrough"
-                      suppressHydrationWarning
-                      className="absolute left-1/2 top-1/2 flex h-20 w-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-[#f12131] text-white shadow-2xl transition-transform duration-300 hover:scale-115 hover:bg-[#d81928]"
-                    >
-                      <Play className="h-8 w-8 fill-current ml-1" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="relative h-[450px] sm:h-[550px] w-full bg-black">
-                    {(() => {
-                      const videoUrl = project.walkthroughVideoUrl || '';
-                      const ytMatch = videoUrl.match(
-                        /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/
-                      );
-                      if (ytMatch) {
-                        return (
-                          <iframe
-                            title={`${project.name} Walkthrough Video`}
-                            src={`https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1`}
-                            className="h-full w-full border-0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                          />
+              project.walkthroughVideoUrl && project.walkthroughVideoUrl.trim() !== '' ? (
+                <div className="relative overflow-hidden rounded-[32px] border border-slate-100 shadow-xl my-4">
+                  {!isVideoPlaying ? (
+                    <div className="group relative h-[450px] sm:h-[550px] w-full">
+                      <img
+                        src={project.image}
+                        alt="Video cover"
+                        className="h-full w-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/30" />
+                      
+                      {/* Big Red Play Button */}
+                      <button
+                        onClick={() => setIsVideoPlaying(true)}
+                        aria-label="Play Project Video Walkthrough"
+                        suppressHydrationWarning
+                        className="absolute left-1/2 top-1/2 flex h-20 w-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-[#f12131] text-white shadow-2xl transition-transform duration-300 hover:scale-115 hover:bg-[#d81928] cursor-pointer"
+                      >
+                        <Play className="h-8 w-8 fill-current ml-1" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="relative h-[450px] sm:h-[550px] w-full bg-black">
+                      {(() => {
+                        const videoUrl = project.walkthroughVideoUrl || '';
+                        const ytMatch = videoUrl.match(
+                          /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/
                         );
-                      }
-                      const vimeoMatch = videoUrl.match(/vimeo\.com\/(?:video\/)?([0-9]+)/);
-                      if (vimeoMatch) {
+                        if (ytMatch) {
+                          return (
+                            <iframe
+                              title={`${project.name} Walkthrough Video`}
+                              src={`https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1`}
+                              className="h-full w-full border-0"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                            />
+                          );
+                        }
+                        const vimeoMatch = videoUrl.match(/vimeo\.com\/(?:video\/)?([0-9]+)/);
+                        if (vimeoMatch) {
+                          return (
+                            <iframe
+                              title={`${project.name} Walkthrough Video`}
+                              src={`https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1`}
+                              className="h-full w-full border-0"
+                              allow="autoplay; fullscreen; picture-in-picture"
+                              allowFullScreen
+                            />
+                          );
+                        }
                         return (
-                          <iframe
-                            title={`${project.name} Walkthrough Video`}
-                            src={`https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1`}
-                            className="h-full w-full border-0"
-                            allow="autoplay; fullscreen; picture-in-picture"
-                            allowFullScreen
-                          />
+                          <video
+                            controls
+                            autoPlay
+                            className="h-full w-full object-contain"
+                          >
+                            <source
+                              src={videoUrl}
+                              type="video/mp4"
+                            />
+                            Your browser does not support the video tag.
+                          </video>
                         );
-                      }
-                      return (
-                        <video
-                          controls
-                          autoPlay
-                          className="h-full w-full object-contain"
-                        >
-                          <source
-                            src={videoUrl || '/images/videos/hero-bg.mp4'}
-                            type="video/mp4"
-                          />
-                          Your browser does not support the video tag.
-                        </video>
-                      );
-                    })()}
+                      })()}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="relative overflow-hidden rounded-[32px] border border-slate-100 shadow-xl bg-gradient-to-br from-[#29247c] to-[#18154b] text-white p-12 sm:p-16 text-center my-4">
+                  <div className="relative z-10 mx-auto max-w-lg space-y-4">
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md">
+                      <VideoIcon className="h-8 w-8" />
+                    </div>
+                    <h3 className="text-2xl font-extrabold sm:text-3xl">Walkthrough Video</h3>
+                    <p className="text-sm text-slate-300 leading-relaxed">
+                      A live video walkthrough for {project.name} is being produced. Schedule a guided site visit with our property consultant or explore unit availability online.
+                    </p>
+                    <div className="pt-4 flex flex-wrap justify-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setIsBookingModalOpen(true)}
+                        className="rounded-full bg-[#f12131] px-7 py-3.5 text-xs font-extrabold text-white shadow-lg hover:bg-[#d81928] transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                      >
+                        Explore Units & Book
+                      </button>
+                    </div>
                   </div>
-                )}
-              </div>
+                </div>
+              )
             )}
 
             {/* TAB 4: 360 STREET VIEW */}
             {activeMediaTab === 'Street View' && (
-              <div className="h-[480px] sm:h-[600px] w-full overflow-hidden rounded-[32px] border border-slate-100 shadow-xl">
-                <iframe
-                  title={`${project.name} 360 Interactive Street View`}
-                  src={
-                    project.streetViewUrl ||
-                    "https://www.google.com/maps/embed?pb=!4v1680000000000!6m8!1m7!1sCAoSLEFGMVFpcE1mX1h3Q1pfcG5oQ09oV2RjSGFxTXlhZFl0b2pfaEZfN0p4WGZZ!2m2!1d12.8571477!2d80.0631628!3f120!4f0!5f0.7820865974627469"
-                  }
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0 }}
-                  allowFullScreen
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                />
-              </div>
+              project.streetViewUrl && project.streetViewUrl.trim() !== '' ? (
+                <div className="h-[480px] sm:h-[600px] w-full overflow-hidden rounded-[32px] border border-slate-100 shadow-xl my-4">
+                  <iframe
+                    title={`${project.name} 360 Interactive Street View`}
+                    src={project.streetViewUrl}
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                </div>
+              ) : project.mapEmbedUrl && project.mapEmbedUrl.trim() !== '' ? (
+                <div className="h-[480px] sm:h-[600px] w-full overflow-hidden rounded-[32px] border border-slate-100 shadow-xl my-4">
+                  <iframe
+                    title={`${project.name} Location Map`}
+                    src={project.mapEmbedUrl}
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                </div>
+              ) : (
+                <div className="relative overflow-hidden rounded-[32px] border border-slate-100 shadow-xl bg-gradient-to-br from-slate-900 to-[#29247c] text-white p-12 sm:p-16 text-center my-4">
+                  <div className="relative z-10 mx-auto max-w-lg space-y-4">
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md">
+                      <StreetIcon className="h-8 w-8" />
+                    </div>
+                    <h3 className="text-2xl font-extrabold sm:text-3xl">360° Interactive Street View</h3>
+                    <p className="text-sm text-slate-300 leading-relaxed">
+                      360° Virtual tour for {project.name} is available on-site during your scheduled visit. Navigate directly to the project address using Google Maps below.
+                    </p>
+                    <div className="pt-4 flex flex-wrap justify-center gap-3">
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                          project.address || `${project.name} ${project.location}`
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 rounded-full bg-[#f12131] px-7 py-3.5 text-xs font-extrabold text-white shadow-lg hover:bg-[#d81928] transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                      >
+                        <MapPin className="h-4 w-4" />
+                        <span>Get Directions to Site</span>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )
             )}
           </div>
 
@@ -1402,46 +1710,28 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
 
                 <div className="space-y-6">
                   <h3 className="text-lg font-extrabold text-[#29247c]">
-                    Key transport
+                    Key transport & landmarks
                   </h3>
 
                   <div className="grid grid-cols-2 gap-x-8 gap-y-5 text-sm">
-                    <div>
-                      <p className="text-xs font-semibold text-slate-400">Coast</p>
-                      <p className="text-base font-extrabold text-slate-900">300m</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-slate-400">University</p>
-                      <p className="text-base font-extrabold text-slate-900">750m</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-slate-400">Supermarket</p>
-                      <p className="text-base font-extrabold text-slate-900">500m</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-slate-400">Park</p>
-                      <p className="text-base font-extrabold text-slate-900">1120m</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-slate-400">Railway station</p>
-                      <p className="text-base font-extrabold text-slate-900">1750m</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-slate-400">Airport</p>
-                      <p className="text-base font-extrabold text-slate-900">3158m</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-slate-400">Bus station</p>
-                      <p className="text-base font-extrabold text-slate-900">450m</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-slate-400">Bank</p>
-                      <p className="text-base font-extrabold text-slate-900">415m</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-slate-400">Hospital</p>
-                      <p className="text-base font-extrabold text-slate-900">350m</p>
-                    </div>
+                    {nearbyLandmarks.map((item: any, idx: number) => {
+                      const name =
+                        typeof item === 'string'
+                          ? item
+                          : item.name || item.title || item.location || 'Landmark';
+                      const distance =
+                        typeof item === 'string'
+                          ? ''
+                          : item.distance || item.dist || '';
+                      return (
+                        <div key={idx}>
+                          <p className="text-xs font-semibold text-slate-400">{name}</p>
+                          <p className="text-base font-extrabold text-slate-900">
+                            {distance || 'Nearby'}
+                          </p>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </FadeIn>
@@ -1690,7 +1980,7 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
 
               {/* Accordion Items Stream with Left Purple Icon Badge & Right Chevron */}
               <div className="mx-auto mt-16 max-w-4xl space-y-0">
-                {projectFaqs.map((faq, index) => {
+                {dynamicFaqs.map((faq: any, index: number) => {
                   const isOpen = openFaqIndex === index;
                   return (
                     <FadeIn

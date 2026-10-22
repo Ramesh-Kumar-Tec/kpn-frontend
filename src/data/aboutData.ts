@@ -3,35 +3,35 @@ export const timelineData = [
     year: '2004',
     image: '/images/features/b1.png',
     description:
-      'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusam doloremque laudtium, totam rem aperiam, eaque ipsa.',
+      'KPN Promoters was established with an uncompromising commitment to transparent land ownership, clear documentation, and customer trust across Chennai.',
   },
 
   {
     year: '2006',
     image: '/images/features/b2.png',
     description:
-      'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusam doloremque laudtium, totam rem aperiam, eaque ipsa.',
+      'Expanded into plotted layout developments, delivering CMDA and DTCP-approved gated communities along high-growth southern residential corridors.',
   },
 
   {
     year: '2007',
     image: '/images/features/b3.png',
     description:
-      'Natus error sit voluptatem accusantium doloremque laudtium.',
+      'Successfully delivered our landmark 10th residential layout, surpassing 1,500 happy homeowners with on-time registration and infrastructure delivery.',
   },
 
   {
     year: '2013',
     image: '/images/features/b4.png',
     description:
-      'Quae ab illoentore veritatis et quasi architecto beatae vitae dicta sunt explicabo.',
+      'Pioneered integrated villa and plotted communities featuring blacktop avenue roads, comprehensive drainage systems, and landscaped recreation parks.',
   },
 
   {
     year: '2024',
     image: '/images/features/b1.png',
     description:
-      'Soloremque laudtium, totam rem aperiam, eaque ipsa quae ab illoentore veritatis.',
+      'Surpassed 10,000+ satisfied families across 100+ projects in Chennai and Tamil Nadu, scaling into sustainable and modern residential communities.',
   },
 ];
 export const learnMoreCards = [

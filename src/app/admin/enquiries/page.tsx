@@ -20,14 +20,14 @@ import {
   SelectItem,
 } from '@/components/ui/select';
 
-export interface FormCategoryMeta {
+interface FormCategoryMeta {
   key: string;
   label: string;
   badgeColor: string;
   icon: string;
 }
 
-export function getEnquiryFormCategory(e: any): FormCategoryMeta {
+function getEnquiryFormCategory(e: any): FormCategoryMeta {
   const source = (e.source || '').toLowerCase();
   const project = (e.projectName || '').toLowerCase();
   const message = (e.message || '').toLowerCase();
