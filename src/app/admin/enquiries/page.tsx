@@ -32,6 +32,21 @@ function getEnquiryFormCategory(e: any): FormCategoryMeta {
   const project = (e.projectName || '').toLowerCase();
   const message = (e.message || '').toLowerCase();
 
+  // 0. New Project Launch Announcement / Floating Ad
+  if (
+    source.includes('launch') ||
+    source.includes('floating') ||
+    project.includes('guduvancherry') ||
+    message.includes('guduvancherry')
+  ) {
+    return {
+      key: 'New Launch',
+      label: 'New Launch Announcement',
+      badgeColor: 'bg-rose-50 text-[#f12131] border-rose-200/90',
+      icon: '🚀',
+    };
+  }
+
   // 1. Joint Development Form
   if (
     source.includes('joint development') ||
@@ -158,6 +173,7 @@ function getEnquiryFormCategory(e: any): FormCategoryMeta {
 
 const FORM_FILTER_OPTIONS = [
   { value: 'All', label: 'All Forms & Sources', icon: '📋' },
+  { value: 'New Launch', label: 'New Project Launch Ads', icon: '🚀' },
   { value: 'Joint Development', label: 'Joint Development Form', icon: '🤝' },
   { value: 'Investors', label: 'Investor Relations', icon: '📈' },
   { value: 'Our Venture', label: 'Our Venture', icon: '🚀' },
@@ -341,6 +357,7 @@ export default function AdminEnquiriesPage() {
   const formCounts = useMemo(() => {
     const counts: Record<string, number> = {
       All: enquiries.length,
+      'New Launch': 0,
       'Joint Development': 0,
       'Investors': 0,
       'Our Venture': 0,

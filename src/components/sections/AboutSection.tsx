@@ -55,7 +55,7 @@ export default function AboutSection() {
                 {/* Stat 2 */}
                 <div className="flex flex-col border-x border-slate-100 px-3 sm:px-6">
                   <div className="text-3xl font-black tracking-tight text-[#221e68] sm:text-4xl lg:text-5xl">
-                    <Counter value={80} suffix="+" />
+                    <Counter value={120} suffix="+" />
                   </div>
                   <span className="mt-1 text-xs font-semibold text-slate-600 sm:text-sm">
                     Completed Projects
@@ -127,7 +127,7 @@ export default function AboutSection() {
                 {/* Chairman Visual Graphic */}
                 <div className="relative overflow-hidden rounded-[22px] bg-slate-50 md:rounded-[30px]">
                   <Image
-                    src="/images/about/kpn-promoters-about.png"
+                    src="/images/about/kpn-promoters.png"
                     alt="V Kanniyappan B.Com - Chairman of KPN Promoters Pvt Ltd"
                     width={878}
                     height={711}

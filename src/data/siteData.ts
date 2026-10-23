@@ -98,6 +98,7 @@ export interface ProjectItem {
   image: string;
   address?: string;
   description?: string;
+  projectArea?: string;
   plotSizes?: string;
   proximityDetails?: string[];
   locationAdvantages?: {

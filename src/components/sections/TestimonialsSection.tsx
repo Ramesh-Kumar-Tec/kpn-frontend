@@ -352,14 +352,14 @@ export default function TestimonialsSection() {
               <text
                 className="
                   fill-black
-                  text-[9.5px]
+                  text-[11px]
                   font-black
                   uppercase
                   tracking-[0.115em]
                 "
               >
                 <textPath href="#testimonialCirclePath" startOffset="0%">
-                  WHAT PEOPLE SAYS • WHAT PEOPLE SAYS • WHAT PEOPLE SAYS • WHAT PEOPLE SAYS •
+                  YOU'RE IN SAFE HANDS • YOU'RE IN SAFE HANDS • YOU'RE IN SAFE HANDS • 
                 </textPath>
               </text>
             </svg>

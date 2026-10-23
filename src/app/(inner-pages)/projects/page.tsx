@@ -9,6 +9,8 @@ import { getProjects } from '@/lib/cmsClient';
 import { MapPin, ChevronDown, Scale, Check } from 'lucide-react';
 import FadeIn from '@/components/animation/FadeIn';
 import { useWishlistCompare } from '@/context/WishlistCompareContext';
+import ProjectListingCard from '@/components/project/ProjectListingCard';
+import SiteVisitModal from '@/components/project/SiteVisitModal';
 
 // Budget parser helper to match diverse price formats like "₹ 19L Onwards", "₹ 58L Onwards", "₹ 2799/Sq.Ft"
 function matchesBudget(projectBudget: string | undefined, filterValue: string): boolean {
@@ -182,6 +184,7 @@ function FilterDropdown({
 export default function ProjectsPage() {
   const { toggleCompare, isInCompare } = useWishlistCompare();
   const [allProjects, setAllProjects] = useState<ProjectItem[]>(projectsData);
+  const [siteVisitProject, setSiteVisitProject] = useState<ProjectItem | null>(null);
 
   useEffect(() => {
     async function loadDynamic() {
@@ -448,255 +451,13 @@ export default function ProjectsPage() {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
                 {paginatedProjects.map((project) => (
-                  <Link
+                  <ProjectListingCard
                     key={project.id}
-                    href={`/projects/${project.slug}`}
-                    className="
-                      group
-                      relative
-                      block
-                      h-[380px]
-                      w-full
-                      overflow-hidden
-                      rounded-[32px]
-                      bg-slate-200
-                      shadow-lg
-                      transition-all
-                      duration-500
-                      hover:shadow-2xl
-                      sm:h-[430px]
-                      lg:h-[460px]
-                      xl:h-[400px]
-                    "
-                  >
-                    {/* Main project image */}
-                    <img
-                      src={project.image}
-                      alt={project.name}
-                      className="
-                        absolute
-                        inset-0
-                        h-full
-                        w-full
-                        object-cover
-                        object-center
-                        transition-transform
-                        duration-700
-                        group-hover:scale-[1.03]
-                      "
-                    />
-
-                    {/* =====================================================
-                        RIGHT FLOATING PANEL
-                    ====================================================== */}
-                    <div
-                      className="
-                        absolute
-                        bottom-3
-                        right-3
-                        top-3
-                        z-10
-                        w-[56%]
-                        overflow-hidden
-                        rounded-[26px]
-                        border
-                        border-white/30
-                        shadow-xl
-                        sm:bottom-3.5
-                        sm:right-3.5
-                        sm:top-3.5
-                        sm:w-[54%]
-                        lg:w-[58%]
-                        xl:w-[55%]
-                      "
-                    >
-                      {/* =================================================
-                          NORMAL STATE - BLURRED IMAGE
-                      ================================================= */}
-                      <img
-                        src={project.image}
-                        alt=""
-                        aria-hidden="true"
-                        className="
-                          absolute
-                          inset-0
-                          h-full
-                          w-full
-                          scale-110
-                          object-cover
-                          object-center
-                          blur-[18px]
-                          transition-opacity
-                          duration-500
-                          group-hover:opacity-0
-                        "
-                      />
-
-                      {/* Normal glass background */}
-                      <div
-                        className="
-                          absolute
-                          inset-0
-                          bg-white/20
-                          backdrop-blur-[3px]
-                          transition-opacity
-                          duration-500
-                          group-hover:opacity-0
-                        "
-                      />
-
-                      {/* =================================================
-                          HOVER RED BACKGROUND
-                      ================================================= */}
-                      <div
-                        className="
-                          absolute
-                          inset-0
-                          bg-[#f12131]
-                          opacity-0
-                          transition-opacity
-                          duration-500
-                          group-hover:opacity-100
-                        "
-                      />
-
-                      {/* =================================================
-                          CONTENT
-                      ================================================= */}
-                      <div
-                        className="
-                          relative
-                          flex
-                          h-full
-                          flex-col
-                          justify-between
-                          p-4
-                          sm:p-5
-                          lg:p-5
-                          xl:p-6
-                        "
-                      >
-                        {/* TOP BADGE & ACTION BUTTONS */}
-                        <div className="flex items-center justify-between gap-1.5">
-                          <span
-                            className="
-                              inline-flex
-                              items-center
-                              rounded-full
-                              bg-[#f12131]
-                              px-3.5
-                              py-1.5
-                              sm:px-4
-                              sm:py-2
-                              text-[11px]
-                              sm:text-xs
-                              font-black
-                              tracking-wide
-                              text-white
-                              shadow-md
-                              transition-all
-                              duration-500
-                              group-hover:bg-white
-                              group-hover:text-black
-                              truncate
-                            "
-                          >
-                            {project.bhk}
-                          </span>
-
-                          {/* Compare Button */}
-                          <div className="flex items-center gap-1.5 z-20 shrink-0">
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                toggleCompare(project.id);
-                              }}
-                              className={`flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full shadow-md backdrop-blur-md transition-all duration-300 ${
-                                isInCompare(project.id)
-                                  ? 'bg-[#382b88] text-white scale-110'
-                                  : 'bg-white/80 text-slate-800 hover:bg-white hover:text-[#382b88]'
-                              }`}
-                              title={isInCompare(project.id) ? 'Remove from Compare' : 'Add to Compare'}
-                            >
-                              <Scale className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* BOTTOM CONTENT */}
-                        <div className="space-y-3 sm:space-y-3.5">
-                          {/* Location */}
-                          <div className="flex items-center gap-2">
-                            <MapPin
-                              className="
-                                h-4
-                                w-4
-                                shrink-0
-                                text-[#f12131]
-                                transition-colors
-                                duration-500
-                                group-hover:text-black
-                              "
-                            />
-                            <span
-                              className="
-                                text-xs
-                                sm:text-sm
-                                font-bold
-                                text-white
-                                drop-shadow-md
-                                transition-colors
-                                duration-500
-                                group-hover:text-black
-                                group-hover:drop-shadow-none
-                                truncate
-                              "
-                            >
-                              {project.location}
-                            </span>
-                          </div>
-
-                          {/* Divider */}
-                          <div
-                            className="
-                              h-px
-                              w-full
-                              bg-white/60
-                              transition-colors
-                              duration-500
-                              group-hover:bg-black
-                            "
-                          />
-
-                          {/* Project name */}
-                          <h3
-                            className="
-                              text-xl
-                              font-extrabold
-                              tracking-tight
-                              text-white
-                              drop-shadow-lg
-                              transition-colors
-                              duration-500
-                              sm:text-2xl
-                              lg:text-[22px]
-                              xl:text-[24px]
-                              leading-tight
-                              line-clamp-2
-                              group-hover:text-black
-                              group-hover:drop-shadow-none
-                            "
-                          >
-                            {project.name}
-                          </h3>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
+                    project={project}
+                    onBookSiteVisit={(p) => setSiteVisitProject(p)}
+                  />
                 ))}
               </div>
             )}
@@ -746,6 +507,13 @@ export default function ProjectsPage() {
 
         </div>
       </section>
+
+      {/* Complimentary Guided Site Visit Booking Modal */}
+      <SiteVisitModal
+        project={siteVisitProject}
+        isOpen={Boolean(siteVisitProject)}
+        onClose={() => setSiteVisitProject(null)}
+      />
     </>
   );
 }

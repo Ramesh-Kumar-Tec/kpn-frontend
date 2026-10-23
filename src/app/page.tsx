@@ -1,4 +1,4 @@
-import PortalZoomHero from '@/components/sections/PortalZoomHero';
+import FullScreenVideoEntry from '@/components/sections/FullScreenVideoEntry';
 import HeroSection from '@/components/sections/HeroSection';
 import AboutSection from '@/components/sections/AboutSection';
 import ServicesSection from '@/components/sections/ServicesSection';
@@ -15,7 +15,7 @@ import ScrollToTop from '@/components/ui/ScrollToTop';
 export default function Home() {
   return (
     <main className="min-h-screen bg-white text-slate-800 antialiased selection:bg-red-500 selection:text-white">
-      <PortalZoomHero />
+      <FullScreenVideoEntry />
       <HeroSection />
       <AboutSection />
       <ServicesSection />

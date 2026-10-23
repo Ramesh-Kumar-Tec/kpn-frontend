@@ -6,6 +6,7 @@ import KpnChatbot from './KpnChatbot';
 import ScrollQuoteModal from './ScrollQuoteModal';
 import BrochureDownloadModal from './BrochureDownloadModal';
 import FloatingActionBar from './FloatingActionBar';
+import NewProjectAdModal from './NewProjectAdModal';
 
 export default function PublicWidgets() {
   const pathname = usePathname();
@@ -22,6 +23,7 @@ export default function PublicWidgets() {
       <ScrollQuoteModal />
       <BrochureDownloadModal />
       <FloatingActionBar />
+      <NewProjectAdModal />
     </>
   );
 }
