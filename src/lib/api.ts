@@ -1,6 +1,20 @@
 import { compressImage } from './imageCompressor';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+export const getApiBaseUrl = (): string => {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, '');
+  }
+  if (typeof window !== 'undefined') {
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (!isLocal) {
+      return 'https://kpnbackend.elroiitsolutions.com/api';
+    }
+  }
+  if (process.env.NODE_ENV === 'production') {
+    return 'https://kpnbackend.elroiitsolutions.com/api';
+  }
+  return 'http://localhost:5000/api';
+};
 
 export interface ApiResponse<T = any> {
   success: boolean;
@@ -26,7 +40,8 @@ async function request<T = any>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
-  const url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+  const baseUrl = getApiBaseUrl();
+  const url = `${baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
   const token = getAuthToken();
 
   const headers: Record<string, string> = {
@@ -83,7 +98,7 @@ export const api = {
 
   // File Upload Helper (with auto client-side image compression for large photos)
   upload: async (file: File, folder = 'kpn_promoters'): Promise<{ url: string; publicId?: string }> => {
-    const url = `${API_BASE_URL}/upload`;
+    const url = `${getApiBaseUrl()}/upload`;
     const token = getAuthToken();
 
     // Automatically optimize large camera images (>1.5MB) down to clean web resolution
@@ -118,7 +133,7 @@ export const api = {
     folder = 'kpn_promoters'
   ): Promise<Array<{ url: string; publicId?: string }>> => {
     if (!files || files.length === 0) return [];
-    const url = `${API_BASE_URL}/upload/multiple`;
+    const url = `${getApiBaseUrl()}/upload/multiple`;
     const token = getAuthToken();
 
     // Compress all large images in parallel

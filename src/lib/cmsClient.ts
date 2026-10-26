@@ -19,7 +19,23 @@ export interface TestimonialItem {
   rating?: number;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+export const getCmsApiBaseUrl = (): string => {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, '');
+  }
+  if (typeof window !== 'undefined') {
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (!isLocal) {
+      return 'https://kpnbackend.elroiitsolutions.com/api';
+    }
+  }
+  if (process.env.NODE_ENV === 'production') {
+    return 'https://kpnbackend.elroiitsolutions.com/api';
+  }
+  return 'http://localhost:5000/api';
+};
+
+const API_BASE_URL = getCmsApiBaseUrl();
 
 /**
  * Fetch all published projects from MongoDB backend API with fallback to local siteData
@@ -466,7 +482,7 @@ export const fallbackCelebrations: CelebrationItem[] = [
  */
 export async function getCelebrations(category?: string): Promise<CelebrationItem[]> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+    const baseUrl = getCmsApiBaseUrl();
     const query = category && category !== 'All' ? `?category=${encodeURIComponent(category)}` : '';
     const res = await fetch(`${baseUrl}/celebrations${query}`, {
       cache: 'no-store',

@@ -2,7 +2,9 @@ import type { NextConfig } from "next";
 const backendBaseUrl = (
   process.env.NEXT_PUBLIC_API_URL
     ? process.env.NEXT_PUBLIC_API_URL.replace(/\/api\/?$/, '')
-    : 'http://localhost:5000'
+    : (process.env.NODE_ENV === 'production'
+        ? 'https://kpnbackend.elroiitsolutions.com'
+        : 'http://localhost:5000')
 );
 
 const nextConfig: NextConfig = {

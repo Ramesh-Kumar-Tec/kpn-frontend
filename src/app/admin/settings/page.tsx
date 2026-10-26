@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Settings, Lock, Shield, Server, CheckCircle, AlertCircle } from 'lucide-react';
-import { api } from '@/lib/api';
+import { api, getApiBaseUrl } from '@/lib/api';
 import { useAuth } from '@/lib/authContext';
 
 export default function AdminSettingsPage() {
@@ -82,7 +82,7 @@ export default function AdminSettingsPage() {
 
           <div className="rounded-2xl bg-slate-50 p-4 border border-slate-100">
             <span className="text-[10px] font-extrabold uppercase text-slate-400">Backend API</span>
-            <p className="font-extrabold text-emerald-700 text-sm mt-1">http://localhost:5000/api</p>
+            <p className="font-extrabold text-emerald-700 text-sm mt-1 truncate" title={getApiBaseUrl()}>{getApiBaseUrl()}</p>
           </div>
         </div>
       </div>

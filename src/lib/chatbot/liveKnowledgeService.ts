@@ -33,7 +33,12 @@ export interface LiveKnowledgeData {
   lastFetchedAt: number;
 }
 
-const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api').replace(/\/$/, '');
+const API_BASE_URL = (
+  process.env.NEXT_PUBLIC_API_URL ||
+  (process.env.NODE_ENV === 'production'
+    ? 'https://kpnbackend.elroiitsolutions.com/api'
+    : 'http://localhost:5001/api')
+).replace(/\/$/, '');
 const CACHE_TTL_MS = 60_000; // 1 minute in-memory cache
 
 let cachedKnowledge: LiveKnowledgeData | null = null;

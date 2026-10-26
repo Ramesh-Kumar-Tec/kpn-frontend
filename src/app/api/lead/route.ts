@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
 
-const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api').replace(/\/$/, '');
+const API_BASE_URL = (
+  process.env.NEXT_PUBLIC_API_URL ||
+  (process.env.NODE_ENV === 'production'
+    ? 'https://kpnbackend.elroiitsolutions.com/api'
+    : 'http://localhost:5001/api')
+).replace(/\/$/, '');
 
 export async function POST(req: Request) {
   try {
