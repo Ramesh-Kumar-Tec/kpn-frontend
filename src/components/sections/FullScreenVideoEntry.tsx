@@ -190,7 +190,7 @@ export default function FullScreenVideoEntry() {
               backfaceVisibility: 'hidden',
             }}
           >
-            <source src="/entry/KPN%20LOGO_2.mp4" type="video/mp4" />
+            <source src="/entry/KPN%20LOGO.mp4" type="video/mp4" />
             <source src="/entry/kpn-logo-entry.mp4" type="video/mp4" />
             Your browser does not support video playback.
           </video>
