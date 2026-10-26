@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, X, Star, CheckCircle, MapPin, Clock } from 'lucide-react';
 import RunningPillBadge from '@/components/ui/RunningPillBadge';
 import FadeIn from '@/components/animation/FadeIn';
+import { getVideos } from '@/lib/cmsClient';
 
 export interface VideoTestimonial {
   id: string;
@@ -20,6 +21,22 @@ export interface VideoTestimonial {
   thumbnail: string;
   videoUrl: string;
   verifiedYear: string;
+}
+
+export function formatVideoEmbedUrl(url: string): string {
+  if (!url) return '';
+  if (url.includes('/embed/')) return url;
+  const shortMatch = url.match(/youtu\.be\/([\w-]{11})/);
+  if (shortMatch) return `https://www.youtube.com/embed/${shortMatch[1]}?autoplay=1`;
+  const watchMatch = url.match(/[?&]v=([\w-]{11})/);
+  if (watchMatch) return `https://www.youtube.com/embed/${watchMatch[1]}?autoplay=1`;
+  return url;
+}
+
+export function getYouTubeThumbnail(url: string): string {
+  if (!url) return '';
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+  return match ? `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg` : '';
 }
 
 export const videoTestimonialsData: VideoTestimonial[] = [
@@ -116,14 +133,61 @@ export const videoTestimonialsData: VideoTestimonial[] = [
 ];
 
 export default function VideoTestimonialsSection() {
+  const [items, setItems] = useState<VideoTestimonial[]>(videoTestimonialsData);
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [activeVideo, setActiveVideo] = useState<VideoTestimonial | null>(null);
 
+  useEffect(() => {
+    let isMounted = true;
+    async function loadCmsVideos() {
+      try {
+        const liveVideos = await getVideos();
+        if (isMounted && Array.isArray(liveVideos) && liveVideos.length > 0) {
+          const published = liveVideos.filter((v) => !v.status || v.status === 'Published');
+          if (published.length > 0) {
+            const mapped: VideoTestimonial[] = published.map((v, idx) => {
+              const formattedUrl = formatVideoEmbedUrl(v.videoUrl);
+              const thumb =
+                v.thumbnailUrl ||
+                getYouTubeThumbnail(v.videoUrl) ||
+                'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&auto=format&fit=crop&q=80';
+              return {
+                id: v.id || v._id || `cms-vid-${idx}`,
+                title: v.title,
+                customerName: v.projectName ? `${v.projectName} Owner` : 'KPN Homeowner',
+                role: 'Verified Customer',
+                project: v.projectName || 'KPN Promoters',
+                location: 'Chennai, Tamil Nadu',
+                category: 'All',
+                duration: 'Walkthrough',
+                quote:
+                  v.description ||
+                  'Watch our full project tour and homeowner handover walkthrough with KPN Promoters.',
+                rating: 5,
+                thumbnail: thumb,
+                videoUrl: formattedUrl,
+                verifiedYear: 'Verified 2025',
+              };
+            });
+            setItems(mapped);
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to load videos from CMS:', err);
+      }
+    }
+    loadCmsVideos();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const categories = ['All', 'Villas', 'Plots', 'NRI'];
 
-  const filteredVideos = activeCategory === 'All'
-    ? videoTestimonialsData
-    : videoTestimonialsData.filter((v) => v.category === activeCategory);
+  const filteredVideos =
+    activeCategory === 'All'
+      ? items
+      : items.filter((v) => v.category === activeCategory);
 
   return (
     <section className="relative w-full overflow-hidden bg-gradient-to-b from-white via-slate-50/60 to-white py-24 md:py-32">

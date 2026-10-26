@@ -504,5 +504,44 @@ export async function getCelebrations(category?: string): Promise<CelebrationIte
   return fallbackCelebrations;
 }
 
+export interface VideoItemCMS {
+  id: string;
+  _id?: string;
+  title: string;
+  projectId?: string;
+  project?: string;
+  projectName?: string;
+  videoUrl: string;
+  videoType?: 'YouTube' | 'Vimeo' | 'Cloudinary' | 'External';
+  thumbnailUrl?: string;
+  description?: string;
+  order?: number;
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/**
+ * Fetch all published videos from backend API
+ */
+export async function getVideos(): Promise<VideoItemCMS[]> {
+  try {
+    const baseUrl = getCmsApiBaseUrl();
+    const res = await fetch(`${baseUrl}/videos`, {
+      cache: 'no-store',
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) {
+        return data.data;
+      }
+    }
+  } catch (err) {
+    console.warn('[cmsClient] Failed to fetch videos:', err);
+  }
+  return [];
+}
+
 
 
