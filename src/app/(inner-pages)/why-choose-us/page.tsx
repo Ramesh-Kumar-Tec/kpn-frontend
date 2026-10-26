@@ -4,6 +4,7 @@ import Navbar from "@/components/layout/Navbar";
 import InnerPageHero from "@/components/sections/InnerPageHero";
 import FadeIn from "@/components/animation/FadeIn";
 import RunningPillBadge from "@/components/ui/RunningPillBadge";
+import VideoTestimonialsSection from "@/components/sections/VideoTestimonialsSection";
 export default function WhyChooseUs() {
   const values = [
     {
@@ -122,6 +123,8 @@ export default function WhyChooseUs() {
         </div>
       </section>
 
+      {/* Customer Video Testimonials */}
+      <VideoTestimonialsSection />
     </div>
   );
 }

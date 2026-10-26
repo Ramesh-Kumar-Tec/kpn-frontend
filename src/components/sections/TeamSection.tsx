@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { teamData } from '@/data/siteData';
 import RunningPillBadge from '../ui/RunningPillBadge';
 import StaggerContainer from '../animation/StaggerContainer';
@@ -107,22 +108,36 @@ export default function TeamSection() {
                   />
                 </div>
 
-                <div className="h-15 w-15 rounded-full bg-[#f12131] flex items-center justify-center text-white shadow-md">
+                <Link
+                  href="/careers"
+                  aria-label="View career opportunities"
+                  className="h-15 w-15 rounded-full bg-[#f12131] flex items-center justify-center text-white shadow-md transition-transform duration-300 group-hover:scale-110"
+                >
                   <svg className="h-5 w-5 fill-current" viewBox="0 0 24 24">
-                    <path d="M12 4v16m-8-8h16" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                    <path
+                      d="M6 18L18 6M18 6H8M18 6V16"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      fill="none"
+                    />
                   </svg>
-                </div>
+                </Link>
               </div>
 
               <span className="text-xs font-bold text-[#29247c] uppercase tracking-widest block">
                 JOIN OUR TEAM
               </span>
               <h3 className="text-4xl font-black text-[#29247c] mt-16 leading-tight tracking-tight">
-                Start a career with excellent benefits
+                Start a career with KPN Promoters.
               </h3>
             </div>
 
-            <button suppressHydrationWarning className="w-full rounded-full bg-[#f12131] py-3.5 px-6 flex items-center justify-between text-white font-bold text-sm shadow-md transition-all hover:bg-red-600 active:scale-98">
+            <Link
+              href="/careers"
+              className="w-full rounded-full bg-[#f12131] py-3.5 px-6 flex items-center justify-between text-white font-bold text-sm shadow-md transition-all hover:bg-red-600 active:scale-98"
+            >
               <span>Current Openings</span>
               <span className="h-8 w-8 rounded-full border border-white/40 flex items-center justify-center text-white transition-transform duration-300 group-hover:scale-110">
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
@@ -135,7 +150,7 @@ export default function TeamSection() {
                   />
                 </svg>
               </span>
-            </button>
+            </Link>
           </StaggerItem>
         </StaggerContainer>
       </div>

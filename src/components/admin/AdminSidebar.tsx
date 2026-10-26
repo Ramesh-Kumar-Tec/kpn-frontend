@@ -53,7 +53,7 @@ const navSections = [
       // { label: 'Media Library', href: '/admin/media', icon: ImageIcon },
       { label: 'Awards & Honors', href: '/admin/awards', icon: Trophy },
       { label: 'Testimonials', href: '/admin/testimonials', icon: MessageSquareQuote },
-      // { label: 'Video Center', href: '/admin/videos', icon: Video },
+      { label: 'Videos', href: '/admin/videos', icon: Video },
     ],
   },
   {

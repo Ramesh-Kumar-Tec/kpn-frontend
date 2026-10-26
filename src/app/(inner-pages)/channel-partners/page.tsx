@@ -16,10 +16,14 @@ export default function ChannelPartnersPage() {
         title="Channel Partners"
         breadcrumb="Channel Partners"
         description="Join a network of trusted partners bringing innovative solutions to more markets. Let's achieve success together."
-        image="/images/projects/project_7.jpg"
+        image="/images/banners/channel_partners_banner.jpg"
       />
 
-      <AssociatePageTemplate title="Channel Partners" />
+      <AssociatePageTemplate
+        title="Channel Partners"
+        email="kpnsalesteam@gmail.com"
+        phone="+91 73580 38425 / +91 73580 38421"
+      />
 
     </>
   );

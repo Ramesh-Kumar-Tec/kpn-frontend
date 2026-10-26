@@ -1,64 +1,45 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Volume2, VolumeX } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Navbar from '@/components/layout/Navbar';
 
-// Storage key to persist user's explicit mute choice across page navigations in this session
-const MUTE_STORAGE_KEY = 'kpn_hero_muted_by_user';
-
-function getIsMutedPreference(): boolean {
-  if (typeof window === 'undefined') return false;
-  try {
-    const stored = sessionStorage.getItem(MUTE_STORAGE_KEY);
-    // If the user has explicitly muted ('true'), return true
-    if (stored === 'true') return true;
-    // If the user has explicitly unmuted ('false'), return false
-    if (stored === 'false') return false;
-  } catch {}
-  // Default on initial website opening: unmuted (plays audio)
-  return false;
-}
-
 export default function HeroSection() {
+  const sectionRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-
-  // Default to false (unmuted) on both server and client during initial render to eliminate hydration mismatch
-  const [isMuted, setIsMuted] = useState(false);
-  const isMutedRef = useRef(false);
+  const isInViewRef = useRef<boolean>(true);
 
   useEffect(() => {
-    // Check if user previously muted in this browser session
-    const shouldBeMuted = getIsMutedPreference();
-    setIsMuted(shouldBeMuted);
-    isMutedRef.current = shouldBeMuted;
-
     const video = videoRef.current;
+    const section = sectionRef.current;
     if (!video) return;
 
-    video.defaultMuted = shouldBeMuted;
-    video.muted = shouldBeMuted;
+    // Start unmuted by default when in view
+    video.defaultMuted = false;
+    video.muted = false;
 
     const playVideo = async () => {
       if (!video) return;
       try {
-        video.muted = isMutedRef.current;
+        if (isInViewRef.current) {
+          video.muted = false;
+        } else {
+          video.muted = true;
+        }
         const promise = video.play();
         if (promise !== undefined) {
           await promise;
         }
       } catch {
-        // If browser autoplay policy blocks unmuted playback on cold open:
-        // fallback to muted so video plays visually, and auto-unmute on first user gesture
-        if (!isMutedRef.current) {
-          video.muted = true;
-          try {
-            await video.play();
-          } catch {
-            // Browser policy catch
-          }
+        // Fallback if browser autoplay policy blocks unmuted audio on cold start:
+        // play muted initially and unmute upon first user interaction
+        video.muted = true;
+        try {
+          await video.play();
+        } catch {
+          // Browser policy catch
         }
       }
     };
@@ -69,6 +50,7 @@ export default function HeroSection() {
       }
     };
 
+    // When intro portal completes fading, begin hero playback
     const handlePortalFade = (e: Event) => {
       const customEvent = e as CustomEvent<{ faded: boolean }>;
       if (customEvent.detail?.faded) {
@@ -77,25 +59,27 @@ export default function HeroSection() {
         pauseVideo();
       }
     };
-
     window.addEventListener('kpn-portal-fade', handlePortalFade);
 
+    // Pause/mute when tab is in background, resume when active and in view
     const handleVisibilityChange = () => {
-      if (!document.hidden && (typeof window !== 'undefined' && (window as any).__kpnPortalFaded)) {
+      if (document.hidden) {
+        video.muted = true;
+        pauseVideo();
+      } else if (isInViewRef.current && (typeof window !== 'undefined' && (window as any).__kpnPortalFaded)) {
         playVideo();
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    // Initial gesture unlock: ONLY auto-unmute if the user did NOT mute the video!
+    // Any user gesture unlocks unmuted playback if it was previously blocked by browser autoplay policy
     const handleGesture = () => {
       const vid = videoRef.current;
       if (!vid) return;
 
       if (typeof window !== 'undefined' && (window as any).__kpnPortalFaded) {
-        if (!isMutedRef.current && vid.muted) {
+        if (isInViewRef.current && vid.muted) {
           vid.muted = false;
-          setIsMuted(false);
         }
         playVideo();
       }
@@ -104,7 +88,60 @@ export default function HeroSection() {
     window.addEventListener('keydown', handleGesture, { passive: true });
     window.addEventListener('touchstart', handleGesture, { passive: true });
 
-    // Initial state: play only if portal has already faded, otherwise keep paused to preserve GPU decoder
+    // IntersectionObserver to auto-mute when hero video is scrolled up / out of view
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        const isVisible = entry.isIntersecting && entry.intersectionRatio >= 0.2;
+        isInViewRef.current = isVisible;
+
+        const vid = videoRef.current;
+        if (!vid) return;
+
+        if (isVisible) {
+          // Hero section is back in view: play unmuted
+          if (typeof window !== 'undefined' && (window as any).__kpnPortalFaded) {
+            vid.muted = false;
+            if (vid.paused) {
+              vid.play().catch(() => {});
+            }
+          }
+        } else {
+          // Hero section has scrolled up out of view: auto-mute audio immediately
+          vid.muted = true;
+        }
+      },
+      {
+        threshold: [0, 0.2, 0.5],
+      }
+    );
+
+    if (section) {
+      observer.observe(section);
+    }
+
+    // Scroll listener as an instant fallback for rapid scrolling
+    const handleScroll = () => {
+      const sec = sectionRef.current;
+      const vid = videoRef.current;
+      if (!sec || !vid) return;
+
+      const rect = sec.getBoundingClientRect();
+      // If hero section has scrolled past the top of the viewport
+      if (rect.bottom <= 120) {
+        if (!vid.muted) vid.muted = true;
+        isInViewRef.current = false;
+      } else if (rect.top >= -100 && rect.bottom > 200) {
+        isInViewRef.current = true;
+        if (typeof window !== 'undefined' && (window as any).__kpnPortalFaded) {
+          if (vid.muted) vid.muted = false;
+          if (vid.paused) vid.play().catch(() => {});
+        }
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    // Initial state trigger
     if (typeof window !== 'undefined' && (window as any).__kpnPortalFaded) {
       playVideo();
     } else {
@@ -112,6 +149,13 @@ export default function HeroSection() {
     }
 
     return () => {
+      // Immediately silence and pause video on component unmount (e.g. navigating to other pages)
+      if (video) {
+        video.muted = true;
+        video.pause();
+      }
+      observer.disconnect();
+      window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('kpn-portal-fade', handlePortalFade);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('pointerdown', handleGesture);
@@ -120,32 +164,8 @@ export default function HeroSection() {
     };
   }, []);
 
-  const toggleMute = () => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    if (isMuted) {
-      // User is unmuting
-      video.muted = false;
-      setIsMuted(false);
-      isMutedRef.current = false;
-      try {
-        sessionStorage.setItem(MUTE_STORAGE_KEY, 'false');
-      } catch {}
-      video.play().catch(() => {});
-    } else {
-      // User is muting
-      video.muted = true;
-      setIsMuted(true);
-      isMutedRef.current = true;
-      try {
-        sessionStorage.setItem(MUTE_STORAGE_KEY, 'true');
-      } catch {}
-    }
-  };
-
   return (
-    <section id="main-content" className="relative z-10 min-h-[100vh] w-full overflow-hidden bg-slate-800">
+    <section ref={sectionRef} id="main-content" className="relative z-10 min-h-[100vh] w-full overflow-hidden bg-slate-800">
       <video
         ref={videoRef}
         autoPlay
@@ -202,33 +222,6 @@ export default function HeroSection() {
           </motion.div>
         </motion.div>
       </div>
-
-      {/* Floating Speaker Mute/Unmute Audio Control */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5, delay: 0.5 }}
-        className="absolute top-38 right-6 z-20"
-      >
-        <button
-          onClick={toggleMute}
-          type="button"
-          suppressHydrationWarning
-          aria-label={isMuted ? 'Unmute hero video audio' : 'Mute hero video audio'}
-          className="group flex items-center gap-2 rounded-full bg-black/60 hover:bg-black/85 px-3.5 py-2.5 sm:px-4 sm:py-2 text-xs font-semibold text-white backdrop-blur-md border border-white/20 shadow-[0_8px_30px_rgb(0,0,0,0.35)] transition-all duration-300 hover:scale-105 active:scale-95"
-        >
-          {isMuted ? (
-            <>
-              <VolumeX className="h-4 w-4 text-red-400 transition-transform group-hover:scale-110" />
-            </>
-          ) : (
-            <>
-
-              <Volume2 className="h-4 w-4 text-emerald-400 transition-transform group-hover:scale-110" />
-            </>
-          )}
-        </button>
-      </motion.div>
     </section>
   );
 }

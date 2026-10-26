@@ -35,7 +35,13 @@ export default function Navbar({
       try {
         const dynamicMenu = await getMenu();
         if (isMounted && dynamicMenu && dynamicMenu.length > 0) {
-          setLinks(dynamicMenu);
+          const filteredMenu = dynamicMenu.map((item: any) => ({
+            ...item,
+            children: item.children
+              ? item.children.filter((c: any) => c.href !== '/our-ventures' && c.label !== 'Our Venture')
+              : undefined,
+          }));
+          setLinks(filteredMenu);
         }
       } catch (err) {
         console.warn('Could not load dynamic menu, using static siteData');
@@ -154,6 +160,7 @@ export default function Navbar({
               object-contain
               sm:h-[62px]
               lg:h-[74px]
+              p-2.5
             "
             priority
           />

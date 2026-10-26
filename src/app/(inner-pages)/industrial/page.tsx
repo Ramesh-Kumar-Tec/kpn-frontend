@@ -11,8 +11,8 @@ export default function IndustrialPage() {
       <InnerPageHero
         title="Industrial"
         breadcrumb="Industrial"
-        description="Join a network of trusted partners bringing innovative solutions to more markets. Let's achieve success together."
-        image="/images/projects/project_1.jpg"
+        description="State-of-the-art industrial layouts, warehousing infrastructure, and manufacturing spaces designed for operational excellence."
+        image="/images/banners/industrial_banner.jpg"
       />
 
       <AssociatePageTemplate title="Industrial" />

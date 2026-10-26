@@ -9,9 +9,42 @@ import { projectsData } from '@/data/siteData';
 import { getHomepageCMS, getProjects } from '@/lib/cmsClient';
 import RunningPillBadge from '../ui/RunningPillBadge';
 
+// Helper: guarantees that the 3rd card in Selected Projects is ALWAYS KPN Marvel Township (never SP2K Serenity Skyline)
+function formatWithMarvelThird(rawList: any[]): any[] {
+  const marvelItem =
+    rawList.find((p: any) => p && (p.slug === 'kpn-marvel-township' || (p.name && p.name.toLowerCase().includes('marvel')))) ||
+    projectsData.find((p) => p.slug === 'kpn-marvel-township');
+
+  const filtered = rawList.filter(
+    (p: any) =>
+      p &&
+      p.slug !== 'sp2k-serenity-skyline' &&
+      p.slug !== 'kpn-marvel-township' &&
+      !(p.name && p.name.toLowerCase().includes('serenity'))
+  );
+
+  if (marvelItem) {
+    const formattedMarvel = {
+      id: (marvelItem as any).id || (marvelItem as any)._id || marvelItem.slug,
+      name: marvelItem.name,
+      slug: marvelItem.slug,
+      location: marvelItem.location,
+      bhk: marvelItem.bhk,
+      type: (marvelItem as any).propertyType || marvelItem.type || 'Plots',
+      status: marvelItem.status || 'Ongoing',
+      budget: marvelItem.budget,
+      image: marvelItem.image || '/images/projects/plot_marvel.jpg',
+      address: marvelItem.address,
+    };
+    filtered.splice(2, 0, formattedMarvel);
+  }
+
+  return filtered.slice(0, 4);
+}
+
 export default function ProjectsSection() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [featuredProjects, setFeaturedProjects] = useState<any[]>(projectsData.slice(0, 4));
+  const [featuredProjects, setFeaturedProjects] = useState<any[]>(() => formatWithMarvelThird(projectsData));
 
   useEffect(() => {
     let isMounted = true;
@@ -80,7 +113,7 @@ export default function ProjectsSection() {
         }
 
         if (list.length > 0) {
-          setFeaturedProjects(list.slice(0, 4));
+          setFeaturedProjects(formatWithMarvelThird(list));
         }
       } catch (err) {
         console.warn('Using fallback featured projects', err);
@@ -148,7 +181,7 @@ export default function ProjectsSection() {
                     src={project.image}
                     alt={project.name}
                     fill
-                    sizes="100vw"
+                    sizes="(max-width: 1024px) 100vw, 50vw"
                     priority={index === 0}
                     className="object-cover transition-transform duration-700 hover:scale-105"
                   />

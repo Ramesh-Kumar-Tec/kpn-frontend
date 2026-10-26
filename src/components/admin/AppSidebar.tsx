@@ -60,7 +60,7 @@ const navigationItems = [
       // { title: 'Media Library', url: '/admin/media', icon: ImageIcon },
       { title: 'Awards', url: '/admin/awards', icon: Trophy },
       { title: 'Testimonials', url: '/admin/testimonials', icon: MessageSquareQuote },
-      // { title: 'Videos', url: '/admin/videos', icon: Video },
+      { title: 'Videos', url: '/admin/videos', icon: Video },
     ],
   },
   {

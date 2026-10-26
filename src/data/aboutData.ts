@@ -1,37 +1,43 @@
 export const timelineData = [
   {
     year: '2004',
-    image: '/images/features/b1.png',
+    image: '/images/features/t1.png',
     description:
-      'KPN Promoters was established with an uncompromising commitment to transparent land ownership, clear documentation, and customer trust across Chennai.',
+      'Our journey started as an individual venture.',
   },
 
   {
-    year: '2006',
-    image: '/images/features/b2.png',
+    year: '2010',
+    image: '/images/features/t2.png',
     description:
-      'Expanded into plotted layout developments, delivering CMDA and DTCP-approved gated communities along high-growth southern residential corridors.',
+      'The company rebranded as "KPN Promoters".',
   },
 
   {
-    year: '2007',
-    image: '/images/features/b3.png',
+    year: '2014',
+    image: '/images/features/t3.png',
     description:
-      'Successfully delivered our landmark 10th residential layout, surpassing 1,500 happy homeowners with on-time registration and infrastructure delivery.',
+      'We officially registered as KPN Promoters Pvt. Ltd.',
   },
 
   {
-    year: '2013',
-    image: '/images/features/b4.png',
+    year: '2018',
+    image: '/images/features/t4.png',
     description:
-      'Pioneered integrated villa and plotted communities featuring blacktop avenue roads, comprehensive drainage systems, and landscaped recreation parks.',
+      ' We established our Head Office in Urapakkam.',
   },
 
   {
-    year: '2024',
-    image: '/images/features/b1.png',
+    year: '2023',
+    image: '/images/features/t5.png',
     description:
-      'Surpassed 10,000+ satisfied families across 100+ projects in Chennai and Tamil Nadu, scaling into sustainable and modern residential communities.',
+      'Established a branch office in Bangalore.',
+  },
+  {
+    year: '2026',
+    image: '/images/features/t6.png',
+    description:
+      'KPN Promoters Pvt Ltd - Trusted by 20 Years! (15+ Active Project | 2500+ Happy Customers 120+ Completed projects | Excellence in Realestate).',
   },
 ];
 export const learnMoreCards = [

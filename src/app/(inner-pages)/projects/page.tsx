@@ -289,7 +289,7 @@ export default function ProjectsPage() {
   };
 
   const filteredProjects = useMemo(() => {
-    return allProjects.filter((project) => {
+    const list = allProjects.filter((project) => {
       // 1. Type filter
       if (appliedFilters.type !== 'All') {
         const pType = (project.type || (project as any).propertyType || '').toLowerCase();
@@ -301,14 +301,14 @@ export default function ProjectsPage() {
 
       // 2. Status filter
       if (appliedFilters.status !== 'All') {
-        const statTerm = appliedFilters.status.toLowerCase();
-        const projStat = (project.status || '').toLowerCase();
+        const statTerm = appliedFilters.status.toLowerCase().trim();
+        const projStat = (project.status || '').toLowerCase().trim();
         if (statTerm === 'ongoing') {
           if (projStat !== 'ongoing' && projStat !== 'available') return false;
         } else if (statTerm === 'upcoming') {
-          if (projStat !== 'upcoming') return false;
-        } else if (statTerm === 'completed') {
-          if (projStat !== 'completed' && projStat !== 'sold') return false;
+          if (projStat !== 'upcoming' && !projStat.includes('launch')) return false;
+        } else if (statTerm === 'completed' || statTerm === 'sold out') {
+          if (projStat !== 'completed' && !projStat.includes('sold') && projStat !== 'ready to move') return false;
         } else if (projStat !== statTerm) {
           return false;
         }
@@ -333,6 +333,17 @@ export default function ProjectsPage() {
 
       return true;
     });
+
+    // Task 2: Order projects by Upcoming first, Ongoing next, and Completed (including Sold Out) last
+    const getStatusPriority = (status?: string) => {
+      const s = (status || '').toLowerCase().trim();
+      if (s === 'upcoming' || s.includes('launch')) return 1;
+      if (s === 'ongoing' || s === 'available') return 2;
+      if (s === 'completed' || s.includes('sold') || s === 'ready to move') return 3;
+      return 2;
+    };
+
+    return [...list].sort((a, b) => getStatusPriority(a.status) - getStatusPriority(b.status));
   }, [allProjects, appliedFilters]);
 
   // Paginated Projects slice for current page

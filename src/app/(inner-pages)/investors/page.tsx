@@ -11,8 +11,8 @@ export default function InvestorsPage() {
       <InnerPageHero
         title="Investors"
         breadcrumb="Investors"
-        description="Join a network of trusted partners bringing innovative solutions to more markets. Let's achieve success together."
-        image="/images/projects/project_4.jpg"
+        description="Partner with KPN Promoters for high-yield real estate investments and strategic wealth creation across Chennai's prime growth corridors."
+        image="/images/banners/investors_banner.jpg"
       />
 
       <AssociatePageTemplate

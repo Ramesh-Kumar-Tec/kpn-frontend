@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { MapPin } from 'lucide-react';
 import FadeIn from '../animation/FadeIn';
 import StaggerContainer from '../animation/StaggerContainer';
 import StaggerItem from '../animation/StaggerItem';
@@ -10,6 +11,7 @@ import { getFooter } from '@/lib/cmsClient';
 const DEFAULT_FOOTER = {
   phone: '+91 7338834233',
   email: 'kpnsalesteam@gmail.com',
+  address: 'No. 48, Karanai Puducherry Rd, Senthil Nagar, Urapakkam, Chennai - 603 210.',
   companyDescription: 'KPN Promoters has earned the trust of over 10,000 satisfied families across Chennai and Tamil Nadu.',
   copyright: '© 2026 KPN Promoters. All Rights Reserved.',
   socialLinks: {
@@ -48,6 +50,7 @@ export default function Footer() {
           setData({
             phone: cmsData.phone || DEFAULT_FOOTER.phone,
             email: cmsData.email || DEFAULT_FOOTER.email,
+            address: cmsData.address || DEFAULT_FOOTER.address,
             companyDescription: cmsData.companyDescription || DEFAULT_FOOTER.companyDescription,
             copyright: cmsData.copyright || DEFAULT_FOOTER.copyright,
             socialLinks: {
@@ -98,6 +101,14 @@ export default function Footer() {
                 {data.email}
               </a>
             </div>
+
+            {/* Corporate Head Office Address */}
+            {data.address && (
+              <div className="pt-2 text-sm text-slate-300 leading-relaxed max-w-sm flex items-start gap-2.5">
+                <MapPin className="h-4 w-4 text-[#f12131] shrink-0 mt-1" />
+                <span className="font-medium text-slate-300 leading-normal">{data.address}</span>
+              </div>
+            )}
 
             <div className="flex items-center gap-3 text-xs font-semibold text-slate-400 pt-6">
               {data.socialLinks?.facebook && (
@@ -160,11 +171,11 @@ export default function Footer() {
         {/* Bottom Bar: Centered Logo and Centered Copyright */}
         <FadeIn delay={0.2} direction="up">
           <div className="pt-12 flex flex-col items-center justify-center gap-6">
-            <Link href="/" className="flex items-center justify-center transition-transform duration-300 hover:scale-105">
+            <Link href="/" className="flex items-center justify-center transition-transform duration-300 hover:scale-105 bg-white rounded-xl p-3">
               <img
                 src="/images/newlogoo.jpeg"
                 alt="KPN Promoters"
-                className="h-[80px] sm:h-[96px] lg:h-[105px] w-auto object-contain"
+                className="h-[50px] sm:h-[60px] lg:h-[70px] w-auto object-contain "
               />
             </Link>
             <p className="text-sm font-bold text-white text-center">

@@ -12,10 +12,10 @@ export default function NRIPage() {
         <Navbar variant="hero" />
       </div>
       <InnerPageHero
-        title="NRI"
-        breadcrumb="NRI"
-        description="Join a network of trusted partners bringing innovative solutions to more markets. Let's achieve success together."
-        image="/images/projects/project_6.jpg"
+        title="NRI Services"
+        breadcrumb="NRI Services"
+        description="Seamless end-to-end real estate solutions, hassle-free property management, and premium investments tailored for global Indians."
+        image="/images/banners/nri_services_banner.jpg"
       />
 
       <AssociatePageTemplate title="NRI" />

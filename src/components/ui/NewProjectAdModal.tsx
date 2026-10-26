@@ -247,6 +247,7 @@ export default function NewProjectAdModal() {
                       src={LOGO_PATH}
                       alt="KPN Promoters Pvt Ltd"
                       fill
+                      sizes="(max-width: 640px) 96px, 112px"
                       className="object-contain object-left"
                       priority
                     />

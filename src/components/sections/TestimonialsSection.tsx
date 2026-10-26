@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { Star } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { testimonialsData } from '@/data/siteData';
 import { getTestimonials, TestimonialItem } from '@/lib/cmsClient';
+import RunningPillBadge from '@/components/ui/RunningPillBadge';
 
 interface BankingPartner {
   id: string;
@@ -239,10 +240,14 @@ const bankingPartners: BankingPartner[] = [
   },
 ];
 
-export default function TestimonialsSection() {
+interface TestimonialsSectionProps {
+  showBankingPartners?: boolean;
+}
+
+export default function TestimonialsSection({
+  showBankingPartners = true,
+}: TestimonialsSectionProps = {}) {
   const [items, setItems] = useState<TestimonialItem[]>(testimonialsData);
-  const [current, setCurrent] = useState(0);
-  const [direction, setDirection] = useState(1);
 
   useEffect(() => {
     async function loadCMS() {
@@ -258,28 +263,10 @@ export default function TestimonialsSection() {
     loadCMS();
   }, []);
 
-  const total = items.length || 1;
-
-  const next = () => {
-    setDirection(1);
-    setCurrent((prev) => (prev + 1) % total);
-  };
-
-  const prev = () => {
-    setDirection(-1);
-    setCurrent((prev) => (prev - 1 + total) % total);
-  };
-
-  // Automatic testimonial rotation
-  useEffect(() => {
-    const interval = window.setInterval(() => {
-      next();
-    }, 6000);
-
-    return () => window.clearInterval(interval);
-  }, [total]);
-
-  const testimonial = items[current] || items[0] || testimonialsData[0];
+  // Ensure enough cards for a continuous, seamless, gapless running loop on all screen sizes
+  const repeatFactor = Math.max(3, Math.ceil(8 / (items.length || 1)));
+  const baseList = Array(repeatFactor).fill(items).flat();
+  const duplicatedData = [...baseList, ...baseList];
 
   const duplicatedBankingPartners = useMemo(
     () => [...bankingPartners, ...bankingPartners, ...bankingPartners],
@@ -301,7 +288,7 @@ export default function TestimonialsSection() {
             left-0
             right-0
             top-[95px]
-            h-[620px]
+            bottom-0
             rounded-t-[90px]
             bg-slate-50/70
           "
@@ -399,171 +386,78 @@ export default function TestimonialsSection() {
         </div>
 
         {/* =====================================================
-            TESTIMONIAL CONTENT
+            HEADING & CLIENT TESTIMONIAL CARDS RUNWAY
         ===================================================== */}
 
-        <div className="relative z-20 mx-auto max-w-[1200px] px-6 pb-24 pt-10">
+        <div className="relative z-20 text-center pt-4 pb-6 space-y-3 flex flex-col items-center">
+          <RunningPillBadge text="AWARDS & RECOGNITION" />
+          <h2 className="text-3xl font-extrabold text-[#29247c] sm:text-4xl lg:text-5xl tracking-tight">
+            What our clients say
+          </h2>
+        </div>
 
-          <div className="flex items-center justify-between gap-6">
-
-            {/* LEFT BUTTON */}
-            <button
-              type="button"
-              onClick={prev}
-              aria-label="Previous testimonial"
-              suppressHydrationWarning
-              className="
-                hidden
-                h-12
-                w-12
-                shrink-0
-                items-center
-                justify-center
-                rounded-full
-                bg-white
-                text-black
-                shadow-sm
-                transition-all
-                duration-300
-                hover:scale-105
-                hover:shadow-md
-                md:flex
-              "
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-
-            {/* TEXT */}
-            <div className="min-h-[350px] flex-1 overflow-hidden">
-
-              <AnimatePresence
-                mode="wait"
-                custom={direction}
+        {/* Continuous Smooth Running Marquee with Stars & Hover Pause */}
+        <div className="relative z-20 w-full overflow-hidden pb-16 pt-2">
+          <div
+            className="flex w-max gap-7 sm:gap-8 px-4 animate-marquee hover:[animation-play-state:paused]"
+            style={{
+              animationDuration: `${Math.max(28, baseList.length * 4)}s`,
+            }}
+          >
+            {duplicatedData.map((item, index) => (
+              <div
+                key={`${item.author}-${index}`}
+                className="shrink-0 w-[300px] sm:w-[350px] lg:w-[370px] flex flex-col group cursor-pointer"
               >
-                <motion.div
-                  key={current}
-                  custom={direction}
-                  initial={{
-                    opacity: 0,
-                    x: direction > 0 ? 100 : -100,
-                  }}
-                  animate={{
-                    opacity: 1,
-                    x: 0,
-                  }}
-                  exit={{
-                    opacity: 0,
-                    x: direction > 0 ? -100 : 100,
-                  }}
-                  transition={{
-                    duration: 0.45,
-                    ease: 'easeInOut',
-                  }}
-                  className="
-                    flex
-                    min-h-[350px]
-                    flex-col
-                    items-center
-                    justify-center
-                    text-center
-                  "
-                >
-                  <h2
-                    className="
-                      max-w-[850px]
-                      text-3xl
-                      font-bold
-                      leading-[1.15]
-                      tracking-[-0.04em]
-                      text-[#29247c]
-                      sm:text-4xl
-                      md:text-5xl
-                      lg:text-[52px]
-                    "
-                  >
-                    “{testimonial.quote}”
-                  </h2>
+                {/* Card Box matching reference design with Golden Stars */}
+                <div className="bg-white rounded-[32px] p-8 sm:p-10 shadow-[0_10px_35px_rgba(0,0,0,0.03)] border border-slate-100/60 min-h-[350px] sm:min-h-[380px] relative flex flex-col items-center text-center justify-between pb-12 hover:shadow-xl hover:border-amber-100/80 transition-all duration-300">
+                  <div className="space-y-3.5 max-w-[300px] flex flex-col items-center">
+                    {/* ⭐ Dynamic Golden Star Rating */}
+                    <div className="flex items-center justify-center gap-1.5 text-amber-400 pt-1">
+                      {[...Array(Number(item.rating) || 5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className="h-4 w-4 sm:h-4.5 sm:w-4.5 fill-amber-400 text-amber-400 drop-shadow-xs transition-transform duration-200 group-hover:scale-110"
+                        />
+                      ))}
+                    </div>
 
-                  <div className="mt-14 text-center">
-                    <p className="inline-block border-b-2 border-[#f12131] pb-1 text-lg font-bold text-black">
-                      {testimonial.author}
-                    </p>
-
-                    <p className="mt-2 text-sm text-slate-400">
-                      {testimonial.role}
+                    <h4 className="text-2xl sm:text-[26px] font-black text-[#29247c] leading-tight tracking-tight">
+                      “{item.title}”
+                    </h4>
+                    <p className="text-sm sm:text-[15px] text-slate-500/90 leading-relaxed font-medium line-clamp-4">
+                      &ldquo;{item.quote}&rdquo;
                     </p>
                   </div>
-                </motion.div>
-              </AnimatePresence>
 
-            </div>
+                  {/* Arch Curve cutout container for avatar on bottom edge */}
+                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 flex flex-col items-center">
+                    <div className="h-10 w-24 bg-[#f4ebd0]/40 rounded-t-full flex items-center justify-center pt-2">
+                      <div className="h-14 w-14 rounded-full overflow-hidden border-2 border-white shadow-md bg-white transition-transform duration-300 group-hover:scale-105">
+                        <img
+                          src={item.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80'}
+                          alt={item.author}
+                          className="h-full w-full object-cover"
+                          onError={(e: any) => {
+                            e.target.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80';
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-            {/* RIGHT BUTTON */}
-            <button
-              type="button"
-              onClick={next}
-              aria-label="Next testimonial"
-              suppressHydrationWarning
-              className="
-                hidden
-                h-12
-                w-12
-                shrink-0
-                items-center
-                justify-center
-                rounded-full
-                bg-white
-                text-black
-                shadow-sm
-                transition-all
-                duration-300
-                hover:scale-105
-                hover:shadow-md
-                md:flex
-              "
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
-
-          </div>
-
-          {/* Mobile controls */}
-          <div className="mt-2 flex items-center justify-center gap-4 md:hidden">
-            <button
-              type="button"
-              onClick={prev}
-              suppressHydrationWarning
-              className="
-                flex
-                h-11
-                w-11
-                items-center
-                justify-center
-                rounded-full
-                bg-white
-                shadow-md
-              "
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-
-            <button
-              type="button"
-              onClick={next}
-              suppressHydrationWarning
-              className="
-                flex
-                h-11
-                w-11
-                items-center
-                justify-center
-                rounded-full
-                bg-white
-                shadow-md
-              "
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
+                {/* Text Details below Card */}
+                <div className="mt-10 text-center space-y-0.5">
+                  <p className="text-sm font-bold text-slate-900 transition-colors duration-300 group-hover:text-[#f12131]">
+                    {item.author}
+                  </p>
+                  <p className="text-xs text-slate-400 font-medium">
+                    {item.role}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -572,71 +466,73 @@ export default function TestimonialsSection() {
           BANKING PARTNER SECTION
       ========================================================= */}
 
-      <div className="relative bg-white pb-16 pt-8">
+      {showBankingPartners && (
+        <div className="relative bg-white pb-16 pt-8">
 
-        {/* Divider */}
-        <div className="mx-auto max-w-[1120px] px-6">
-          <div className="border-t border-slate-200/80" />
+          {/* Divider */}
+          <div className="mx-auto max-w-[1120px] px-6">
+            <div className="border-t border-slate-200/80" />
+          </div>
+
+          {/* Banking Partners heading matching user reference image */}
+          <div className="pt-16 pb-4 text-center px-4">
+            <h3
+              className="
+                text-3xl
+                sm:text-4xl
+                md:text-[42px]
+                font-bold
+                tracking-tight
+                text-[#1f2462]
+                font-serif
+              "
+            >
+              Our Banking Partners
+            </h3>
+            <p className="mt-3 text-sm md:text-base text-slate-500 font-medium max-w-xl mx-auto">
+              Approved by leading banks and financial institutions for hassle-free home loan approvals
+            </p>
+          </div>
+
+          {/* =====================================================
+              CONTINUOUS LOGO MARQUEE
+              RIGHT → LEFT
+          ===================================================== */}
+
+          <div className="mt-10 w-full overflow-hidden py-4">
+
+            <motion.div
+              className="flex w-max items-center gap-12 pr-12 md:gap-16 md:pr-16"
+              animate={{
+                x: ['0%', '-33.333%'],
+              }}
+              transition={{
+                duration: 32,
+                ease: 'linear',
+                repeat: Infinity,
+                repeatType: 'loop',
+              }}
+            >
+              {duplicatedBankingPartners.map((bank, index) => {
+                const LogoComponent = bank.component;
+                return (
+                  <div
+                    key={`${bank.id}-${index}`}
+                    className="flex h-20 min-w-[180px] shrink-0 items-center justify-center transition-transform duration-300 hover:scale-105"
+                    title={bank.name}
+                  >
+                    <LogoComponent />
+                  </div>
+                );
+              })}
+            </motion.div>
+
+          </div>
+
+          {/* Bottom spacing */}
+          <div className="h-16" />
         </div>
-
-        {/* Banking Partners heading matching user reference image */}
-        <div className="pt-16 pb-4 text-center px-4">
-          <h3
-            className="
-              text-3xl
-              sm:text-4xl
-              md:text-[42px]
-              font-bold
-              tracking-tight
-              text-[#1f2462]
-              font-serif
-            "
-          >
-            Our Banking Partners
-          </h3>
-          <p className="mt-3 text-sm md:text-base text-slate-500 font-medium max-w-xl mx-auto">
-            Approved by leading banks and financial institutions for hassle-free home loan approvals
-          </p>
-        </div>
-
-        {/* =====================================================
-            CONTINUOUS LOGO MARQUEE
-            RIGHT → LEFT
-        ===================================================== */}
-
-        <div className="mt-10 w-full overflow-hidden py-4">
-
-          <motion.div
-            className="flex w-max items-center gap-12 pr-12 md:gap-16 md:pr-16"
-            animate={{
-              x: ['0%', '-33.333%'],
-            }}
-            transition={{
-              duration: 32,
-              ease: 'linear',
-              repeat: Infinity,
-              repeatType: 'loop',
-            }}
-          >
-            {duplicatedBankingPartners.map((bank, index) => {
-              const LogoComponent = bank.component;
-              return (
-                <div
-                  key={`${bank.id}-${index}`}
-                  className="flex h-20 min-w-[180px] shrink-0 items-center justify-center transition-transform duration-300 hover:scale-105"
-                  title={bank.name}
-                >
-                  <LogoComponent />
-                </div>
-              );
-            })}
-          </motion.div>
-
-        </div>
-
-        {/* Bottom spacing */}
-        <div className="h-16" />
-      </div>
+      )}
 
       {/* =========================================================
           ROUNDED END OF WHITE SECTION

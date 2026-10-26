@@ -1,11 +1,11 @@
 export const learnMoreCards = [
   {
     num: '01.',
-    title: 'What we do',
+    title: 'Why Choose Us',
     description:
       'We maintain this by ensuring transparency and professional conduct in every aspect.',
-    btnText: 'Our Solutions',
-    href: '/solutions',
+    btnText: 'Know More',
+    href: '/why-choose-us',
     bg: 'bg-[#171d0d]',
     textColor: 'text-white',
     image: '/images/projects/project_2.jpg',
@@ -13,7 +13,7 @@ export const learnMoreCards = [
 
   {
     num: '02.',
-    title: 'Our impact',
+    title: 'Our Impact',
     description:
       'We work with both investors and developers to create landmarks that make an impact.',
     btnText: 'See Projects',
@@ -25,11 +25,11 @@ export const learnMoreCards = [
 
   {
     num: '03.',
-    title: 'Core values',
+    title: 'Core Values',
     description:
       'To empower businesses with cutting-edge web solutions that enhance their digital presence and drive growth.',
-    btnText: 'Discover More',
-    href: '/core-values',
+    btnText: 'See Blogs',
+    href: '/blogs',
     bg: 'bg-slate-900',
     textColor: 'text-white',
     image: '/images/projects/project_2.jpg',

@@ -51,15 +51,15 @@ function formatConfiguration(bhk?: string, type?: string): string {
 
 // Resolve KPN status badge
 function getStatusBadge(status?: string) {
-  const s = (status || 'Ongoing').toLowerCase();
-  if (s === 'completed' || s === 'ready to move') {
+  const s = (status || 'Ongoing').toLowerCase().trim();
+  if (s === 'completed' || s === 'ready to move' || s === 'sold out' || s.includes('sold')) {
     return {
-      label: 'Ready to Move',
+      label: 'Completed',
       className: 'bg-emerald-600 text-white',
       dotColor: 'bg-emerald-300',
     };
   }
-  if (s === 'upcoming' || s === 'new launch') {
+  if (s === 'upcoming' || s === 'new launch' || s.includes('launch')) {
     return {
       label: 'Upcoming',
       className: 'bg-[#29247c] text-white',

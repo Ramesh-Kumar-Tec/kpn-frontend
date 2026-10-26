@@ -11,8 +11,8 @@ export default function JointDevelopmentPage() {
       <InnerPageHero
         title="Joint Development"
         breadcrumb="Joint Development"
-        description="Join a network of trusted partners bringing innovative solutions to more markets. Let's achieve success together."
-        image="/images/projects/project_4.jpg"
+        description="Unlock the maximum potential of your land with transparent joint ventures, superior construction quality, and maximized returns."
+        image="/images/banners/joint_dev_banner.jpg"
       />
 
       <AssociatePageTemplate

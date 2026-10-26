@@ -345,6 +345,7 @@ export default function SmartSearchModal({
                             src={result.image}
                             alt={result.title}
                             fill
+                            sizes="72px"
                             className="object-cover"
                           />
                         </div>
