@@ -111,8 +111,8 @@ export default function AdminVideosPage() {
       type = 'YouTube';
     } else if (url.includes('vimeo.com')) {
       type = 'Vimeo';
-    } else if (url.includes('cloudinary.com')) {
-      type = 'Cloudinary';
+    } else {
+      type = 'External';
     }
 
     // Auto set thumbnail if it's YouTube and user hasn't uploaded custom thumbnail
@@ -398,8 +398,7 @@ export default function AdminVideosPage() {
                     <SelectContent className="rounded-xl border border-slate-100 bg-white p-1.5 shadow-xl">
                       <SelectItem value="YouTube" className="text-xs font-bold py-2">YouTube</SelectItem>
                       <SelectItem value="Vimeo" className="text-xs font-bold py-2">Vimeo</SelectItem>
-                      <SelectItem value="Cloudinary" className="text-xs font-bold py-2">Cloudinary</SelectItem>
-                      <SelectItem value="External" className="text-xs font-bold py-2">External / MP4</SelectItem>
+                      <SelectItem value="External" className="text-xs font-bold py-2">Self-Hosted / MP4</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

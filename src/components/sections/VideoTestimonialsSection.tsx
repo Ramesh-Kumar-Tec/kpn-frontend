@@ -52,7 +52,7 @@ export const videoTestimonialsData: VideoTestimonial[] = [
     quote: 'The craftsmanship, transparent documentation, and on-schedule handover gave our family absolute peace of mind.',
     rating: 5,
     thumbnail: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&auto=format&fit=crop&q=80',
-    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', // Clean embed URL (or direct mp4)
+    videoUrl: '/testimonis/test1.mp4', // Clean embed URL (or direct mp4)
     verifiedYear: 'Handover 2024',
   },
   {
@@ -67,7 +67,7 @@ export const videoTestimonialsData: VideoTestimonial[] = [
     quote: 'Black-top roads, streetlights, and parks were ready before registration. Exceptional infrastructure quality.',
     rating: 5,
     thumbnail: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&auto=format&fit=crop&q=80',
-    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    videoUrl: '/testimonis/test1.mp4',
     verifiedYear: 'Registered 2024',
   },
   {
@@ -82,7 +82,7 @@ export const videoTestimonialsData: VideoTestimonial[] = [
     quote: 'As an NRI, remote verification was seamless. The KPN executive team provided weekly photo updates and prompt assistance.',
     rating: 5,
     thumbnail: 'https://images.unsplash.com/photo-1574958269340-fa927503f3dd?w=800&auto=format&fit=crop&q=80',
-    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    videoUrl: '/testimonis/test1.mp4',
     verifiedYear: 'NRI Investor 2025',
   },
   {
@@ -97,7 +97,7 @@ export const videoTestimonialsData: VideoTestimonial[] = [
     quote: 'Clear titles, CMDA & RERA approvals with zero hidden costs. Truly the most reliable developer we have ever worked with.',
     rating: 5,
     thumbnail: 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800&auto=format&fit=crop&q=80',
-    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    videoUrl: '/testimonis/test1.mp4',
     verifiedYear: 'Verified Owner 2024',
   },
   {
@@ -112,7 +112,7 @@ export const videoTestimonialsData: VideoTestimonial[] = [
     quote: 'From custom interior suggestions to swift bank loan facilitation, the KPN team stood by us at every single milestone.',
     rating: 5,
     thumbnail: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&auto=format&fit=crop&q=80',
-    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    videoUrl: '/testimonis/test1.mp4',
     verifiedYear: 'Handover 2025',
   },
   {
@@ -127,7 +127,7 @@ export const videoTestimonialsData: VideoTestimonial[] = [
     quote: 'Proximity to Kilambakkam terminus and high appreciation potential made this the smartest land investment for our portfolio.',
     rating: 5,
     thumbnail: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&auto=format&fit=crop&q=80',
-    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    videoUrl: '/testimonis/test1.mp4',
     verifiedYear: 'Verified Investor 2025',
   },
 ];
@@ -146,7 +146,10 @@ export default function VideoTestimonialsSection() {
           const published = liveVideos.filter((v) => !v.status || v.status === 'Published');
           if (published.length > 0) {
             const mapped: VideoTestimonial[] = published.map((v, idx) => {
-              const formattedUrl = formatVideoEmbedUrl(v.videoUrl);
+              const formattedUrl =
+                v.videoUrl && v.videoUrl.trim() !== '' && !v.videoUrl.includes('dQw4w9WgXcQ')
+                  ? formatVideoEmbedUrl(v.videoUrl)
+                  : '/testimonis/test1.mp4';
               const thumb =
                 v.thumbnailUrl ||
                 getYouTubeThumbnail(v.videoUrl) ||

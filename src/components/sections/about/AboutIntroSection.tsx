@@ -189,10 +189,12 @@ export default function AboutIntroSection() {
             className="
               relative
               mx-auto
-              h-[520px]
+              h-[280px]
+              sm:h-[380px]
               w-full
               overflow-hidden
-              rounded-[32px]
+              rounded-[24px]
+              sm:rounded-[32px]
               bg-slate-900
               shadow-2xl
               lg:h-[560px]
@@ -214,30 +216,30 @@ export default function AboutIntroSection() {
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-black/20" />
 
             {/* Audio & Play Controls */}
-            <div className="absolute top-6 right-6 z-20 flex items-center gap-2">
+            <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20 flex items-center gap-2">
               <button
                 onClick={togglePlay}
                 type="button"
                 aria-label={isPlaying ? 'Pause video' : 'Play video'}
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-md transition-all hover:bg-black/85 hover:scale-105 active:scale-95"
+                className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-md transition-all hover:bg-black/85 hover:scale-105 active:scale-95"
               >
-                {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
+                {isPlaying ? <Pause className="h-4 w-4 sm:h-5 sm:w-5" /> : <Play className="h-4 w-4 sm:h-5 sm:w-5 ml-0.5" />}
               </button>
 
               <button
                 onClick={toggleMute}
                 type="button"
                 aria-label={isMuted ? 'Unmute video' : 'Mute video'}
-                className="flex h-11 items-center gap-2 rounded-full bg-black/60 px-4 text-xs font-bold text-white backdrop-blur-md transition-all hover:bg-black/85 hover:scale-105 active:scale-95"
+                className="flex h-9 sm:h-11 items-center gap-1.5 sm:gap-2 rounded-full bg-black/60 px-3 sm:px-4 text-[11px] sm:text-xs font-bold text-white backdrop-blur-md transition-all hover:bg-black/85 hover:scale-105 active:scale-95"
               >
                 {isMuted ? (
                   <>
-                    <VolumeX className="h-5 w-5 text-red-400" />
+                    <VolumeX className="h-4 w-4 sm:h-5 sm:w-5 text-red-400" />
                     <span>Unmute</span>
                   </>
                 ) : (
                   <>
-                    <Volume2 className="h-5 w-5 text-green-400" />
+                    <Volume2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-400" />
                     <span>Mute</span>
                   </>
                 )}
@@ -248,22 +250,24 @@ export default function AboutIntroSection() {
 
 
           {/* =========================
-              STAT CARDS
+              STAT CARDS - Fully Responsive on Mobile & Desktop
           ========================== */}
 
           <div
             className="
-              absolute
-              bottom-6
-              right-6
+              relative
+              mt-4
               grid
-              w-[340px]
+              w-full
               grid-cols-2
               gap-3
+              sm:mt-6
+              sm:gap-4
+              lg:absolute
               lg:bottom-8
               lg:right-8
+              lg:mt-0
               lg:w-[520px]
-              lg:gap-4
             "
           >
 
@@ -271,10 +275,14 @@ export default function AboutIntroSection() {
             <div
               className="
                 col-span-2
-                rounded-[24px]
+                rounded-[20px]
+                sm:rounded-[24px]
                 bg-white
-                p-7
+                p-5
+                sm:p-7
                 shadow-xl
+                border
+                border-slate-100/80
                 lg:p-9
               "
             >
@@ -283,7 +291,9 @@ export default function AboutIntroSection() {
                 <div>
                   <div
                     className="
-                      text-6xl
+                      text-4xl
+                      sm:text-5xl
+                      lg:text-6xl
                       font-black
                       leading-none
                       tracking-tight
@@ -293,12 +303,12 @@ export default function AboutIntroSection() {
                     <Counter value={40} /><span className="text-[#f12131]">+</span>
                   </div>
 
-                  <p className="mt-2 text-sm text-gray-500">
+                  <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-gray-500 font-medium">
                     projects in development
                   </p>
                 </div>
 
-                <span className="text-3xl">▥</span>
+                <span className="text-2xl sm:text-3xl text-slate-400">▥</span>
 
               </div>
             </div>
@@ -307,16 +317,22 @@ export default function AboutIntroSection() {
             {/* 18m+ */}
             <div
               className="
-                rounded-[24px]
+                rounded-[20px]
+                sm:rounded-[24px]
                 bg-white
-                p-7
+                p-5
+                sm:p-7
                 shadow-xl
+                border
+                border-slate-100/80
                 lg:p-8
               "
             >
               <div
                 className="
-                  text-5xl
+                  text-3xl
+                  sm:text-4xl
+                  lg:text-5xl
                   font-black
                   leading-none
                   text-[#342987]
@@ -325,7 +341,7 @@ export default function AboutIntroSection() {
                 <Counter value={18} suffix="m" /><span className="text-[#f12131]">+</span>
               </div>
 
-              <p className="mt-2 text-sm text-gray-500">
+              <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-gray-500 font-medium leading-snug">
                 square feet of property
               </p>
             </div>
@@ -334,16 +350,22 @@ export default function AboutIntroSection() {
             {/* 2.5b+ */}
             <div
               className="
-                rounded-[24px]
+                rounded-[20px]
+                sm:rounded-[24px]
                 bg-white
-                p-7
+                p-5
+                sm:p-7
                 shadow-xl
+                border
+                border-slate-100/80
                 lg:p-8
               "
             >
               <div
                 className="
-                  text-5xl
+                  text-3xl
+                  sm:text-4xl
+                  lg:text-5xl
                   font-black
                   leading-none
                   text-[#342987]
@@ -352,7 +374,7 @@ export default function AboutIntroSection() {
                 <Counter value={2.5} decimals={1} suffix="b" /><span className="text-[#f12131]">+</span>
               </div>
 
-              <p className="mt-2 text-sm text-gray-500">
+              <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-gray-500 font-medium leading-snug">
                 total projects cost
               </p>
             </div>

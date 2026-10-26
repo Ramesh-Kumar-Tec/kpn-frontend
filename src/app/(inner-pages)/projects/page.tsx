@@ -334,13 +334,13 @@ export default function ProjectsPage() {
       return true;
     });
 
-    // Task 2: Order projects by Upcoming first, Ongoing next, and Completed (including Sold Out) last
+    // Task 2: Order projects by Ongoing first, Upcoming next, and Completed (including Sold Out) last
     const getStatusPriority = (status?: string) => {
       const s = (status || '').toLowerCase().trim();
-      if (s === 'upcoming' || s.includes('launch')) return 1;
-      if (s === 'ongoing' || s === 'available') return 2;
+      if (s === 'ongoing' || s === 'available') return 1;
+      if (s === 'upcoming' || s.includes('launch')) return 2;
       if (s === 'completed' || s.includes('sold') || s === 'ready to move') return 3;
-      return 2;
+      return 1;
     };
 
     return [...list].sort((a, b) => getStatusPriority(a.status) - getStatusPriority(b.status));

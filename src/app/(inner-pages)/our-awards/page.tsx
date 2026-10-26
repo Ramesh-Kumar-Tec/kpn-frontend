@@ -92,6 +92,41 @@ export default function OurAwardsPage() {
 
           </FadeIn>
 
+          {/* =====================================================
+              FEATURED AWARDS CEREMONY VIDEO
+          ====================================================== */}
+          <FadeIn direction="up" className="mx-auto mt-12 max-w-5xl">
+            <div className="group relative overflow-hidden rounded-[24px] sm:rounded-[32px] border border-slate-200/90 bg-slate-950 p-2 sm:p-3 shadow-2xl">
+              <div className="relative aspect-video w-full overflow-hidden rounded-[20px] sm:rounded-[26px] bg-black">
+                <video
+                  src="/testimonis/awardvideo.mp4"
+                  controls
+                  playsInline
+                  autoPlay
+                  muted
+                  loop
+                  preload="metadata"
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-4 py-3.5 sm:px-6">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[11px] font-black uppercase tracking-wider text-amber-400">
+                      Celebration & Felicitation Ceremony
+                    </span>
+                  </div>
+                  <h3 className="mt-0.5 text-base sm:text-lg font-bold text-white">
+                    Honoring Two Decades of Leadership & Trust
+                  </h3>
+                </div>
+                <span className="rounded-full bg-white/10 px-3.5 py-1 text-xs font-semibold text-slate-300 backdrop-blur-md">
+                  Official Award Highlights
+                </span>
+              </div>
+            </div>
+          </FadeIn>
 
           {/* =====================================================
               AWARDS SHOWCASE - DIVIDER GRID (3x3 Layout)
