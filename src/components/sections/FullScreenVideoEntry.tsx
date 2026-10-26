@@ -163,7 +163,7 @@ export default function FullScreenVideoEntry() {
         animate={{ opacity: isFading ? 0 : 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
-        className="fixed inset-0 z-[9999] h-[100dvh] w-[100dvw] bg-black overflow-hidden flex items-center justify-center select-none"
+        className="fixed inset-0 z-[9999] h-[100dvh] w-[100dvw] bg-white overflow-hidden flex items-center justify-center select-none"
         onClick={() => {
           // If video was paused by browser policy, clicking screen resumes it
           const video = videoRef.current;
@@ -173,7 +173,7 @@ export default function FullScreenVideoEntry() {
         }}
       >
         {/* Fullscreen Video Player - Clean & Pure with 0 Overlay Icons */}
-        <div className="relative h-full w-full flex items-center justify-center bg-black">
+        <div className="relative h-full w-full flex items-center justify-center bg-white">
           <video
             ref={videoRef}
             autoPlay
@@ -184,7 +184,7 @@ export default function FullScreenVideoEntry() {
             controls={false}
             onError={finishAndRevealWebsite}
             onEnded={finishAndRevealWebsite}
-            className="h-full w-full object-contain sm:object-cover bg-black"
+            className="h-full w-full object-contain sm:object-cover bg-white"
             style={{
               transform: 'translateZ(0)',
               backfaceVisibility: 'hidden',
