@@ -3,6 +3,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 
 interface InnerPageHeroProps {
@@ -19,18 +20,25 @@ export default function InnerPageHero({
   image,
 }: InnerPageHeroProps) {
   return (
-    <section className="relative min-h-[580px] overflow-hidden bg-slate-800">
+    <section className="relative min-h-[580px] overflow-hidden bg-slate-900">
 
-      {/* Background */}
-      <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{
-          backgroundImage: `url("${image}")`,
-        }}
-      />
+      {/* High-priority background image */}
+      {image && (
+        <div className="absolute inset-0">
+          <Image
+            src={image}
+            alt={title || 'Page Header'}
+            fill
+            priority
+            sizes="100vw"
+            quality={85}
+            className="object-cover object-center"
+          />
+        </div>
+      )}
 
       {/* Dark overlay */}
-      <div className="absolute inset-0 bg-slate-900/45" />
+      <div className="absolute inset-0 bg-slate-950/50 backdrop-brightness-95" />
 
       {/* Content */}
       <div className="relative z-10 mx-auto max-w-[1500px] px-6 pb-24 pt-32 lg:px-16">

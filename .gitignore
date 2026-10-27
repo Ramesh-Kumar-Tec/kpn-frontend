@@ -40,4 +40,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 *.backup.mp4
+*.optimized.mp4
+*.original.mp4
 scripts/

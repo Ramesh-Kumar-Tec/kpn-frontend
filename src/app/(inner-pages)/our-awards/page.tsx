@@ -190,6 +190,8 @@ export default function OurAwardsPage() {
                         <img
                           src={award.image}
                           alt={award.title}
+                          loading="lazy"
+                          decoding="async"
                           className="
                             max-h-[200px]
                             max-w-[200px]

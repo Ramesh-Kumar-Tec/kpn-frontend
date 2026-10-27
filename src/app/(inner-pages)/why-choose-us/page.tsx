@@ -88,6 +88,8 @@ export default function WhyChooseUs() {
               <img
                 src="/images/core-img.jpg"
                 alt="Core Values"
+                loading="lazy"
+                decoding="async"
                 className="block h-full w-full object-cover object-center"
               />
             </div>

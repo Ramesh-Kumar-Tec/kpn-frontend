@@ -206,7 +206,7 @@ export default function AboutIntroSection() {
               loop
               muted={isMuted}
               playsInline
-              preload="auto"
+              preload="metadata"
               className="h-full w-full object-cover"
             >
               <source src="/images/about/cp-meet-oct-2025.mp4" type="video/mp4" />
@@ -488,7 +488,7 @@ export default function AboutIntroSection() {
                     loop
                     muted={isReelMuted}
                     playsInline
-                    preload="auto"
+                    preload="metadata"
                     className="h-full w-full object-cover"
                   >
                     <source src="/images/about/omega-town-reel.mp4" type="video/mp4" />
