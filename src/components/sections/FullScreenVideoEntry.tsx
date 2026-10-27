@@ -173,7 +173,7 @@ export default function FullScreenVideoEntry() {
         }}
       >
         {/* Fullscreen Video Player - Clean & Pure with 0 Overlay Icons */}
-        <div className="relative h-full w-full flex items-center justify-center bg-white">
+        <div className="relative h-full w-full flex items-center justify-center bg-white overflow-hidden">
           <video
             ref={videoRef}
             autoPlay
@@ -184,14 +184,14 @@ export default function FullScreenVideoEntry() {
             controls={false}
             onError={finishAndRevealWebsite}
             onEnded={finishAndRevealWebsite}
-            className="h-full w-full object-contain sm:object-cover bg-white"
+            className="h-full w-full object-contain sm:object-cover bg-white scale-[1.38] sm:scale-100 transition-transform duration-300"
             style={{
               transform: 'translateZ(0)',
               backfaceVisibility: 'hidden',
             }}
           >
-            <source src="/entry/KPN%20LOGO.mp4" type="video/mp4" />
-            <source src="/entry/kpn-logo-entry.mp4" type="video/mp4" />
+            <source src="/entry/logo-loader.webm" type="video/webm" />
+            <source src="/entry/logo-loader.webm" type="video/webm" />
             Your browser does not support video playback.
           </video>
         </div>

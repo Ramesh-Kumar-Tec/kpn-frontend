@@ -443,52 +443,6 @@ export default function ContactPage() {
                 </button>
 
               </form>
-
-              {/* ===================================================
-                  OFFICE THUMBNAILS
-              =================================================== */}
-              <div className="mt-16 flex items-center gap-6">
-
-                <div
-                  className="
-                    relative
-                    h-[72px]
-                    w-[150px]
-                    overflow-hidden
-                    rounded-full
-                    shadow-sm
-                  "
-                >
-                  <Image
-                    src="/images/about/about-img.jpg"
-                    alt="KPN Promoters office"
-                    fill
-                    sizes="150px"
-                    className="object-cover transition-transform duration-500 hover:scale-105"
-                  />
-                </div>
-
-                <div
-                  className="
-                    relative
-                    h-[72px]
-                    w-[150px]
-                    overflow-hidden
-                    rounded-full
-                    shadow-sm
-                  "
-                >
-                  <Image
-                    src="/images/hero/h1_bg.jpg"
-                    alt="KPN Promoters project"
-                    fill
-                    sizes="150px"
-                    className="object-cover transition-transform duration-500 hover:scale-105"
-                  />
-                </div>
-
-              </div>
-
             </FadeIn>
 
             {/* =====================================================

@@ -183,6 +183,7 @@ export default function ProjectsSection() {
                     fill
                     sizes="(max-width: 1024px) 100vw, 50vw"
                     priority={index === 0}
+                    quality={100}
                     className="object-cover transition-transform duration-700 hover:scale-105"
                   />
 

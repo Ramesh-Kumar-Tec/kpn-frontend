@@ -368,7 +368,7 @@ export default function TestimonialsSection({
             "
           >
             <img
-              src="/images/features/t5.png"
+              src="/images/features/t4.png"
               alt="Building"
               className="h-full w-full object-cover"
             />
