@@ -317,10 +317,32 @@ export async function submitEnquiry(enquiryData: {
 /**
  * Fetch dynamic header navigation menu from backend CMS
  */
+let menuMemoryCache: { items: any[]; expiresAt: number } | null = null;
+const MENU_CACHE_TTL_MS = 5 * 60 * 1000;
+
 export async function getMenu(): Promise<any[]> {
+  if (menuMemoryCache && menuMemoryCache.expiresAt > Date.now()) {
+    return menuMemoryCache.items;
+  }
+
+  if (typeof window !== 'undefined') {
+    try {
+      const cached = window.sessionStorage.getItem('kpn-navigation-menu');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed?.expiresAt > Date.now() && Array.isArray(parsed.items)) {
+          menuMemoryCache = parsed;
+          return parsed.items;
+        }
+      }
+    } catch {
+      // Ignore unavailable or corrupted browser storage.
+    }
+  }
+
   try {
     const res = await fetch(`${API_BASE_URL}/cms/menu`, {
-      cache: 'no-store',
+      cache: 'default',
       signal: AbortSignal.timeout(3000),
     });
 
@@ -328,7 +350,7 @@ export async function getMenu(): Promise<any[]> {
       const data = await res.json();
       if (data.success && Array.isArray(data.data?.items) && data.data.items.length > 0) {
         // Filter only visible items (isEnabled !== false) and sort by order
-        return data.data.items
+        const items = data.data.items
           .filter((item: any) => item.isEnabled !== false)
           .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
           .map((item: any) => ({
@@ -337,6 +359,19 @@ export async function getMenu(): Promise<any[]> {
               .filter((c: any) => c.isEnabled !== false)
               .sort((a: any, b: any) => (a.order || 0) - (b.order || 0)),
           }));
+
+        menuMemoryCache = { items, expiresAt: Date.now() + MENU_CACHE_TTL_MS };
+        if (typeof window !== 'undefined') {
+          try {
+            window.sessionStorage.setItem(
+              'kpn-navigation-menu',
+              JSON.stringify(menuMemoryCache),
+            );
+          } catch {
+            // Ignore unavailable browser storage.
+          }
+        }
+        return items;
       }
     }
   } catch (err) {

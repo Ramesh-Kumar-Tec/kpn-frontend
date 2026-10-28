@@ -1,0 +1,6 @@
+/* Static image assets are safe to cache at the edge. */
+/images/*
+  Cache-Control: public, max-age=86400, s-maxage=31536000, stale-while-revalidate=86400
+
+/team/*
+  Cache-Control: public, max-age=86400, s-maxage=31536000, stale-while-revalidate=86400

@@ -21,6 +21,37 @@ interface NavbarProps {
   variant?: 'default' | 'hero';
 }
 
+const heroImagesByRoute: Record<string, string> = {
+  '/about-us': '/images/about/about-bc.jpg',
+  '/blogs': '/images/blog/blog_1.jpg',
+  '/contact-us': '/images/projects/apt_dgm_monica.jpg',
+  '/careers': '/images/core-bc.jpg',
+  '/channel-partners': '/images/banners/channel_partners_banner.jpg',
+  '/compare': '/images/projects/apt_sp2k_serenity.jpg',
+  '/industrial': '/images/banners/industrial_banner.jpg',
+  '/investors': '/images/banners/investors_banner.jpg',
+  '/joint-development': '/images/banners/joint_dev_banner.jpg',
+  '/nri': '/images/banners/nri_services_banner.jpg',
+  '/our-awards': '/images/projects/project_4.jpg',
+  '/our-ventures': '/images/projects/project_5.jpg',
+  '/projects': '/images/projects/apt_royal_oak.jpg',
+  '/why-choose-us': '/images/core-bc.jpg',
+};
+
+function preloadHeroForRoute(href?: string) {
+  if (typeof window === 'undefined' || !href) return;
+
+  const route = href.split('#')[0].replace(/\/$/, '') || '/';
+  const image = heroImagesByRoute[route] ||
+    (route.startsWith('/projects/') ? '/images/projects/project_4.jpg' : undefined);
+
+  if (image) {
+    const preloader = new window.Image();
+    preloader.decoding = 'async';
+    preloader.src = image;
+  }
+}
+
 export default function Navbar({
   variant = 'default',
 }: NavbarProps) {
@@ -162,7 +193,7 @@ export default function Navbar({
               lg:h-[74px]
               p-2.5
             "
-            priority
+            loading="eager"
           />
         </Link>
 
@@ -212,6 +243,8 @@ export default function Navbar({
                 >
                   <Link
                     href={link.href ?? '#'}
+                    onMouseEnter={() => preloadHeroForRoute(link.href)}
+                    onFocus={() => preloadHeroForRoute(link.href)}
                     className={`
                       relative
                       flex
@@ -290,6 +323,8 @@ export default function Navbar({
                               <Link
                                 key={child.label}
                                 href={child.href}
+                                onMouseEnter={() => preloadHeroForRoute(child.href)}
+                                onFocus={() => preloadHeroForRoute(child.href)}
                                 className={`
                                   block
                                   rounded-md
@@ -327,6 +362,8 @@ export default function Navbar({
               <Link
                 key={link.label}
                 href={link.href ?? '#'}
+                onMouseEnter={() => preloadHeroForRoute(link.href)}
+                onFocus={() => preloadHeroForRoute(link.href)}
                 className={`
                   relative
                   flex
@@ -429,6 +466,8 @@ export default function Navbar({
             <div className="relative group">
               <Link
                 href="/compare"
+                onMouseEnter={() => preloadHeroForRoute('/compare')}
+                onFocus={() => preloadHeroForRoute('/compare')}
                 className="relative flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-700 transition duration-200 hover:bg-red-50 hover:text-[#f12131] hover:scale-105 active:scale-95"
               >
                 <Scale className="h-5 w-5" />
@@ -447,6 +486,8 @@ export default function Navbar({
 
           <Link
             href="/contact-us"
+            onMouseEnter={() => preloadHeroForRoute('/contact-us')}
+            onFocus={() => preloadHeroForRoute('/contact-us')}
             className="
               flex
               h-[52px]
@@ -499,6 +540,8 @@ export default function Navbar({
           <Link
             href="/contact-us"
             onClick={closeMobileMenu}
+            onMouseEnter={() => preloadHeroForRoute('/contact-us')}
+            onFocus={() => preloadHeroForRoute('/contact-us')}
             className="
               hidden
               rounded-full
@@ -696,6 +739,8 @@ export default function Navbar({
                                       href={
                                         child.href
                                       }
+                                      onMouseEnter={() => preloadHeroForRoute(child.href)}
+                                      onFocus={() => preloadHeroForRoute(child.href)}
                                       onClick={
                                         closeMobileMenu
                                       }
@@ -738,6 +783,8 @@ export default function Navbar({
                       key={link.label}
                       href={link.href ?? '#'}
                       onClick={closeMobileMenu}
+                      onMouseEnter={() => preloadHeroForRoute(link.href)}
+                      onFocus={() => preloadHeroForRoute(link.href)}
                       className={`
                         relative
                         border-b

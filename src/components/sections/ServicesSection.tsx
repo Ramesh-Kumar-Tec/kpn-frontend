@@ -107,7 +107,7 @@ export default function ServicesSection() {
                           src={service.image}
                           alt={service.title}
                           fill
-                          priority={index === 0}
+                          loading="lazy"
                           sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 600px"
                           className="
                             object-cover

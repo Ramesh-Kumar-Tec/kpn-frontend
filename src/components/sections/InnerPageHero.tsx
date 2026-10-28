@@ -22,16 +22,17 @@ export default function InnerPageHero({
   return (
     <section className="relative min-h-[580px] overflow-hidden bg-slate-900">
 
-      {/* High-priority background image */}
+      {/* Serve the static hero directly from the CDN. */}
       {image && (
         <div className="absolute inset-0">
           <Image
             src={image}
             alt={title || 'Page Header'}
             fill
-            priority
+            unoptimized
+            loading="eager"
+            fetchPriority="high"
             sizes="100vw"
-            quality={85}
             className="object-cover object-center"
           />
         </div>

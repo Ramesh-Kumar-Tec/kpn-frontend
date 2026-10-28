@@ -131,7 +131,7 @@ export default function AboutSection() {
                     alt="V Kanniyappan B.Com - Chairman of KPN Promoters Pvt Ltd"
                     width={878}
                     height={711}
-                    priority
+                    loading="lazy"
                     className="h-auto w-full object-contain transition-transform duration-700 ease-out group-hover:scale-[1.02]"
                   />
                 </div>

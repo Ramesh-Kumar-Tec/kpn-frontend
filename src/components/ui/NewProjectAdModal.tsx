@@ -249,7 +249,7 @@ export default function NewProjectAdModal() {
                       fill
                       sizes="(max-width: 640px) 96px, 112px"
                       className="object-contain object-left"
-                      priority
+                      loading="lazy"
                     />
                   </div>
 
@@ -295,7 +295,7 @@ export default function NewProjectAdModal() {
                       src={AD_IMAGE_PATH}
                       alt="Your Next Address on Guduvancherry - KPN Promoters"
                       fill
-                      priority
+                      loading="lazy"
                       className="object-cover transition-transform duration-700 group-hover:scale-[1.01]"
                       sizes="(max-width: 960px) 100vw, 940px"
                     />
