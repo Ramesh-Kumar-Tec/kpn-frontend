@@ -43,13 +43,15 @@ export default function FeaturesSection() {
                   <hr className="mb-6 border-t border-slate-200/80" />
                 </div>
 
-                {/* 3D Floating Building Image */}
+                {/* Feature Image */}
                 <div className="relative my-6 flex flex-col items-center justify-center">
-                  <div className="relative flex h-52 sm:h-64 w-full items-center justify-center overflow-visible">
+                  <div className="relative h-52 sm:h-60 w-full overflow-hidden rounded-xl bg-slate-100 shadow-xs">
                     <img
                       src={item.image}
                       alt={item.title}
-                      className="h-full w-auto max-w-full object-contain transition-all duration-500 ease-out group-hover:-translate-y-6 group-hover:scale-110"
+                      loading="lazy"
+                      decoding="async"
+                      className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                     />
                   </div>
                 </div>

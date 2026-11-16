@@ -60,25 +60,25 @@ export const featuresData = [
     num: '01',
     title: 'Modern, eco-friendly homes',
     description: 'Our goal is zero incidents and our lost time frequency rate is industry leading.',
-    image: '/images/diffrent/img1.png',
+    image: '/images/diffrent/img1.jpeg',
   },
   {
     num: '02',
     title: 'Client-centered approach',
     description: 'We work with both investors and developers to create landmarks that make an impact.',
-    image: '/images/diffrent/img2.png',
+    image: '/images/diffrent/img2.jpeg',
   },
   {
     num: '03',
     title: 'Community-focused living',
     description: 'Our multi-skilled team provides innovative, forward-thinking solutions.',
-    image: '/images/diffrent/img3.png',
+    image: '/images/diffrent/img3.jpeg',
   },
   {
     num: '04',
     title: 'Sustainable architecture',
     description: 'We maintain this by ensuring transparency and professional conduct in every aspect.',
-    image: '/images/diffrent/img4.png',
+    image: '/images/diffrent/img4.jpg',
   },
 ];
 
