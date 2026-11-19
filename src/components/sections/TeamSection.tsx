@@ -1,158 +1,127 @@
 'use client';
 
 import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { ArrowRight } from 'lucide-react';
 import { teamData } from '@/data/siteData';
+import FadeIn from '../animation/FadeIn';
 import RunningPillBadge from '../ui/RunningPillBadge';
-import StaggerContainer from '../animation/StaggerContainer';
-import StaggerItem from '../animation/StaggerItem';
+
+// Custom focus positions so portraits are perfectly framed without cutting off faces/chins
+const memberImagePositions: Record<string, string> = {
+  'Mr. V.Kanniyappan': 'object-[center_10%]',
+  'Ms.Krishma': 'object-[center_5%]',
+  'Mr.Amarnath': 'object-[center_32%]',
+};
 
 export default function TeamSection() {
+  // Show only the first three leadership team members matching the client mockup
+  const leadershipMembers = teamData.slice(0, 3);
+
   return (
-    <section id="team" className="py-24 lg:py-32 bg-white">
-      <div className="mx-auto max-w-[1600px] px-6 lg:px-12">
-        {/* Title Grid */}
-        <StaggerContainer
-          staggerDelay={0.1}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-start"
-        >
-          <StaggerItem className="space-y-4 pr-6">
-            <RunningPillBadge text="MEET THE TEAM" />
-            <h2 className="text-4xl sm:text-5xl lg:text-[54px] font-extrabold text-[#29247c] tracking-tight leading-[1.15]">
-              Global executive leadership
-            </h2>
-          </StaggerItem>
-
-          {/* Member 1 & 2 */}
-          {teamData.slice(0, 2).map((member) => (
-            <StaggerItem
-              key={member.name}
-              className="group relative rounded-[36px] overflow-hidden bg-white shadow-lg border border-slate-100/60 aspect-[3/4] cursor-pointer hover:shadow-2xl transition-all duration-300"
-            >
-              <img
-                src={member.image}
-                alt={member.name}
-                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-              />
-              {/* Bottom gradient info panel matching reference design */}
-              <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-900/90 via-slate-800/60 to-transparent pt-12 pb-6 px-6 text-center">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-300/90 block">
-                  {member.role}
-                </span>
-                <h3 className="text-2xl font-black text-white mt-1 leading-tight tracking-tight">
-                  {member.name}
-                </h3>
-              </div>
-              {/* Red arrow button top right */}
-              <div className="absolute top-4 right-4 flex h-11 w-11 items-center justify-center rounded-full bg-[#f12131] text-white shadow-lg transition-transform duration-300 group-hover:scale-110">
-                <svg className="h-5 w-5 fill-current" viewBox="0 0 24 24">
-                  <path d="M6 18L18 6M18 6H8M18 6V16" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                </svg>
-              </div>
-            </StaggerItem>
-          ))}
-
-          {/* Member 3 & 4 */}
-          {teamData.slice(2, 4).map((member) => (
-            <StaggerItem
-              key={member.name}
-              className="group relative rounded-[36px] overflow-hidden bg-white shadow-lg border border-slate-100/60 aspect-[3/4] cursor-pointer hover:shadow-2xl transition-all duration-300"
-            >
-              <img
-                src={member.image}
-                alt={member.name}
-                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-              />
-              {/* Bottom gradient info panel matching reference design */}
-              <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-900/90 via-slate-800/60 to-transparent pt-12 pb-6 px-6 text-center">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-300/90 block">
-                  {member.role}
-                </span>
-                <h3 className="text-2xl font-black text-white mt-1 leading-tight tracking-tight">
-                  {member.name}
-                </h3>
-              </div>
-              {/* Red arrow button top right */}
-              <div className="absolute top-4 right-4 flex h-11 w-11 items-center justify-center rounded-full bg-[#f12131] text-white shadow-lg transition-transform duration-300 group-hover:scale-110">
-                <svg className="h-5 w-5 fill-current" viewBox="0 0 24 24">
-                  <path d="M6 18L18 6M18 6H8M18 6V16" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                </svg>
-              </div>
-            </StaggerItem>
-          ))}
-
-          {/* Career CTA Card matching reference design */}
-          <StaggerItem className="rounded-[36px] bg-white p-8 border border-slate-100/90 shadow-lg aspect-[3/4] flex flex-col justify-between relative group cursor-pointer hover:shadow-2xl transition-all duration-300">
-            <div>
-              {/* Overlapping Employee Avatars + Red Badge */}
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex -space-x-3 items-center">
-                  <img
-                    className="h-15 w-15 rounded-full border-2 border-white object-cover shadow-sm"
-                    src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&auto=format&fit=crop&q=80"
-                    alt="Avatar 1"
-                  />
-                  <img
-                    className="h-15 w-15 rounded-full border-2 border-white object-cover shadow-sm"
-                    src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&auto=format&fit=crop&q=80"
-                    alt="Avatar 2"
-                  />
-                  <img
-                    className="h-15 w-15 rounded-full border-2 border-white object-cover shadow-sm"
-                    src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&auto=format&fit=crop&q=80"
-                    alt="Avatar 3"
-                  />
-                  <img
-                    className="h-15 w-15 rounded-full border-2 border-white object-cover shadow-sm"
-                    src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&auto=format&fit=crop&q=80"
-                    alt="Avatar 4"
-                  />
-                </div>
-
-                <Link
-                  href="/careers"
-                  aria-label="View career opportunities"
-                  className="h-15 w-15 rounded-full bg-[#f12131] flex items-center justify-center text-white shadow-md transition-transform duration-300 group-hover:scale-110"
-                >
-                  <svg className="h-5 w-5 fill-current" viewBox="0 0 24 24">
-                    <path
-                      d="M6 18L18 6M18 6H8M18 6V16"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      fill="none"
-                    />
-                  </svg>
-                </Link>
-              </div>
-
-              <span className="text-xs font-bold text-[#29247c] uppercase tracking-widest block">
-                JOIN OUR TEAM
-              </span>
-              <h3 className="text-4xl font-black text-[#29247c] mt-16 leading-tight tracking-tight">
-                Start a career with KPN Promoters.
-              </h3>
+    <section id="team" className="relative w-full bg-white py-16 sm:py-20 lg:py-24">
+      <div className="mx-auto max-w-[1240px] px-4 sm:px-6 lg:px-8">
+        
+        {/* =========================================================
+            HEADER SECTION (Matches Client Mockup)
+        ========================================================== */}
+        <FadeIn direction="up">
+          <div className="max-w-3xl mb-10 sm:mb-12">
+            {/* Running Pill Badge */}
+            <div className="mb-2">
+              <RunningPillBadge text="OUR LEADERSHIP" />
             </div>
 
-            <Link
-              href="/careers"
-              className="w-full rounded-full bg-[#f12131] py-3.5 px-6 flex items-center justify-between text-white font-bold text-sm shadow-md transition-all hover:bg-red-600 active:scale-98"
+            {/* Main Heading */}
+            <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-[#29247c] sm:text-4xl lg:text-[42px] leading-[1.1]">
+              Meet the people behind KPN.
+            </h2>
+
+            {/* Subtitle */}
+            <p className="mt-2 text-sm font-medium text-slate-500 sm:text-base leading-relaxed">
+              Leadership that brings vision, experience and commitment to every milestone.
+            </p>
+          </div>
+        </FadeIn>
+
+        {/* =========================================================
+            LEADERSHIP CARDS (Compact 3-Column Layout Matching Client Mockup)
+        ========================================================== */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-7 items-stretch">
+          {leadershipMembers.map((member, index) => (
+            <motion.article
+              key={member.name}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-40px' }}
+              whileHover={{ y: -6 }}
+              transition={{
+                duration: 0.45,
+                delay: index * 0.12,
+                ease: [0.21, 0.47, 0.32, 0.98],
+              }}
+              className="group flex flex-col justify-between overflow-hidden rounded-[20px] border border-slate-200/90 bg-white shadow-xs transition-all duration-300 hover:shadow-lg hover:border-slate-300/80"
             >
-              <span>Current Openings</span>
-              <span className="h-8 w-8 rounded-full border border-white/40 flex items-center justify-center text-white transition-transform duration-300 group-hover:scale-110">
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M6 18L18 6M18 6H8M18 6V16"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </span>
+              {/* Top Photo Container - Controlled compact height */}
+              <div className="relative h-[250px] sm:h-[270px] lg:h-[280px] w-full overflow-hidden bg-slate-100">
+                <img
+                  src={member.image}
+                  alt={member.name}
+                  loading="lazy"
+                  decoding="async"
+                  className={`h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 ${
+                    memberImagePositions[member.name] || 'object-center'
+                  }`}
+                />
+              </div>
+
+              {/* Leader Info Body */}
+              <div className="flex flex-1 flex-col justify-between p-5">
+                <div>
+                  {/* Name (Heading) */}
+                  <h3 className="text-lg sm:text-xl font-bold text-[#29247c] transition-colors group-hover:text-[#f12131]">
+                    {member.name}
+                  </h3>
+
+                  {/* Role / Designation (Red Subtitle) */}
+                  <p className="mt-1 text-xs sm:text-[13px] font-extrabold text-[#f12131] uppercase tracking-wider">
+                    {member.role}
+                  </p>
+
+                  {/* Leadership Vertical Tag */}
+                  {member.tag && (
+                    <span className="mt-0.5 block text-xs font-semibold text-slate-400">
+                      {member.tag}
+                    </span>
+                  )}
+
+                  {/* Profile Description */}
+                  {member.bio && (
+                    <p className="mt-3 border-t border-slate-100 pt-2.5 text-xs sm:text-[13px] font-normal text-slate-500 leading-relaxed line-clamp-3">
+                      {member.bio}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </motion.article>
+          ))}
+        </div>
+
+        {/* =========================================================
+            BOTTOM ACTION BUTTON (More About Our Team)
+        ========================================================== */}
+        <FadeIn direction="up" delay={0.25}>
+          <div className="mt-10 sm:mt-12">
+            <Link
+              href="/about-us"
+              className="group inline-flex items-center gap-2 rounded-full border border-slate-200/90 bg-white px-6 py-3 text-xs sm:text-sm font-bold text-slate-700 shadow-2xs transition-all hover:border-[#29247c] hover:text-[#29247c] hover:shadow-xs active:scale-95"
+            >
+              <span>More About Our Team</span>
+              <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1 text-slate-400 group-hover:text-[#29247c]" />
             </Link>
-          </StaggerItem>
-        </StaggerContainer>
+          </div>
+        </FadeIn>
+
       </div>
     </section>
   );

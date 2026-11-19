@@ -193,16 +193,23 @@ export default function HeroSection() {
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-          className="max-w-[430px]"
+          className="max-w-[430px] sm:max-w-[500px]"
         >
           <motion.h1
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="mb-6 text-[22px] font-bold leading-[1.45] text-white drop-shadow-sm md:text-[24px]"
+            className="mb-6 text-[20px] font-bold leading-[1.45] text-white drop-shadow-sm sm:text-[22px] md:text-[24px]"
           >
-            We are a developer invested in our customers&apos; success and improving
-            the communities we serve.
+            <span className="block">
+              Every Creature Has Its Shelter. Every Human Deserves a Home.
+            </span>
+            <span className="block mt-3 text-[18px] font-semibold text-white/95 sm:text-[20px]">
+              Quality Homes. Affordable Prices.
+            </span>
+            <span className="block mt-2 text-[18px] font-extrabold text-white sm:text-[20px]">
+              That&apos;s the KPN Promise.
+            </span>
           </motion.h1>
 
           <motion.div

@@ -358,8 +358,11 @@ export default function ProjectsPage() {
     <>
       <Navbar variant="hero" />
       <InnerPageHero
-        title="Our Projects"
+        title="Find a project that fits your plans."
         breadcrumb="Projects"
+        breadcrumbAtTop={true}
+        tagline="DISCOVER KPN"
+        subtitle="Compare locations, property types and project status. Open a project to explore the details or arrange a visit."
         description="Explore landmark real estate developments engineered for modern luxury living and lasting value."
         image="/images/projects/apt_royal_oak.jpg"
       />

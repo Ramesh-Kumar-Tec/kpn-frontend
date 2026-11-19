@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useState, useEffect, useCallback, useRef } from 'react';
+import { use, useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import Navbar from '@/components/layout/Navbar';
@@ -10,6 +10,8 @@ import { getProjectBySlug, getProjects, getProjectUnits, submitEnquiry } from '@
 import RunningPillBadge from '@/components/ui/RunningPillBadge';
 import FadeIn from '@/components/animation/FadeIn';
 import UnitBookingModal from '@/components/project/UnitBookingModal';
+import SiteVisitModal from '@/components/project/SiteVisitModal';
+import EmiCalculatorCard from '@/components/project/EmiCalculatorCard';
 import PhoneInputWithCountry from '@/components/ui/PhoneInputWithCountry';
 import { Country, DEFAULT_COUNTRY } from '@/lib/countryCodes';
 import { cleanName, validateName, cleanEmail, validateEmail, validatePhone } from '@/lib/formValidation';
@@ -92,6 +94,7 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
 
   // Interactive Unit Booking Modal state
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [isSiteVisitModalOpen, setIsSiteVisitModalOpen] = useState(false);
 
   // Category projects state
   const [categoryProjects, setCategoryProjects] = useState<any[]>(() =>
@@ -118,6 +121,16 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
 
   // Dynamic project list for Next / Prev navigation
   const [allProjectsList, setAllProjectsList] = useState<any[]>(projectsData);
+
+  // Parsed initial loan amount for EMI calculator
+  const parsedInitialPrice = useMemo(() => {
+    if (!project?.budget) return 2500000;
+    const match = String(project.budget).match(/(\d+(?:\.\d+)?)\s*L/i);
+    if (match) {
+      return Math.round(parseFloat(match[1]) * 100000);
+    }
+    return 2500000;
+  }, [project?.budget]);
 
   useEffect(() => {
     let isMounted = true;
@@ -711,6 +724,9 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
         <InnerPageHero
           title={categoryName}
           breadcrumb={`Home / Projects / ${categoryName}`}
+          breadcrumbAtTop={true}
+          tagline="KPN DEVELOPMENTS"
+          subtitle={`Explore verified ${categoryName.toLowerCase()} across prime growth corridors in Chennai.`}
           description={`Explore premium ${categoryName.toLowerCase()} developed by KPN Promoters.`}
           image="/images/projects/project_4.jpg"
         />
@@ -799,9 +815,33 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
       <Navbar variant="hero" />
       <InnerPageHero
         title={project.name}
-        breadcrumb={`Projects / ${project.name}`}
-        description="Explore landmark real estate developments engineered for luxury living, modern architecture, and lasting value."
+        breadcrumb={`Home / Projects / ${project.name}`}
+        breadcrumbAtTop={true}
+        tagline="KPN PROJECT"
+        subtitle={`${project.location} • ${project.propertyType || project.type} • ${project.status}`}
+        description={project.description || "Explore landmark real estate developments engineered for luxury living, modern architecture, and lasting value."}
         image={project.image}
+        actions={
+          <>
+            <button
+              type="button"
+              onClick={() => setIsSiteVisitModalOpen(true)}
+              className="rounded-full bg-[#f12131] px-7 py-3 text-xs sm:text-sm font-bold text-white shadow-lg shadow-red-500/25 hover:bg-[#d81928] hover:shadow-red-500/40 transition-all cursor-pointer"
+            >
+              Book Free Site Visit
+            </button>
+            <a
+              href={`https://wa.me/917338834233?text=${encodeURIComponent(
+                `Hello KPN Team, I would like to download the brochure and get details for ${project.name} in ${project.location}.`
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-full bg-white px-7 py-3 text-xs sm:text-sm font-bold text-[#10143a] shadow-lg hover:bg-slate-100 transition-all"
+            >
+              WhatsApp Brochure
+            </a>
+          </>
+        }
       />
 
       <section className="bg-white px-4 py-16 sm:px-6 lg:px-10 lg:py-24">
@@ -1758,187 +1798,232 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
           <hr className="my-20 border-t border-slate-100" />
 
           {/* =========================================================
-              REQUEST INFORMATION FORM & BOTTOM NAVIGATION
+              PLAN YOUR PURCHASE & REQUEST INFORMATION (2-COLUMN GRID)
           ========================================================= */}
           <FadeIn direction="up">
-            <div className="mx-auto max-w-2xl text-center">
-              <h2 className="mb-10 text-3xl font-extrabold text-[#29247c] sm:text-4xl">
-                Request more information
-              </h2>
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-10 items-stretch">
 
-              {inquirySubmitted ? (
-                <div className="rounded-[28px] border border-emerald-200 bg-emerald-50/90 p-8 text-center shadow-sm animate-in fade-in duration-300">
-                  <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500 text-white shadow-md">
-                    ✓
+              {/* Left Column: EMI Calculating Card */}
+              <div className="lg:col-span-6 flex flex-col">
+                <EmiCalculatorCard
+                  initialAmount={parsedInitialPrice}
+                  className="h-full"
+                />
+              </div>
+
+              {/* Right Column: Request More Information Card */}
+              <div className="lg:col-span-6 flex flex-col">
+                <div className="h-full rounded-[32px] border border-slate-200/90 bg-white p-7 sm:p-9 shadow-sm flex flex-col justify-between">
+                  <div>
+                    {/* Header Tagline */}
+                    <div className="flex items-center gap-2 text-xs font-bold tracking-widest text-[#f12131] uppercase mb-2">
+                      <span>GET IN TOUCH</span>
+                    </div>
+
+                    <h3 className="text-2xl sm:text-3xl font-extrabold text-[#29247c] tracking-tight">
+                      Request more information
+                    </h3>
+
+                    <p className="mt-2 text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
+                      Leave your details below and our property advisor will assist you with verified pricing, site visits, and brochure copies.
+                    </p>
                   </div>
-                  <h3 className="text-xl font-extrabold text-[#29247c]">
-                    Thank you! Your enquiry has been received.
-                  </h3>
-                  <p className="mt-2 text-sm text-slate-600">
-                    Our sales team will get in touch with you shortly regarding {project.name}.
-                  </p>
-                  <button
-                    type="button"
-                    suppressHydrationWarning
-                    onClick={() => {
-                      setInquirySubmitted(false);
-                      setInquiryFirstName('');
-                      setInquiryLastName('');
-                      setInquiryPhone('');
-                      setInquiryEmail('');
-                      setInquiryMessage('');
-                    }}
-                    className="mt-6 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-6 py-2.5 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 transition"
-                  >
-                    Send another inquiry
-                  </button>
+
+                  <div className="mt-7 flex-1 flex flex-col justify-center">
+                    {inquirySubmitted ? (
+                      <div className="rounded-[28px] border border-emerald-200 bg-emerald-50/90 p-8 text-center shadow-sm animate-in fade-in duration-300">
+                        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500 text-white shadow-md">
+                          ✓
+                        </div>
+                        <h4 className="text-xl font-extrabold text-[#29247c]">
+                          Thank you! Your enquiry has been received.
+                        </h4>
+                        <p className="mt-2 text-sm text-slate-600">
+                          Our sales team will get in touch with you shortly regarding {project.name}.
+                        </p>
+                        <button
+                          type="button"
+                          suppressHydrationWarning
+                          onClick={() => {
+                            setInquirySubmitted(false);
+                            setInquiryFirstName('');
+                            setInquiryLastName('');
+                            setInquiryPhone('');
+                            setInquiryEmail('');
+                            setInquiryMessage('');
+                          }}
+                          className="mt-6 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-6 py-2.5 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 transition"
+                        >
+                          Send another inquiry
+                        </button>
+                      </div>
+                    ) : (
+                      <form onSubmit={handleInquirySubmit} noValidate className="space-y-4 text-left">
+                        {inquiryError && (
+                          <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-xs font-semibold text-red-700">
+                            {inquiryError}
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                              First Name*
+                            </label>
+                            <input
+                              type="text"
+                              required
+                              placeholder="First Name*"
+                              value={inquiryFirstName}
+                              onChange={(e) => handleInquiryFirstNameChange(e.target.value)}
+                              onBlur={() => {
+                                setInquiryFieldErrors((prev) => ({
+                                  ...prev,
+                                  firstName: validateName(inquiryFirstName, 'First name').error,
+                                }));
+                              }}
+                              suppressHydrationWarning
+                              className={`h-13 w-full rounded-2xl border px-5 text-sm font-semibold text-slate-800 outline-none placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-[#f12131]/30 ${
+                                inquiryFieldErrors.firstName
+                                  ? 'border-red-400 bg-red-50/40 text-red-900'
+                                  : 'border-slate-200 bg-slate-50/70'
+                              }`}
+                            />
+                            {inquiryFieldErrors.firstName && (
+                              <p className="mt-1.5 px-3 text-xs font-semibold text-red-600 animate-in fade-in duration-200">
+                                {inquiryFieldErrors.firstName}
+                              </p>
+                            )}
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                              Last Name
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="Last Name"
+                              value={inquiryLastName}
+                              onChange={(e) => handleInquiryLastNameChange(e.target.value)}
+                              onBlur={() => {
+                                if (inquiryLastName.trim()) {
+                                  setInquiryFieldErrors((prev) => ({
+                                    ...prev,
+                                    lastName: validateName(inquiryLastName, 'Last name').error,
+                                  }));
+                                }
+                              }}
+                              suppressHydrationWarning
+                              className={`h-13 w-full rounded-2xl border px-5 text-sm font-semibold text-slate-800 outline-none placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-[#f12131]/30 ${
+                                inquiryFieldErrors.lastName
+                                  ? 'border-red-400 bg-red-50/40 text-red-900'
+                                  : 'border-slate-200 bg-slate-50/70'
+                              }`}
+                            />
+                            {inquiryFieldErrors.lastName && (
+                              <p className="mt-1.5 px-3 text-xs font-semibold text-red-600 animate-in fade-in duration-200">
+                                {inquiryFieldErrors.lastName}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                              Phone Number*
+                            </label>
+                            <PhoneInputWithCountry
+                              variant="pill"
+                              phone={inquiryPhone}
+                              selectedCountry={inquiryCountry}
+                              onPhoneChange={handleInquiryPhoneChange}
+                              onCountryChange={(c) => {
+                                setInquiryCountry(c);
+                                if (inquiryPhone) {
+                                  setInquiryFieldErrors((prev) => ({
+                                    ...prev,
+                                    phone: validatePhone(inquiryPhone, c, true).error,
+                                  }));
+                                }
+                              }}
+                              error={inquiryFieldErrors.phone}
+                              required
+                              onBlur={() => {
+                                setInquiryFieldErrors((prev) => ({
+                                  ...prev,
+                                  phone: validatePhone(inquiryPhone, inquiryCountry, true).error,
+                                }));
+                              }}
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                              Email Address*
+                            </label>
+                            <input
+                              type="email"
+                              required
+                              placeholder="Email Address* (e.g. name@gmail.com)"
+                              value={inquiryEmail}
+                              onChange={(e) => handleInquiryEmailChange(e.target.value)}
+                              onBlur={() => {
+                                setInquiryFieldErrors((prev) => ({
+                                  ...prev,
+                                  email: validateEmail(inquiryEmail, true).error,
+                                }));
+                              }}
+                              pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.com"
+                              title="Email must include '@' and end with '.com' (e.g. name@gmail.com)"
+                              suppressHydrationWarning
+                              className={`h-13 w-full rounded-2xl border px-5 text-sm font-semibold text-slate-800 outline-none placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-[#f12131]/30 ${
+                                inquiryFieldErrors.email
+                                  ? 'border-red-400 bg-red-50/40 text-red-900'
+                                  : 'border-slate-200 bg-slate-50/70'
+                              }`}
+                            />
+                            {inquiryFieldErrors.email && (
+                              <p className="mt-1.5 px-3 text-xs font-semibold text-red-600 animate-in fade-in duration-200">
+                                {inquiryFieldErrors.email}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                            Message (optional)
+                          </label>
+                          <textarea
+                            rows={3}
+                            placeholder="Message or specific requirements (optional)..."
+                            value={inquiryMessage}
+                            onChange={(e) => setInquiryMessage(e.target.value)}
+                            suppressHydrationWarning
+                            className="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50/70 p-4 text-sm font-semibold text-slate-800 outline-none placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-[#f12131]/30"
+                          />
+                        </div>
+
+                        <div className="flex justify-start pt-2">
+                          <button
+                            type="submit"
+                            disabled={isSubmittingInquiry}
+                            suppressHydrationWarning
+                            className="group flex h-13 items-center gap-4 rounded-full border border-slate-200 bg-[#29247c] pl-7 pr-2 text-sm font-bold text-white shadow-md transition hover:bg-[#1f1a63] hover:shadow-lg disabled:opacity-60 cursor-pointer"
+                          >
+                            <span>{isSubmittingInquiry ? 'Submitting...' : 'Submit Inquiry'}</span>
+                            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f12131] text-white transition-transform duration-300 group-hover:translate-x-1">
+                              <ArrowRight className="h-4 w-4" />
+                            </span>
+                          </button>
+                        </div>
+                      </form>
+                    )}
+                  </div>
                 </div>
-              ) : (
-                <form onSubmit={handleInquirySubmit} noValidate className="space-y-5 text-left">
-                  {inquiryError && (
-                    <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-xs font-semibold text-red-700">
-                      {inquiryError}
-                    </div>
-                  )}
+              </div>
 
-                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                    <div>
-                      <input
-                        type="text"
-                        required
-                        placeholder="First Name*"
-                        value={inquiryFirstName}
-                        onChange={(e) => handleInquiryFirstNameChange(e.target.value)}
-                        onBlur={() => {
-                          setInquiryFieldErrors((prev) => ({
-                            ...prev,
-                            firstName: validateName(inquiryFirstName, 'First name').error,
-                          }));
-                        }}
-                        suppressHydrationWarning
-                        className={`h-14 w-full rounded-full border px-7 text-sm font-semibold text-slate-800 outline-none placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-[#f12131]/30 ${
-                          inquiryFieldErrors.firstName
-                            ? 'border-red-400 bg-red-50/40 text-red-900'
-                            : 'border-0 bg-slate-100/80'
-                        }`}
-                      />
-                      {inquiryFieldErrors.firstName && (
-                        <p className="mt-1.5 px-4 text-xs font-semibold text-red-600 animate-in fade-in duration-200">
-                          {inquiryFieldErrors.firstName}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <input
-                        type="text"
-                        placeholder="Last Name"
-                        value={inquiryLastName}
-                        onChange={(e) => handleInquiryLastNameChange(e.target.value)}
-                        onBlur={() => {
-                          if (inquiryLastName.trim()) {
-                            setInquiryFieldErrors((prev) => ({
-                              ...prev,
-                              lastName: validateName(inquiryLastName, 'Last name').error,
-                            }));
-                          }
-                        }}
-                        suppressHydrationWarning
-                        className={`h-14 w-full rounded-full border px-7 text-sm font-semibold text-slate-800 outline-none placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-[#f12131]/30 ${
-                          inquiryFieldErrors.lastName
-                            ? 'border-red-400 bg-red-50/40 text-red-900'
-                            : 'border-0 bg-slate-100/80'
-                        }`}
-                      />
-                      {inquiryFieldErrors.lastName && (
-                        <p className="mt-1.5 px-4 text-xs font-semibold text-red-600 animate-in fade-in duration-200">
-                          {inquiryFieldErrors.lastName}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                    <div>
-                      <PhoneInputWithCountry
-                        variant="pill"
-                        phone={inquiryPhone}
-                        selectedCountry={inquiryCountry}
-                        onPhoneChange={handleInquiryPhoneChange}
-                        onCountryChange={(c) => {
-                          setInquiryCountry(c);
-                          if (inquiryPhone) {
-                            setInquiryFieldErrors((prev) => ({
-                              ...prev,
-                              phone: validatePhone(inquiryPhone, c, true).error,
-                            }));
-                          }
-                        }}
-                        error={inquiryFieldErrors.phone}
-                        required
-                        onBlur={() => {
-                          setInquiryFieldErrors((prev) => ({
-                            ...prev,
-                            phone: validatePhone(inquiryPhone, inquiryCountry, true).error,
-                          }));
-                        }}
-                      />
-                    </div>
-
-                    <div>
-                      <input
-                        type="email"
-                        required
-                        placeholder="Email Address* (e.g. name@gmail.com)"
-                        value={inquiryEmail}
-                        onChange={(e) => handleInquiryEmailChange(e.target.value)}
-                        onBlur={() => {
-                          setInquiryFieldErrors((prev) => ({
-                            ...prev,
-                            email: validateEmail(inquiryEmail, true).error,
-                          }));
-                        }}
-                        pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.com"
-                        title="Email must include '@' and end with '.com' (e.g. name@gmail.com)"
-                        suppressHydrationWarning
-                        className={`h-14 w-full rounded-full border px-7 text-sm font-semibold text-slate-800 outline-none placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-[#f12131]/30 ${
-                          inquiryFieldErrors.email
-                            ? 'border-red-400 bg-red-50/40 text-red-900'
-                            : 'border-0 bg-slate-100/80'
-                        }`}
-                      />
-                      {inquiryFieldErrors.email && (
-                        <p className="mt-1.5 px-4 text-xs font-semibold text-red-600 animate-in fade-in duration-200">
-                          {inquiryFieldErrors.email}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  <textarea
-                    rows={4}
-                    placeholder="Message or specific requirements (optional)..."
-                    value={inquiryMessage}
-                    onChange={(e) => setInquiryMessage(e.target.value)}
-                    suppressHydrationWarning
-                    className="w-full resize-none rounded-[28px] border-0 bg-slate-100/80 p-7 text-sm font-semibold text-slate-800 outline-none placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-[#f12131]/30"
-                  />
-
-                  <div className="flex justify-center pt-2">
-                    <button
-                      type="submit"
-                      disabled={isSubmittingInquiry}
-                      suppressHydrationWarning
-                      className="group flex h-14 items-center gap-5 rounded-full border border-slate-200 bg-white pl-8 pr-2 text-sm font-extrabold text-slate-900 shadow-md transition hover:shadow-lg disabled:opacity-60 cursor-pointer"
-                    >
-                      <span>{isSubmittingInquiry ? 'Submitting...' : 'Submit Inquiry'}</span>
-                      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#f12131] text-white transition-transform duration-300 group-hover:translate-x-1">
-                        <ArrowRight className="h-5 w-5" />
-                      </span>
-                    </button>
-                  </div>
-                </form>
-              )}
             </div>
           </FadeIn>
 
@@ -2156,6 +2241,15 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
         onClose={() => setIsBookingModalOpen(false)}
         project={project}
       />
+
+      {/* Interactive Site Visit Modal */}
+      {project && (
+        <SiteVisitModal
+          isOpen={isSiteVisitModalOpen}
+          onClose={() => setIsSiteVisitModalOpen(false)}
+          project={project}
+        />
+      )}
     </>
   );
 }

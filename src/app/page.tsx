@@ -5,6 +5,7 @@ import ServicesSection from '@/components/sections/ServicesSection';
 import FeaturesSection from '@/components/sections/FeaturesSection';
 import ProjectsSection from '@/components/sections/ProjectsSection';
 import TeamSection from '@/components/sections/TeamSection';
+import AwardsSection from '@/components/sections/AwardsSection';
 import TestimonialsSection from '@/components/sections/TestimonialsSection';
 import BlogSection from '@/components/sections/BlogSection';
 import ContactFormSection from '@/components/sections/ContactFormSection';
@@ -17,11 +18,12 @@ export default function Home() {
       <FullScreenVideoEntry />
       <HeroSection />
       <AboutSection />
-      <ServicesSection />
-      <FeaturesSection />
       <ProjectsSection />
-      <TeamSection />
+      <ServicesSection />
+      {/* <FeaturesSection /> */}
       <TestimonialsSection />
+      <TeamSection />
+      <AwardsSection />
       <BlogSection />
       <ContactFormSection />
       <Footer />

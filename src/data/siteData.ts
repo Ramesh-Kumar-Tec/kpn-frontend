@@ -871,22 +871,30 @@ export const teamData = [
   {
     name: 'Mr. V.Kanniyappan',
     role: 'Founder & Managing Director',
+    tag: 'Founder & Leadership',
     image: '/team/sir1.jpeg',
+    bio: 'Visionary founder guiding KPN Promoters with over 20+ years of excellence, delivering trusted residential developments and landmarks across Chennai.',
   },
   {
     name: 'Ms.Krishma',
     role: 'Chief Executive Officer',
+    tag: 'Executive Leadership',
     image: '/team/madam.jpeg',
+    bio: 'Spearheading strategic growth, client-centric development, and modern living communities across Chennai’s prime growth corridors.',
   },
   {
     name: 'Mr.Amarnath',
     role: 'Director',
+    tag: 'Business & Operations',
     image: '/team/amarnath.jpeg',
+    bio: 'Directing operational execution, key partnerships, and project governance to ensure superior construction quality and timely handovers.',
   },
   {
     name: 'Leslie Alexander',
     role: 'Development Manager',
+    tag: 'Project Management',
     image: '/images/team/team-4.jpg',
+    bio: 'Managing on-site construction timelines, planning approvals, and engineering coordination.',
   },
 ];
 export const testimonialsData = [

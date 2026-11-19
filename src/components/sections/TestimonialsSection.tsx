@@ -1,10 +1,15 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Star } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { testimonialsData } from '@/data/siteData';
-import { getTestimonials, TestimonialItem } from '@/lib/cmsClient';
+import { Star, Play, X, CheckCircle, MapPin, Clock } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  videoTestimonialsData,
+  VideoTestimonial,
+  formatVideoEmbedUrl,
+  getYouTubeThumbnail,
+} from '@/components/sections/VideoTestimonialsSection';
+import { getVideos } from '@/lib/cmsClient';
 import RunningPillBadge from '@/components/ui/RunningPillBadge';
 
 interface BankingPartner {
@@ -247,24 +252,59 @@ interface TestimonialsSectionProps {
 export default function TestimonialsSection({
   showBankingPartners = true,
 }: TestimonialsSectionProps = {}) {
-  const [items, setItems] = useState<TestimonialItem[]>(testimonialsData);
+  const [items, setItems] = useState<VideoTestimonial[]>(videoTestimonialsData);
+  const [activeVideo, setActiveVideo] = useState<VideoTestimonial | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
     async function loadCMS() {
       try {
-        const fetched = await getTestimonials();
-        if (fetched && fetched.length > 0) {
-          setItems(fetched);
+        const liveVideos = await getVideos();
+        if (isMounted && Array.isArray(liveVideos) && liveVideos.length > 0) {
+          const published = liveVideos.filter((v) => !v.status || v.status === 'Published');
+          if (published.length > 0) {
+            const mapped: VideoTestimonial[] = published.map((v, idx) => {
+              const formattedUrl =
+                v.videoUrl && v.videoUrl.trim() !== '' && !v.videoUrl.includes('dQw4w9WgXcQ')
+                  ? formatVideoEmbedUrl(v.videoUrl)
+                  : '/testimonis/test1.mp4';
+              const thumb =
+                v.thumbnailUrl ||
+                getYouTubeThumbnail(v.videoUrl) ||
+                'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&auto=format&fit=crop&q=80';
+              return {
+                id: v.id || v._id || `cms-vid-${idx}`,
+                title: v.title,
+                customerName: v.projectName ? `${v.projectName} Owner` : 'KPN Homeowner',
+                role: 'Verified Customer',
+                project: v.projectName || 'KPN Promoters',
+                location: 'Chennai, Tamil Nadu',
+                category: 'All',
+                duration: 'Walkthrough',
+                quote:
+                  v.description ||
+                  'Watch our full project tour and homeowner handover walkthrough with KPN Promoters.',
+                rating: 5,
+                thumbnail: thumb,
+                videoUrl: formattedUrl,
+                verifiedYear: 'Verified 2025',
+              };
+            });
+            setItems(mapped);
+          }
         }
       } catch (err) {
-        console.warn('Fallback testimonials used');
+        console.warn('Fallback to sample videoTestimonialsData:', err);
       }
     }
     loadCMS();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Ensure enough cards for a continuous, seamless, gapless running loop on all screen sizes
-  const repeatFactor = Math.max(3, Math.ceil(8 / (items.length || 1)));
+  const repeatFactor = Math.max(2, Math.ceil(6 / (items.length || 1)));
   const baseList = Array(repeatFactor).fill(items).flat();
   const duplicatedData = [...baseList, ...baseList];
 
@@ -390,71 +430,107 @@ export default function TestimonialsSection({
         ===================================================== */}
 
         <div className="relative z-20 text-center pt-4 pb-6 space-y-3 flex flex-col items-center">
-          <RunningPillBadge text="AWARDS & RECOGNITION" />
+          <RunningPillBadge text="CUSTOMER VIDEO TESTIMONIALS" />
           <h2 className="text-3xl font-extrabold text-[#29247c] sm:text-4xl lg:text-5xl tracking-tight">
             What our clients say
           </h2>
+          <p className="max-w-xl text-sm sm:text-base text-slate-500 font-medium px-4">
+            Hear directly from homeowners and investors who built their dreams with KPN Promoters.
+          </p>
         </div>
 
         {/* Continuous Smooth Running Marquee with Stars & Hover Pause */}
         <div className="relative z-20 w-full overflow-hidden pb-16 pt-2">
           <div
-            className="flex w-max gap-7 sm:gap-8 px-4 animate-marquee hover:[animation-play-state:paused]"
+            className="flex w-max gap-6 sm:gap-7 px-4 animate-marquee hover:[animation-play-state:paused]"
             style={{
-              animationDuration: `${Math.max(28, baseList.length * 4)}s`,
+              animationDuration: `${Math.max(30, baseList.length * 6)}s`,
             }}
           >
             {duplicatedData.map((item, index) => (
               <div
-                key={`${item.author}-${index}`}
-                className="shrink-0 w-[300px] sm:w-[350px] lg:w-[370px] flex flex-col group cursor-pointer"
+                key={`${item.id}-${index}`}
+                onClick={() => setActiveVideo(item)}
+                className="shrink-0 w-[340px] sm:w-[380px] lg:w-[400px] flex flex-col group cursor-pointer"
               >
-                {/* Card Box matching reference design with Golden Stars */}
-                <div className="bg-white rounded-[32px] p-8 sm:p-10 shadow-[0_10px_35px_rgba(0,0,0,0.03)] border border-slate-100/60 min-h-[350px] sm:min-h-[380px] relative flex flex-col items-center text-center justify-between pb-12 hover:shadow-xl hover:border-amber-100/80 transition-all duration-300">
-                  <div className="space-y-3.5 max-w-[300px] flex flex-col items-center">
-                    {/* ⭐ Dynamic Golden Star Rating */}
-                    <div className="flex items-center justify-center gap-1.5 text-amber-400 pt-1">
-                      {[...Array(Number(item.rating) || 5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className="h-4 w-4 sm:h-4.5 sm:w-4.5 fill-amber-400 text-amber-400 drop-shadow-xs transition-transform duration-200 group-hover:scale-110"
-                        />
-                      ))}
-                    </div>
+                {/* Video Card Box matching why-choose-us design */}
+                <div className="relative flex flex-col justify-between overflow-hidden rounded-[28px] border border-slate-200/90 bg-white p-3 shadow-md transition-all duration-300 hover:shadow-2xl hover:border-slate-300 hover:-translate-y-1.5 h-full">
+                  {/* 16:10 Thumbnail Container with Play Overlay */}
+                  <div className="relative aspect-[16/10] w-full overflow-hidden rounded-[22px] bg-slate-900">
+                    <img
+                      src={item.thumbnail}
+                      alt={item.title}
+                      loading="lazy"
+                      className="h-full w-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-108"
+                    />
 
-                    <h4 className="text-2xl sm:text-[26px] font-black text-[#29247c] leading-tight tracking-tight">
-                      “{item.title}”
-                    </h4>
-                    <p className="text-sm sm:text-[15px] text-slate-500/90 leading-relaxed font-medium line-clamp-4">
-                      &ldquo;{item.quote}&rdquo;
-                    </p>
-                  </div>
+                    {/* Dark subtle gradient */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
 
-                  {/* Arch Curve cutout container for avatar on bottom edge */}
-                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 flex flex-col items-center">
-                    <div className="h-10 w-24 bg-[#f4ebd0]/40 rounded-t-full flex items-center justify-center pt-2">
-                      <div className="h-14 w-14 rounded-full overflow-hidden border-2 border-white shadow-md bg-white transition-transform duration-300 group-hover:scale-105">
-                        <img
-                          src={item.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80'}
-                          alt={item.author}
-                          className="h-full w-full object-cover"
-                          onError={(e: any) => {
-                            e.target.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80';
-                          }}
-                        />
+                    {/* Play Button Icon with Ping Animation on Hover */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="relative flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-[#f12131] text-white shadow-xl shadow-red-500/40 transition-transform duration-300 group-hover:scale-115">
+                        <span className="absolute inset-0 rounded-full bg-[#f12131] opacity-75 group-hover:animate-ping" />
+                        <Play className="relative z-10 h-6 w-6 sm:h-7 sm:w-7 fill-white translate-x-0.5" />
                       </div>
                     </div>
-                  </div>
-                </div>
 
-                {/* Text Details below Card */}
-                <div className="mt-10 text-center space-y-0.5">
-                  <p className="text-sm font-bold text-slate-900 transition-colors duration-300 group-hover:text-[#f12131]">
-                    {item.author}
-                  </p>
-                  <p className="text-xs text-slate-400 font-medium">
-                    {item.role}
-                  </p>
+                    {/* Top Badges */}
+                    <div className="absolute top-3 inset-x-3 flex items-center justify-between text-xs font-bold text-white">
+                      <span className="flex items-center gap-1.5 rounded-full bg-black/60 backdrop-blur-md px-3 py-1 shadow-xs border border-white/10 text-[11px]">
+                        <Clock className="h-3.5 w-3.5 text-red-400" />
+                        {item.duration}
+                      </span>
+                      <span className="flex items-center gap-1.5 rounded-full bg-emerald-600/90 backdrop-blur-md px-3 py-1 shadow-xs border border-white/10 text-[11px]">
+                        <CheckCircle className="h-3 w-3" />
+                        {item.verifiedYear}
+                      </span>
+                    </div>
+
+                    {/* Project Tag at bottom of thumbnail */}
+                    <div className="absolute bottom-2.5 left-3 right-3 flex items-center gap-1.5 text-white/95 text-xs font-semibold">
+                      <MapPin className="h-3.5 w-3.5 text-red-400 shrink-0" />
+                      <span className="truncate">{item.project} • {item.location}</span>
+                    </div>
+                  </div>
+
+                  {/* Card Content Body */}
+                  <div className="p-4 sm:p-5 flex flex-col justify-between flex-1">
+                    <div>
+                      {/* Golden Stars Rating */}
+                      <div className="flex items-center gap-1 text-amber-400 mb-2.5">
+                        {[...Array(item.rating || 5)].map((_, i) => (
+                          <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
+                        ))}
+                      </div>
+
+                      {/* Video Title */}
+                      <h3 className="text-base sm:text-lg font-bold text-[#29247c] leading-snug group-hover:text-[#f12131] transition-colors duration-300 line-clamp-2">
+                        “{item.title}”
+                      </h3>
+
+                      {/* Customer Quote */}
+                      <p className="mt-2 text-xs sm:text-sm text-slate-500 font-medium leading-relaxed line-clamp-3">
+                        &ldquo;{item.quote}&rdquo;
+                      </p>
+                    </div>
+
+                    {/* Homeowner Info & Watch Story Link */}
+                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                      <div className="text-left">
+                        <p className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-[#f12131] transition-colors">
+                          {item.customerName}
+                        </p>
+                        <p className="text-[11px] text-slate-400 font-medium">
+                          {item.role}
+                        </p>
+                      </div>
+
+                      <span className="text-xs font-bold text-[#f12131] flex items-center gap-1 group-hover:translate-x-1 transition-transform shrink-0">
+                        Watch Story →
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
@@ -545,6 +621,83 @@ export default function TestimonialsSection({
           bg-white
         "
       />
+
+      {/* =========================================================
+          LIGHTBOX / VIDEO MODAL
+      ========================================================= */}
+      <AnimatePresence>
+        {activeVideo && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 sm:p-6 md:p-10"
+            onClick={() => setActiveVideo(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ duration: 0.3 }}
+              className="relative w-full max-w-4xl overflow-hidden rounded-[28px] bg-slate-900 border border-white/20 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close Button */}
+              <button
+                type="button"
+                onClick={() => setActiveVideo(null)}
+                aria-label="Close video"
+                className="absolute top-4 right-4 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-black/70 hover:bg-red-600 text-white transition-all duration-300 shadow-lg hover:scale-110"
+              >
+                <X className="h-5 w-5" />
+              </button>
+
+              {/* Video Player (Responsive 16:9) */}
+              <div className="relative aspect-video w-full bg-black">
+                {activeVideo.videoUrl.includes('youtube.com') || activeVideo.videoUrl.includes('youtu.be') ? (
+                  <iframe
+                    src={`${activeVideo.videoUrl}?autoplay=1&rel=0&modestbranding=1`}
+                    title={activeVideo.title}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="h-full w-full border-0"
+                  />
+                ) : (
+                  <video
+                    src={activeVideo.videoUrl}
+                    controls
+                    autoPlay
+                    playsInline
+                    className="h-full w-full object-cover"
+                  />
+                )}
+              </div>
+
+              {/* Video Details Footer */}
+              <div className="p-6 sm:p-7 bg-slate-900/95 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <span className="text-xs font-bold text-red-400 uppercase tracking-wider">
+                    {activeVideo.project} • {activeVideo.location}
+                  </span>
+                  <h4 className="text-xl font-black text-white">
+                    {activeVideo.title}
+                  </h4>
+                  <p className="text-sm text-slate-300">
+                    Shared by <span className="text-white font-bold">{activeVideo.customerName}</span> ({activeVideo.role})
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 sm:self-center">
+                  <span className="rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3.5 py-1 text-xs font-extrabold flex items-center gap-1.5">
+                    <CheckCircle className="h-3.5 w-3.5" />
+                    {activeVideo.verifiedYear}
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }

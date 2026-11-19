@@ -18,7 +18,7 @@ interface RunningPillBadgeProps {
 export default function RunningPillBadge({
   text,
   separator = '-',
-  speed = 8,
+  speed,
   variant = 'light',
   className = '',
 }: RunningPillBadgeProps) {
@@ -26,6 +26,10 @@ export default function RunningPillBadge({
   const items = [text, text, text];
 
   const isDark = variant === 'dark';
+
+  // Automatically normalize the scroll speed so longer phrases don't scroll too fast
+  // Standard speed: ~14 characters completes in ~8s. Longer phrases scale duration proportionally.
+  const animationDuration = speed ?? Math.max(8, Math.round((text.length / 14) * 8 * 10) / 10);
 
   const renderItemSet = () => (
     <div className="flex items-center gap-3 pr-3 shrink-0">
@@ -66,7 +70,7 @@ export default function RunningPillBadge({
           x: ['0%', '-50%'],
         }}
         transition={{
-          duration: speed,
+          duration: animationDuration,
           ease: 'linear',
           repeat: Infinity,
           repeatType: 'loop',
