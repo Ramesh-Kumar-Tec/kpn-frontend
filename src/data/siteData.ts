@@ -648,6 +648,28 @@ const rawProjectsData: ProjectItem[] = [
     image: '/images/projectimg/KPN-SRI-BHAVANI-AMMAN-NAGAR.jpg',
     streetViewUrl: 'https://www.google.com/maps/embed?pb=!4v1680000000000!6m8!1m7!1sCAoSLEFGMVFpcE1mX1h3Q1pfcG5oQ09oV2RjSGFxTXlhZFl0b2pfaEZfN0p4WGZZ!2m2!1d12.8571477!2d80.0631628!3f120!4f0!5f0.7820865974627469',
   },
+  {
+    id: '22',
+    name: 'KPN Blue Meadows',
+    slug: 'kpn-blue-meadows',
+    location: 'Guduvanchery, Chennai',
+    address: 'Pandur, Guduvanchery, Chennai',
+    bhk: 'Plots (770 - 1545 Sq.Ft.)',
+    type: 'Plots',
+    status: 'Ongoing',
+    budget: '₹ 2999/Sq.Ft',
+    image: '/images/projects/plot_marvel.jpg',
+    plotSizes: '770 - 1,545 Sq.Ft.',
+    brochureUrl: '/brouchure/KPN Blue Meadows - Brochure.pdf',
+    description: 'KPN Blue Meadows is a premium CMDA & RERA approved residential plotted township in Pandur, Guduvanchery. Offering clear title deeds, 24x7 security, blacktop roads, streetlights, and strategic access to GST Road and Kilambakkam Bus Terminus.',
+    highlights: [
+      'CMDA & RERA Approved Residential Township',
+      'Sizes ranging from 770 to 1,545 Sq.Ft.*',
+      'Just 10 Mins from GST Road & Guduvanchery Railway Station',
+      'Gated Community with Avenue Trees and 24x7 Security',
+    ],
+    streetViewUrl: 'https://www.google.com/maps/embed?pb=!4v1680000000000!6m8!1m7!1sCAoSLEFGMVFpcE1mX1h3Q1pfcG5oQ09oV2RjSGFxTXlhZFl0b2pfaEZfN0p4WGZZ!2m2!1d12.8571477!2d80.0631628!3f120!4f0!5f0.7820865974627469',
+  },
 ];
 
 const createApartmentBlocks = () => [

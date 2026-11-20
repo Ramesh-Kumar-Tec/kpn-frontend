@@ -147,7 +147,6 @@ export default function Navbar({
           flex
           min-h-[68px]
           w-full
-          max-w-[1728px]
           items-center
           rounded-[28px]
           bg-white

@@ -33,6 +33,15 @@ export default function NewProjectAdModal() {
   const [isPillDismissed, setIsPillDismissed] = useState(false);
   const [showEnquiryForm, setShowEnquiryForm] = useState(false);
 
+  // Initialize dismissed state from sessionStorage on mount
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined' && sessionStorage.getItem('kpn_guduvancherry_pill_dismissed') === 'true') {
+        setIsPillDismissed(true);
+      }
+    } catch {}
+  }, []);
+
   // Form states
   const [formData, setFormData] = useState({
     name: '',
@@ -97,9 +106,12 @@ export default function NewProjectAdModal() {
   };
 
   const handlePermanentPillDismiss = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     setIsPillDismissed(true);
-    sessionStorage.setItem('kpn_guduvancherry_pill_dismissed', 'true');
+    try {
+      sessionStorage.setItem('kpn_guduvancherry_pill_dismissed', 'true');
+    } catch {}
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -153,48 +165,54 @@ export default function NewProjectAdModal() {
             className="fixed bottom-6 left-6 z-40 max-w-[calc(100vw-32px)]"
           >
             <div
-              onClick={() => setIsOpen(true)}
               className="
-                group relative flex items-center gap-3 rounded-full
-                bg-white p-2 pr-4 text-slate-800
+                group relative flex items-center gap-2 rounded-full
+                bg-white p-1.5 pr-2.5 text-slate-800
                 shadow-[0_12px_36px_rgba(41,36,124,0.18),0_4px_12px_rgba(0,0,0,0.06)]
                 border-2 border-rose-200 hover:border-[#f12131]
-                transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer
+                transition-all duration-300
               "
-              role="button"
-              tabIndex={0}
-              aria-label="View New Launch: Guduvancherry Estates"
             >
-              {/* Icon Circle */}
-              <div className="relative flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-[#f12131] to-[#d01927] text-white shadow-md shadow-red-500/30">
-                <Sparkles className="h-5 w-5 animate-spin [animation-duration:8s]" />
-              </div>
+              {/* Clickable Announcement Body */}
+              <div
+                onClick={() => setIsOpen(true)}
+                className="flex items-center gap-2.5 cursor-pointer hover:opacity-95"
+                role="button"
+                tabIndex={0}
+                aria-label="View New Launch: Guduvancherry Estates"
+              >
+                {/* Icon Circle */}
+                <div className="relative flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-[#f12131] to-[#d01927] text-white shadow-md shadow-red-500/30">
+                  <Sparkles className="h-5 w-5 animate-spin [animation-duration:8s]" />
+                </div>
 
-              {/* Text Badge */}
-              <div className="relative flex flex-col pr-1">
-                <div className="flex items-center gap-1.5">
-                  <span className="inline-block h-2 w-2 rounded-full bg-[#f12131] animate-pulse" />
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#f12131]">
-                    New Launch
+                {/* Text Badge */}
+                <div className="relative flex flex-col pr-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="inline-block h-2 w-2 rounded-full bg-[#f12131] animate-pulse" />
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#f12131]">
+                      New Launch
+                    </span>
+                  </div>
+                  <span className="text-xs sm:text-sm font-bold text-[#29247c] tracking-tight line-clamp-1">
+                    Guduvancherry Estates • Coming Soon
                   </span>
                 </div>
-                <span className="text-xs sm:text-sm font-bold text-[#29247c] tracking-tight line-clamp-1">
-                  Guduvancherry Estates • Coming Soon
-                </span>
+
+                {/* View prompt */}
+                <div className="relative hidden md:flex items-center pl-1 text-xs font-bold text-[#f12131] group-hover:translate-x-0.5 transition">
+                  <span>View</span>
+                  <Maximize2 className="ml-1 h-3.5 w-3.5" />
+                </div>
               </div>
 
-              {/* View prompt */}
-              <div className="relative hidden md:flex items-center pl-1 text-xs font-bold text-[#f12131] group-hover:translate-x-0.5 transition">
-                <span>View</span>
-                <Maximize2 className="ml-1 h-3.5 w-3.5" />
-              </div>
-
-              {/* Dismiss Cross */}
+              {/* Independent Dismiss Cross Button with generous click area */}
               <button
+                type="button"
                 onClick={handlePermanentPillDismiss}
                 title="Dismiss announcement"
                 aria-label="Dismiss announcement"
-                className="relative ml-1 flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:bg-rose-50 hover:text-[#f12131] transition cursor-pointer"
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 hover:bg-rose-100 text-slate-500 hover:text-[#f12131] transition-all cursor-pointer shrink-0 ml-1 shadow-2xs hover:scale-110 active:scale-95"
               >
                 <X className="h-3.5 w-3.5" />
               </button>

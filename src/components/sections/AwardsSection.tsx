@@ -47,7 +47,7 @@ export default function AwardsSection() {
 
   return (
     <section id="awards" className="relative w-full bg-slate-50/60 py-16 sm:py-20 lg:py-24 border-t border-slate-100">
-      <div className="mx-auto max-w-[1240px] px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
         
         {/* =========================================================
             HEADER SECTION (Matches Client Mockup)

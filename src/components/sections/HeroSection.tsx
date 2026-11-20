@@ -188,7 +188,7 @@ export default function HeroSection() {
 
       <Navbar />
 
-      <div className="relative z-10 mx-auto w-full max-w-[1728px] px-4 pt-20 md:px-6 lg:px-4">
+      <div className="relative z-10 w-full px-4 sm:px-6 lg:px-10 xl:px-12 pt-20">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
@@ -218,10 +218,17 @@ export default function HeroSection() {
             transition={{ duration: 0.6, delay: 0.45, ease: [0.22, 1, 0.36, 1] }}
           >
             <Link
-              href="/about-us"
+              href="#projects"
+              onClick={(e) => {
+                const el = document.getElementById('projects');
+                if (el) {
+                  e.preventDefault();
+                  el.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
               className="group inline-flex items-center gap-5 rounded-full bg-white py-1.5 pl-8 pr-1.5 text-sm font-bold text-black shadow-lg transition-all hover:text-[#f12131] hover:shadow-xl active:scale-98"
             >
-              <span>More About Us</span>
+              <span>Explore Our Projects</span>
               <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#f12131] text-white transition-transform group-hover:translate-x-1">
                 <ArrowRight className="h-5 w-5 -rotate-45 transition-colors duration-300 group-hover:rotate-0 group-hover:text-black" />
               </span>

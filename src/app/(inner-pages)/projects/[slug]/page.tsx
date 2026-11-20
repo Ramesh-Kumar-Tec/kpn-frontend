@@ -11,6 +11,7 @@ import RunningPillBadge from '@/components/ui/RunningPillBadge';
 import FadeIn from '@/components/animation/FadeIn';
 import UnitBookingModal from '@/components/project/UnitBookingModal';
 import SiteVisitModal from '@/components/project/SiteVisitModal';
+import ProjectEnquiryModal from '@/components/project/ProjectEnquiryModal';
 import EmiCalculatorCard from '@/components/project/EmiCalculatorCard';
 import PhoneInputWithCountry from '@/components/ui/PhoneInputWithCountry';
 import { Country, DEFAULT_COUNTRY } from '@/lib/countryCodes';
@@ -95,6 +96,7 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
   // Interactive Unit Booking Modal state
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [isSiteVisitModalOpen, setIsSiteVisitModalOpen] = useState(false);
+  const [isEnquiryModalOpen, setIsEnquiryModalOpen] = useState(false);
 
   // Category projects state
   const [categoryProjects, setCategoryProjects] = useState<any[]>(() =>
@@ -187,6 +189,19 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
       isMounted = false;
     };
   }, [slug, isCategory, categoryName, projectIndex]);
+
+  // Lead Generation: Automatic enquiry modal popup on project page
+  useEffect(() => {
+    if (isCategory || !project) return;
+    const timer = setTimeout(() => {
+      setIsEnquiryModalOpen(true);
+    }, 2500); // 2.5-second fast & reliable engagement popup
+    return () => clearTimeout(timer);
+  }, [isCategory, project, slug]);
+
+  const handleCloseEnquiryModal = () => {
+    setIsEnquiryModalOpen(false);
+  };
 
   // Previous and Next navigation across all live active projects
   const activeProjectIndex = allProjectsList.findIndex(
@@ -732,7 +747,7 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
         />
 
         <section className="bg-white px-4 py-16 sm:px-6 lg:px-10 lg:py-24">
-          <div className="mx-auto max-w-[1500px]">
+          <div className="w-full px-4 sm:px-6 lg:px-10 xl:px-12">
             {/* Category Tabs */}
             <div className="mb-12 flex flex-wrap items-center gap-3 border-b border-slate-100 pb-8">
               <Link
@@ -830,6 +845,13 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
             >
               Book Free Site Visit
             </button>
+            <button
+              type="button"
+              onClick={() => setIsEnquiryModalOpen(true)}
+              className="rounded-full bg-white/10 backdrop-blur-md border border-white/25 px-6 py-3 text-xs sm:text-sm font-bold text-white shadow-lg hover:bg-white/20 transition-all cursor-pointer"
+            >
+              Enquire Now
+            </button>
             <a
               href={`https://wa.me/917338834233?text=${encodeURIComponent(
                 `Hello KPN Team, I would like to download the brochure and get details for ${project.name} in ${project.location}.`
@@ -845,7 +867,7 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
       />
 
       <section className="bg-white px-4 py-16 sm:px-6 lg:px-10 lg:py-24">
-        <div className="mx-auto max-w-[1500px]">
+        <div className="w-full px-4 sm:px-6 lg:px-10 xl:px-12">
 
           {/* =========================================================
               HEADER & 5 KEY STAT CARDS
@@ -2247,6 +2269,15 @@ export default function ProjectCategoryOrDetailPage({ params }: PageProps) {
         <SiteVisitModal
           isOpen={isSiteVisitModalOpen}
           onClose={() => setIsSiteVisitModalOpen(false)}
+          project={project}
+        />
+      )}
+
+      {/* Interactive Project Details Enquiry Modal Popup */}
+      {project && (
+        <ProjectEnquiryModal
+          isOpen={isEnquiryModalOpen}
+          onClose={handleCloseEnquiryModal}
           project={project}
         />
       )}

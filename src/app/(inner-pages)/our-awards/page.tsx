@@ -35,9 +35,12 @@ export default function OurAwardsPage() {
       <Navbar variant="hero" />
 
       <InnerPageHero
-        title="Our Awards"
-        breadcrumb="Our Awards"
-        description="A showcase of the milestones, honors, and achievements that define our journey of excellence."
+        breadcrumbAtTop={true}
+        tagline="EXCELLENCE & RECOGNITION"
+        title="Our Awards & Honors"
+        subtitle="Recognized for Trust, Legal Clarity, and Timely Handover"
+        breadcrumb="Home / About KPN / Our Awards"
+        description="A showcase of prestigious industry milestones, honors, and customer trust recognitions that celebrate our journey of 25+ years of excellence."
         image="/images/projects/project_4.jpg"
       />
 
@@ -45,7 +48,7 @@ export default function OurAwardsPage() {
           AWARDS SECTION
       ========================================================== */}
       <section className="bg-gradient-to-b from-white via-slate-50/50 to-white px-4 py-16 sm:px-6 lg:px-12 lg:py-24">
-        <div className="mx-auto max-w-[1450px]">
+        <div className="w-full px-4 sm:px-6 lg:px-10 xl:px-12">
 
           {/* =====================================================
               SECTION INTRO

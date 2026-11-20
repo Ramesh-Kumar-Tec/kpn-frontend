@@ -11,7 +11,7 @@ import StaggerItem from '@/components/animation/StaggerItem';
 export default function LearnMoreSection() {
   return (
     <section className="bg-white py-24 sm:py-28 lg:py-32">
-      <div className="mx-auto max-w-[1200px] px-6">
+      <div className="w-full px-4 sm:px-6 lg:px-10 xl:px-12">
 
         {/* =========================
             SECTION HEADER

@@ -139,6 +139,12 @@ export default function KpnChatbot() {
 
   // Show friendly notification pill after 3 seconds on first visit
   useEffect(() => {
+    try {
+      if (typeof window !== 'undefined' && sessionStorage.getItem('kpn_chat_notification_dismissed') === 'true') {
+        return;
+      }
+    } catch {}
+
     const timer = setTimeout(() => {
       if (!isOpen && !hasPrompted) {
         setShowNotification(true);
@@ -332,11 +338,21 @@ export default function KpnChatbot() {
         {showNotification && !isOpen && (
           <div className="absolute right-16 bottom-0 w-[260px] animate-in fade-in slide-in-from-right-3 rounded-2xl bg-white p-3.5 shadow-2xl border border-slate-100 ring-1 ring-slate-900/5 transition-all">
             <button
-              onClick={() => setShowNotification(false)}
-              className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-slate-600 hover:bg-slate-300"
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowNotification(false);
+                try {
+                  sessionStorage.setItem('kpn_chat_notification_dismissed', 'true');
+                } catch {}
+              }}
+              title="Close notification"
+              aria-label="Close notification"
+              className="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-slate-200 hover:bg-red-50 text-slate-600 hover:text-red-500 shadow-xs transition-all cursor-pointer hover:scale-110 active:scale-95 z-20"
               suppressHydrationWarning
             >
-              <X className="h-3 w-3" />
+              <X className="h-4 w-4" />
             </button>
             <div className="flex items-start gap-2.5">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#29247c] text-white">

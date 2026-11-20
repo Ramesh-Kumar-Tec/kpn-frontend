@@ -7,7 +7,7 @@ import FadeIn from '@/components/animation/FadeIn';
 export default function VisionMissionSection() {
   return (
     <section className="relative bg-gradient-to-b from-white via-slate-50/50 to-white px-6 py-20 sm:py-24 lg:px-10 lg:py-32">
-      <div className="mx-auto max-w-[1400px]">
+      <div className="w-full px-4 sm:px-6 lg:px-10 xl:px-12">
 
         {/* Section Header */}
         <FadeIn direction="up" className="mx-auto max-w-3xl text-center">

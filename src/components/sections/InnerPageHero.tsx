@@ -97,7 +97,7 @@ export default function InnerPageHero({
       <div className="absolute inset-0 bg-slate-950/50 backdrop-brightness-95" />
 
       {/* Content */}
-      <div className="relative z-10 mx-auto max-w-[1500px] px-6 pb-24 pt-32 lg:px-16">
+      <div className="relative z-10 w-full px-4 sm:px-6 lg:px-10 xl:px-12 pb-24 pt-32">
 
         <div className="grid min-h-[430px] grid-cols-1 items-center gap-12 lg:grid-cols-2">
 

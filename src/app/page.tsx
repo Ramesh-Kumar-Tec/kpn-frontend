@@ -7,6 +7,7 @@ import ProjectsSection from '@/components/sections/ProjectsSection';
 import TeamSection from '@/components/sections/TeamSection';
 import AwardsSection from '@/components/sections/AwardsSection';
 import TestimonialsSection from '@/components/sections/TestimonialsSection';
+import BankingPartnersSection from '@/components/sections/BankingPartnersSection';
 import BlogSection from '@/components/sections/BlogSection';
 import ContactFormSection from '@/components/sections/ContactFormSection';
 import Footer from '@/components/layout/Footer';
@@ -20,10 +21,15 @@ export default function Home() {
       <AboutSection />
       <ProjectsSection />
       <ServicesSection />
-      {/* <FeaturesSection /> */}
+      {/* 4. Testimonials Section: Google reviews scrolling text + 1 video testimonial */}
       <TestimonialsSection />
+      {/* 5. Our Leadership: Immediately after Testimonials */}
       <TeamSection />
+      {/* 6. Awards & Recognition: After Our Leadership */}
       <AwardsSection />
+      {/* 7. Banking Partners: Standalone section after Awards */}
+      <BankingPartnersSection />
+      {/* 8. Blog Section: Latest blogs after Banking Partners */}
       <BlogSection />
       <ContactFormSection />
       <Footer />

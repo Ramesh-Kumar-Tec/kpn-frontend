@@ -54,15 +54,18 @@ export default function WhyChooseUs() {
       <Navbar variant="hero" />
 
       <InnerPageHero
-        title="Why Choose Us"
-        breadcrumb="Home / Why Choose Us"
-        description="Whether you’re building, remodeling, buying, or selling, we bring seamless project execution under one roof."
+        breadcrumbAtTop={true}
+        tagline="THE KPN ADVANTAGE"
+        title="Why Choose KPN Promoters"
+        subtitle="Unmatched Reliability, Verified Legal Titles & Direct Customer Support"
+        breadcrumb="Home / About KPN / Why Choose Us"
+        description="From 100% CMDA/DTCP approvals to clear parent documents and fast bank loan approvals, discover what makes KPN the trusted choice for thousands of families."
         image="/images/core-bc.jpg"
       />
 
       {/* Core Values */}
       <section className="w-full bg-white py-24 md:py-28 lg:py-[100px]">
-        <div className="mx-auto w-[calc(100%-40px)] max-w-[1440px] md:w-[calc(100%-100px)] lg:w-[calc(100%-240px)]">
+        <div className="w-full px-4 sm:px-6 lg:px-10 xl:px-12">
 
           {/* Label + Heading */}
           <div className="mb-12 grid items-start md:mb-16 lg:grid-cols-[32%_68%]">

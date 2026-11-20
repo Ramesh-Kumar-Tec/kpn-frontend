@@ -12,9 +12,12 @@ export default function AboutUsPage() {
       <Navbar variant="hero" />
 
       <InnerPageHero
-        title="About us"
-        breadcrumb="About us"
-        description="Whether you're building, remodeling, buying, or selling, we bring seamless project execution under one roof."
+        breadcrumbAtTop={true}
+        tagline="BUILDING TRUST & FUTURES"
+        title="About KPN Promoters"
+        subtitle="25+ Years of Real Estate Excellence in Chennai"
+        breadcrumb="Home / About KPN / About Us"
+        description="Whether you're building, buying, or investing, we bring seamless project execution, transparent legal clarity, and 100% approved communities under one roof."
         image="/images/about/about-bc.jpg"
       />
 

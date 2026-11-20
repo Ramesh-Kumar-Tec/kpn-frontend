@@ -1,4 +1,6 @@
 'use client';
+
+import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowUpRight } from 'lucide-react';
 import { servicesData } from '@/data/siteData';
@@ -151,6 +153,49 @@ export default function ServicesSection() {
                         <p className="text-base font-normal leading-relaxed sm:text-lg lg:text-lg text-slate-600 group-hover:text-slate-200 transition-colors duration-500">
                           {service.description}
                         </p>
+                      </div>
+
+                      {/* =========================
+                          BOTTOM-RIGHT ARROW BUTTON
+                      ========================= */}
+                      <div className="w-full flex justify-end pt-4 lg:pt-0 lg:absolute lg:bottom-0 lg:right-0">
+                        <Link
+                          href={(service as any).href || '/contact-us'}
+                          aria-label={`Explore ${service.title}`}
+                          className="
+                            flex
+                            h-12
+                            w-12
+                            sm:h-14
+                            sm:w-14
+                            shrink-0
+                            items-center
+                            justify-center
+                            rounded-full
+                            bg-slate-100
+                            text-[#29247c]
+                            shadow-sm
+                            group-hover:bg-white
+                            group-hover:text-[#29247c]
+                            group-hover:shadow-md
+                            transition-all
+                            duration-500
+                            hover:scale-110
+                          "
+                        >
+                          <ArrowUpRight
+                            className="
+                              h-5
+                              w-5
+                              sm:h-6
+                              sm:w-6
+                              transition-transform
+                              duration-300
+                              group-hover:-translate-y-0.5
+                              group-hover:translate-x-0.5
+                            "
+                          />
+                        </Link>
                       </div>
                     </div>
                   </div>

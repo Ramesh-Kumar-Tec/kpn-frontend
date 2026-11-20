@@ -76,12 +76,12 @@ export default function Footer() {
   }, []);
 
   return (
-    <footer className="relative z-0 -mt-16 bg-neutral-950 text-white pt-28 pb-12">
-      <div className="mx-auto max-w-[1600px] px-6 lg:px-12">
+    <footer className="relative z-0 -mt-16 bg-neutral-950 text-white pt-24 pb-12">
+      <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
         {/* Main Columns */}
         <StaggerContainer
           staggerDelay={0.1}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 mb-16"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 mb-8"
         >
           {/* Brand & Sales Contact */}
           <StaggerItem className="space-y-4">
@@ -168,16 +168,21 @@ export default function Footer() {
           </StaggerItem>
         </StaggerContainer>
 
-        {/* Bottom Bar: Centered Logo and Centered Copyright */}
+        {/* Bottom Bar: Centered Logo moved slightly up & Centered Copyright */}
         <FadeIn delay={0.2} direction="up">
-          <div className="pt-12 flex flex-col items-center justify-center gap-6">
-            <Link href="/" className="flex items-center justify-center transition-transform duration-300 hover:scale-105 bg-white rounded-xl p-3">
+          <div className="pt-2 flex flex-col items-center justify-center gap-4">
+            <button
+              type="button"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              aria-label="Scroll to top of page"
+              className="flex items-center justify-center transition-transform duration-300 hover:scale-105 bg-white rounded-xl p-3 cursor-pointer shadow-md"
+            >
               <img
                 src="/images/newlogoo.jpeg"
                 alt="KPN Promoters"
-                className="h-[50px] sm:h-[60px] lg:h-[70px] w-auto object-contain "
+                className="h-[50px] sm:h-[60px] lg:h-[70px] w-auto object-contain"
               />
-            </Link>
+            </button>
             <p className="text-sm font-bold text-white text-center">
               {data.copyright}
             </p>

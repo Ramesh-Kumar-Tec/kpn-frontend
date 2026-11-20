@@ -118,7 +118,7 @@ export default function InnerFooter() {
       ===================================================== */}
       <footer className="relative z-20 -mt-32 px-4 pb-8 sm:px-6 lg:px-8">
 
-        <FadeIn direction="up" distance={30} className="mx-auto w-full max-w-[1500px] rounded-[38px] bg-white px-8 py-12 shadow-2xl sm:px-12 sm:py-14 lg:px-16 lg:py-16">
+        <FadeIn direction="up" distance={30} className="mx-auto w-full w-full rounded-[38px] bg-white px-8 py-12 shadow-2xl sm:px-12 sm:py-14 lg:px-16 lg:py-16">
 
           {/* =================================================
               MAIN CONTENT

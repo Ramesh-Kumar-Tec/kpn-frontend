@@ -29,7 +29,7 @@ export default function BlogSection() {
 
   return (
     <section id="blog" className="py-24 lg:py-32 bg-white">
-      <div className="mx-auto max-w-[1600px] px-6 lg:px-12">
+      <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
         
         {/* Header */}
         <FadeIn direction="up" className="flex flex-col sm:flex-row sm:items-end justify-between mb-16 gap-6">

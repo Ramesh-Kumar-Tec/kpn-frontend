@@ -194,7 +194,7 @@ export default function VideoTestimonialsSection() {
 
   return (
     <section className="relative w-full overflow-hidden bg-gradient-to-b from-white via-slate-50/60 to-white py-24 md:py-32">
-      <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-12">
+      <div className="w-full px-4 sm:px-6 lg:px-10 xl:px-12">
         {/* Section Header */}
         <FadeIn direction="up" className="text-center mb-14 space-y-4 flex flex-col items-center">
           <RunningPillBadge text="CUSTOMER VIDEO TESTIMONIALS" />

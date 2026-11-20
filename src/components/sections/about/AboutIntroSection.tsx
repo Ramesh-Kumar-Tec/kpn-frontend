@@ -76,7 +76,7 @@ export default function AboutIntroSection() {
 
   return (
     <section className="bg-white px-6 py-24 lg:px-10 lg:py-32">
-      <div className="mx-auto max-w-[1400px]">
+      <div className="w-full px-4 sm:px-6 lg:px-10 xl:px-12">
 
         {/* Top content */}
         <StaggerContainer staggerDelay={0.12} className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-20">

@@ -97,8 +97,48 @@ function getCardBadge(project: any, index: number) {
   };
 }
 
+function getHomepageFourProjects(projects: any[]) {
+  const getRank = (p: any): number => {
+    const slug = (p.slug || '').toLowerCase();
+    const name = (p.name || '').toLowerCase();
+    if (slug === 'kpn-marvel-township' || (name.includes('marvel') && !name.includes('blue'))) return 1;
+    if (slug === 'kpn-blue-meadows' || name.includes('meadows') || name.includes('blue meadows')) return 2;
+    if (slug === 'avp-kanagam-nagar' || name.includes('kanagam nagar') || name.includes('kangam nagar')) return 3;
+    if (slug === 'avp-kanagam-avenue' || name.includes('kanagam') || name.includes('kangam')) return 3;
+    if (slug === 'kpn-sri-bhavani-amman-nagar' || name.includes('bhavani')) return 4;
+    return 100;
+  };
+
+  const unique = new Map<number, any>();
+  for (const item of projects) {
+    const r = getRank(item);
+    if (r <= 4) {
+      if (!unique.has(r)) {
+        unique.set(r, item);
+      } else if (r === 3 && (item.slug === 'avp-kanagam-nagar' || (item.name || '').toLowerCase().includes('nagar'))) {
+        unique.set(3, item); // Prioritize AVP Kanagam Nagar
+      }
+    }
+  }
+
+  // Ensure all 4 are guaranteed to be present from projectsData fallback
+  for (let r = 1; r <= 4; r++) {
+    if (!unique.has(r)) {
+      const fallback = projectsData.find((p) => {
+        if (r === 3) return p.slug === 'avp-kanagam-nagar';
+        return getRank(p) === r;
+      });
+      if (fallback) unique.set(r, fallback);
+    }
+  }
+
+  return [1, 2, 3, 4]
+    .map((r) => unique.get(r))
+    .filter(Boolean);
+}
+
 export default function ProjectsSection() {
-  const [allProjects, setAllProjects] = useState<any[]>(projectsData);
+  const [allProjects, setAllProjects] = useState<any[]>(() => getHomepageFourProjects(projectsData));
   const [filters, setFilters] = useState({
     type: 'All property types',
     location: 'All locations',
@@ -141,7 +181,7 @@ export default function ProjectsSection() {
           list = projectsData;
         }
 
-        setAllProjects(list);
+        setAllProjects(getHomepageFourProjects(list));
       } catch (err) {
         console.warn('Using static projectsData fallback for ProjectsSection', err);
       }
@@ -182,7 +222,7 @@ export default function ProjectsSection() {
 
   // Filter projects based on appliedFilters
   const filteredProjects = useMemo(() => {
-    return allProjects.filter((p) => {
+    const list = allProjects.filter((p) => {
       // Type match
       if (appliedFilters.type !== 'All property types') {
         const pType = (p.type || p.propertyType || '').toLowerCase();
@@ -223,6 +263,7 @@ export default function ProjectsSection() {
 
       return true;
     });
+    return getHomepageFourProjects(list);
   }, [allProjects, appliedFilters]);
 
   // Open WhatsApp with Price Sheet enquiry
@@ -245,7 +286,7 @@ export default function ProjectsSection() {
 
   return (
     <section id="projects" className="relative w-full bg-gradient-to-b from-white via-slate-50/40 to-white py-20 sm:py-24 lg:py-28">
-      <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-8">
         
         {/* =========================================================
             HEADER SECTION (Matches Client Mockup)
@@ -450,9 +491,9 @@ export default function ProjectsSection() {
               <motion.div
                 layout
                 key="projects-grid"
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7 lg:gap-8"
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 xl:gap-6"
               >
-                {filteredProjects.slice(0, 6).map((project, index) => {
+                {filteredProjects.map((project, index) => {
                   const badge = getCardBadge(project, index);
                   const projectArea =
                     project.projectArea ||

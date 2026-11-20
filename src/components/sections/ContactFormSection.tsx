@@ -101,7 +101,7 @@ export default function ContactFormSection() {
       className="relative z-10 bg-white pb-20 pt-10 rounded-b-[40px] md:rounded-b-[60px]"
       id="contact"
     >
-      <div className="mx-auto max-w-[1600px] px-6 lg:px-12">
+      <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
         {/* Background Wrapper with KPN-Marvel-Township-Urapakkam.jpg */}
         <FadeIn direction="up" distance={30}>
           <div

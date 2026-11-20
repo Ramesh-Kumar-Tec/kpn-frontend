@@ -11,6 +11,7 @@ import FadeIn from '@/components/animation/FadeIn';
 import { useWishlistCompare } from '@/context/WishlistCompareContext';
 import ProjectListingCard from '@/components/project/ProjectListingCard';
 import SiteVisitModal from '@/components/project/SiteVisitModal';
+import ProjectEnquiryModal from '@/components/project/ProjectEnquiryModal';
 
 // Budget parser helper to match diverse price formats like "₹ 19L Onwards", "₹ 58L Onwards", "₹ 2799/Sq.Ft"
 function matchesBudget(projectBudget: string | undefined, filterValue: string): boolean {
@@ -185,6 +186,17 @@ export default function ProjectsPage() {
   const { toggleCompare, isInCompare } = useWishlistCompare();
   const [allProjects, setAllProjects] = useState<ProjectItem[]>(projectsData);
   const [siteVisitProject, setSiteVisitProject] = useState<ProjectItem | null>(null);
+  const [enquiryModalProject, setEnquiryModalProject] = useState<ProjectItem | null>(null);
+
+  // Auto-trigger enquiry popup on /projects page after 3.5s
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (allProjects.length > 0) {
+        setEnquiryModalProject(allProjects[0]);
+      }
+    }, 3500);
+    return () => clearTimeout(timer);
+  }, [allProjects]);
 
   useEffect(() => {
     async function loadDynamic() {
@@ -527,6 +539,13 @@ export default function ProjectsPage() {
         project={siteVisitProject}
         isOpen={Boolean(siteVisitProject)}
         onClose={() => setSiteVisitProject(null)}
+      />
+
+      {/* Featured Project Quick Enquiry Popup */}
+      <ProjectEnquiryModal
+        project={enquiryModalProject}
+        isOpen={Boolean(enquiryModalProject)}
+        onClose={() => setEnquiryModalProject(null)}
       />
     </>
   );

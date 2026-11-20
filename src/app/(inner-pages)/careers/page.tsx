@@ -221,15 +221,18 @@ export default function CareersPage() {
 
       {/* Hero Section */}
       <InnerPageHero
-        title="Careers"
-        breadcrumb="Home / Careers"
-        description="This is the place where talented people who want to do impactful work can create their own path to success."
+        breadcrumbAtTop={true}
+        tagline="BUILD YOUR CAREER WITH US"
+        title="Careers at KPN Promoters"
+        subtitle="Work With Passion, Grow With Chennai's Leading Real Estate Brand"
+        breadcrumb="Home / About KPN / Careers"
+        description="Join a dynamic, forward-thinking team dedicated to transforming Chennai's real estate landscape. Explore our open positions and discover your potential."
         image="/images/core-bc.jpg"
       />
 
       {/* Main Careers Section */}
       <section className="bg-white px-4 py-20 sm:px-6 lg:px-12 lg:py-28">
-        <div className="mx-auto max-w-[1500px]">
+        <div className="w-full px-4 sm:px-6 lg:px-10 xl:px-12">
           {/* Section Header */}
           <div className="mb-14 lg:mb-20">
             <FadeIn direction="up">

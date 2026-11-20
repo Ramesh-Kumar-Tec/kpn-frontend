@@ -263,7 +263,8 @@ export async function getAwards(): Promise<AwardItem[]> {
  */
 export async function getTestimonials(): Promise<TestimonialItem[]> {
   try {
-    const res = await fetch(`${API_BASE_URL}/testimonials`, {
+    const baseUrl = getCmsApiBaseUrl();
+    const res = await fetch(`${baseUrl}/testimonials`, {
       cache: 'no-store',
       signal: AbortSignal.timeout(4000),
     });
@@ -279,6 +280,7 @@ export async function getTestimonials(): Promise<TestimonialItem[]> {
           avatar: t.avatar,
           quote: t.quote,
           rating: Number(t.rating) || 5,
+          status: t.status,
         }));
       }
     }
@@ -286,7 +288,7 @@ export async function getTestimonials(): Promise<TestimonialItem[]> {
     console.warn('[cmsClient] Failed to fetch testimonials from backend, using fallback');
   }
 
-  return testimonialsData;
+  return [];
 }
 
 /**

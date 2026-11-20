@@ -15,7 +15,7 @@ export default function AboutSection() {
       id="about"
       className="relative z-20 -mt-8 w-full rounded-t-[36px] bg-white pb-16 pt-16 md:rounded-t-[50px] lg:pb-24 lg:pt-20 shadow-2xl shadow-slate-900/5"
     >
-      <div className="mx-auto max-w-[1520px] px-5 sm:px-8 lg:px-12">
+      <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-14 xl:gap-16">
           
           {/* =========================================
