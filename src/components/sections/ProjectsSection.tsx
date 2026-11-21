@@ -67,8 +67,8 @@ function matchesBudget(projectBudget: string | undefined, filterValue: string): 
 }
 
 // Helper to determine the top badge on the card
-function getCardBadge(project: any, index: number) {
-  if (index === 0) {
+function getCardBadge(project: any, index: number, isFiltered: boolean = false) {
+  if (!isFiltered && index === 0) {
     return {
       label: 'FEATURED',
       className: 'bg-[#0284c7] text-white shadow-md',
@@ -244,32 +244,33 @@ export default function ProjectsSection() {
     const list = allProjects.filter((p) => {
       // 1. Property Type match
       if (appliedFilters.type !== 'All property types') {
-        const pType = (p.type || p.propertyType || '').toLowerCase();
+        const pType = (p.type || p.propertyType || '').toLowerCase().trim();
         const pBhk = (p.bhk || '').toLowerCase();
-        const pDesc = (p.description || '').toLowerCase();
-        const targetType = appliedFilters.type.toLowerCase();
+        const targetType = appliedFilters.type.toLowerCase().trim();
 
-        if (targetType === 'apartments' || targetType === 'apartment') {
+        if (targetType === 'plots' || targetType === 'plot') {
+          // Strictly match Plots: must be Plots and cannot be Villas or Apartments
+          const isPlot =
+            pType === 'plots' ||
+            pType === 'plot' ||
+            (pType !== 'villas' && pType !== 'villa' && pType !== 'apartments' && pType !== 'apartment' && pBhk.includes('plot'));
+          if (!isPlot) return false;
+        } else if (targetType === 'apartments' || targetType === 'apartment') {
+          // Strictly match Apartments: must be Apartments and cannot be Plots or Villas
           const isApt =
-            pType.includes('apartment') ||
-            pBhk.includes('apartment') ||
-            pBhk.includes('flat') ||
-            pDesc.includes('apartment');
+            pType === 'apartments' ||
+            pType === 'apartment' ||
+            (pType !== 'plots' && pType !== 'plot' && pType !== 'villas' && pType !== 'villa' && (pBhk.includes('apartment') || pBhk.includes('flat')));
           if (!isApt) return false;
         } else if (targetType === 'villas' || targetType === 'villa') {
+          // Strictly match Villas: must be Villas and cannot be Plots or Apartments
           const isVilla =
-            pType.includes('villa') ||
-            pBhk.includes('villa') ||
-            pDesc.includes('villa');
+            pType === 'villas' ||
+            pType === 'villa' ||
+            (pType !== 'plots' && pType !== 'plot' && pType !== 'apartments' && pType !== 'apartment' && pBhk.includes('villa'));
           if (!isVilla) return false;
-        } else if (targetType === 'plots' || targetType === 'plot') {
-          const isPlot =
-            pType.includes('plot') ||
-            pBhk.includes('plot') ||
-            pDesc.includes('plot');
-          if (!isPlot) return false;
         } else {
-          if (!pType.includes(targetType) && !targetType.includes(pType)) {
+          if (pType !== targetType) {
             return false;
           }
         }
@@ -278,8 +279,12 @@ export default function ProjectsSection() {
       // 2. Location match
       if (appliedFilters.location !== 'All locations') {
         const pLoc = `${p.location || ''} ${p.address || ''}`.toLowerCase();
-        const targetLoc = appliedFilters.location.toLowerCase();
-        if (!pLoc.includes(targetLoc)) {
+        const targetLoc = appliedFilters.location.toLowerCase().trim();
+        if (targetLoc === 'chengalpattu' || targetLoc === 'chengalpet') {
+          if (!pLoc.includes('chengalpattu') && !pLoc.includes('chengalpet')) {
+            return false;
+          }
+        } else if (!pLoc.includes(targetLoc)) {
           return false;
         }
       }
@@ -532,14 +537,22 @@ export default function ProjectsSection() {
                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7 lg:gap-8"
               >
                 {filteredProjects.map((project, index) => {
-                  const badge = getCardBadge(project, index);
+                  const badge = getCardBadge(project, index, isFiltered);
+                  const displayType =
+                    project.type ||
+                    project.propertyType ||
+                    ((project.bhk || '').toLowerCase().includes('villa')
+                      ? 'Villas'
+                      : (project.bhk || '').toLowerCase().includes('apartment')
+                      ? 'Apartments'
+                      : 'Plots');
                   const projectArea =
                     project.projectArea ||
                     project.plotSizes ||
                     project.bhk ||
-                    (project.type === 'Plots' || project.propertyType === 'Plots'
+                    (displayType === 'Plots'
                       ? 'Plots (600 - 2400 Sq.Ft)'
-                      : project.type === 'Villas'
+                      : displayType === 'Villas'
                       ? '2 & 3 BHK Luxury Villa'
                       : '1 & 2 BHK Apartments');
 
@@ -592,7 +605,7 @@ export default function ProjectsSection() {
                           <div className="mt-1.5 flex items-center gap-1.5 text-xs text-slate-500 font-medium truncate">
                             <MapPin className="h-3.5 w-3.5 shrink-0 text-[#f12131]" />
                             <span className="truncate">
-                              {project.location} • {project.type || project.propertyType || 'Plots'}
+                              {project.location} • {displayType}
                             </span>
                           </div>
 
