@@ -76,7 +76,23 @@ function getCardBadge(project: any, index: number) {
   }
 
   const type = (project.type || project.propertyType || '').toLowerCase();
-  if (type === 'plots' || (project.bhk && project.bhk.toLowerCase().includes('plot'))) {
+  const bhk = (project.bhk || '').toLowerCase();
+
+  if (type === 'apartments' || bhk.includes('apartment') || bhk.includes('flat')) {
+    return {
+      label: 'RESIDENTIAL APARTMENT',
+      className: 'bg-white/95 text-[#29247c] border border-indigo-200 shadow-md backdrop-blur-xs',
+    };
+  }
+
+  if (type === 'villas' || bhk.includes('villa')) {
+    return {
+      label: 'LUXURY VILLA',
+      className: 'bg-white/95 text-amber-700 border border-amber-200 shadow-md backdrop-blur-xs',
+    };
+  }
+
+  if (type === 'plots' || bhk.includes('plot')) {
     return {
       label: 'RESIDENTIAL PLOTS',
       className: 'bg-white/95 text-[#f12131] border border-red-200/80 shadow-md backdrop-blur-xs',
@@ -97,48 +113,47 @@ function getCardBadge(project: any, index: number) {
   };
 }
 
-function getHomepageFourProjects(projects: any[]) {
+function getHomepageSixProjects(projects: any[]) {
   const getRank = (p: any): number => {
     const slug = (p.slug || '').toLowerCase();
     const name = (p.name || '').toLowerCase();
     if (slug === 'kpn-marvel-township' || (name.includes('marvel') && !name.includes('blue'))) return 1;
-    if (slug === 'kpn-blue-meadows' || name.includes('meadows') || name.includes('blue meadows')) return 2;
+    if (slug === 'kpn-blue-meadows' || name.includes('blue meadows') || (name.includes('meadows') && !name.includes('grand'))) return 2;
     if (slug === 'avp-kanagam-nagar' || name.includes('kanagam nagar') || name.includes('kangam nagar')) return 3;
-    if (slug === 'avp-kanagam-avenue' || name.includes('kanagam') || name.includes('kangam')) return 3;
     if (slug === 'kpn-sri-bhavani-amman-nagar' || name.includes('bhavani')) return 4;
+    if (slug === 'sri-ranga-nagar' || name.includes('ranga nagar')) return 5;
+    if (slug === 'avp-kanagam-avenue' || name.includes('kanagam avenue') || name.includes('kangam avenue')) return 6;
     return 100;
   };
 
   const unique = new Map<number, any>();
   for (const item of projects) {
     const r = getRank(item);
-    if (r <= 4) {
-      if (!unique.has(r)) {
-        unique.set(r, item);
-      } else if (r === 3 && (item.slug === 'avp-kanagam-nagar' || (item.name || '').toLowerCase().includes('nagar'))) {
-        unique.set(3, item); // Prioritize AVP Kanagam Nagar
-      }
+    if (r <= 6 && !unique.has(r)) {
+      unique.set(r, item);
     }
   }
 
-  // Ensure all 4 are guaranteed to be present from projectsData fallback
-  for (let r = 1; r <= 4; r++) {
+  // Ensure all 6 are guaranteed to be present from projectsData fallback
+  for (let r = 1; r <= 6; r++) {
     if (!unique.has(r)) {
       const fallback = projectsData.find((p) => {
         if (r === 3) return p.slug === 'avp-kanagam-nagar';
+        if (r === 5) return p.slug === 'sri-ranga-nagar';
+        if (r === 6) return p.slug === 'avp-kanagam-avenue';
         return getRank(p) === r;
       });
       if (fallback) unique.set(r, fallback);
     }
   }
 
-  return [1, 2, 3, 4]
+  return [1, 2, 3, 4, 5, 6]
     .map((r) => unique.get(r))
     .filter(Boolean);
 }
 
 export default function ProjectsSection() {
-  const [allProjects, setAllProjects] = useState<any[]>(() => getHomepageFourProjects(projectsData));
+  const [allProjects, setAllProjects] = useState<any[]>(() => projectsData);
   const [filters, setFilters] = useState({
     type: 'All property types',
     location: 'All locations',
@@ -160,30 +175,23 @@ export default function ProjectsSection() {
 
         let list: any[] = [];
 
-        // 1. Prioritize CMS featured projects if configured
-        if (cms?.featuredProjectIds && Array.isArray(cms.featuredProjectIds) && cms.featuredProjectIds.length > 0) {
-          list = cms.featuredProjectIds.filter((p: any) => p && (p.name || p.slug || p._id));
+        // 1. Append live projects from API if available
+        if (Array.isArray(liveProjects) && liveProjects.length > 0) {
+          list = [...liveProjects];
         }
 
-        // 2. Append live projects from API
-        if (Array.isArray(liveProjects) && liveProjects.length > 0) {
-          const existingSlugs = new Set(list.map((p) => p.slug).filter(Boolean));
-          for (const proj of liveProjects) {
-            if (proj && proj.slug && !existingSlugs.has(proj.slug)) {
-              list.push(proj);
-              existingSlugs.add(proj.slug);
-            }
+        // 2. Ensure all static projectsData (including all Apartments and Villas) are present
+        const existingSlugs = new Set(list.map((p) => (p.slug || '').toLowerCase()).filter(Boolean));
+        for (const proj of projectsData) {
+          if (!existingSlugs.has((proj.slug || '').toLowerCase())) {
+            list.push(proj);
           }
         }
 
-        // 3. Fallback to static projectsData if empty
-        if (list.length === 0) {
-          list = projectsData;
-        }
-
-        setAllProjects(getHomepageFourProjects(list));
+        setAllProjects(list);
       } catch (err) {
         console.warn('Using static projectsData fallback for ProjectsSection', err);
+        setAllProjects(projectsData);
       }
     }
 
@@ -220,19 +228,54 @@ export default function ProjectsSection() {
     setAppliedFilters(reset);
   };
 
+  const isFiltered =
+    appliedFilters.type !== 'All property types' ||
+    appliedFilters.location !== 'All locations' ||
+    appliedFilters.status !== 'Any status' ||
+    appliedFilters.budget !== 'Any budget';
+
   // Filter projects based on appliedFilters
   const filteredProjects = useMemo(() => {
+    if (!isFiltered) {
+      // Default state: strictly 6 featured projects in 2 rows of 3
+      return getHomepageSixProjects(allProjects);
+    }
+
     const list = allProjects.filter((p) => {
-      // Type match
+      // 1. Property Type match
       if (appliedFilters.type !== 'All property types') {
         const pType = (p.type || p.propertyType || '').toLowerCase();
+        const pBhk = (p.bhk || '').toLowerCase();
+        const pDesc = (p.description || '').toLowerCase();
         const targetType = appliedFilters.type.toLowerCase();
-        if (!pType.includes(targetType) && !targetType.includes(pType)) {
-          return false;
+
+        if (targetType === 'apartments' || targetType === 'apartment') {
+          const isApt =
+            pType.includes('apartment') ||
+            pBhk.includes('apartment') ||
+            pBhk.includes('flat') ||
+            pDesc.includes('apartment');
+          if (!isApt) return false;
+        } else if (targetType === 'villas' || targetType === 'villa') {
+          const isVilla =
+            pType.includes('villa') ||
+            pBhk.includes('villa') ||
+            pDesc.includes('villa');
+          if (!isVilla) return false;
+        } else if (targetType === 'plots' || targetType === 'plot') {
+          const isPlot =
+            pType.includes('plot') ||
+            pBhk.includes('plot') ||
+            pDesc.includes('plot');
+          if (!isPlot) return false;
+        } else {
+          if (!pType.includes(targetType) && !targetType.includes(pType)) {
+            return false;
+          }
         }
       }
 
-      // Location match
+      // 2. Location match
       if (appliedFilters.location !== 'All locations') {
         const pLoc = `${p.location || ''} ${p.address || ''}`.toLowerCase();
         const targetLoc = appliedFilters.location.toLowerCase();
@@ -241,7 +284,7 @@ export default function ProjectsSection() {
         }
       }
 
-      // Status match
+      // 3. Status match
       if (appliedFilters.status !== 'Any status') {
         const pStatus = (p.status || 'Ongoing').toLowerCase();
         const targetStatus = appliedFilters.status.toLowerCase();
@@ -256,15 +299,16 @@ export default function ProjectsSection() {
         }
       }
 
-      // Budget match
+      // 4. Budget match
       if (!matchesBudget(p.budget, appliedFilters.budget)) {
         return false;
       }
 
       return true;
     });
-    return getHomepageFourProjects(list);
-  }, [allProjects, appliedFilters]);
+
+    return list;
+  }, [allProjects, appliedFilters, isFiltered]);
 
   // Open WhatsApp with Price Sheet enquiry
   const handleOpenPriceSheet = (project: any) => {
@@ -278,12 +322,6 @@ export default function ProjectsSection() {
     }
   };
 
-  const isFiltered =
-    appliedFilters.type !== 'All property types' ||
-    appliedFilters.location !== 'All locations' ||
-    appliedFilters.status !== 'Any status' ||
-    appliedFilters.budget !== 'Any budget';
-
   return (
     <section id="projects" className="relative w-full bg-gradient-to-b from-white via-slate-50/40 to-white py-20 sm:py-24 lg:py-28">
       <div className="mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-8">
@@ -296,7 +334,7 @@ export default function ProjectsSection() {
             <div>
               {/* Running Pill Badge */}
               <div className="mb-2">
-                <RunningPillBadge text="FEATURED PROJECTS" />
+                <RunningPillBadge text="FEATURED PROJECTS" className="w-[210px]" />
               </div>
 
               {/* Main Heading */}
@@ -491,16 +529,19 @@ export default function ProjectsSection() {
               <motion.div
                 layout
                 key="projects-grid"
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 xl:gap-6"
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7 lg:gap-8"
               >
                 {filteredProjects.map((project, index) => {
                   const badge = getCardBadge(project, index);
                   const projectArea =
                     project.projectArea ||
                     project.plotSizes ||
+                    project.bhk ||
                     (project.type === 'Plots' || project.propertyType === 'Plots'
                       ? 'Plots (600 - 2400 Sq.Ft)'
-                      : '2.5 Acres');
+                      : project.type === 'Villas'
+                      ? '2 & 3 BHK Luxury Villa'
+                      : '1 & 2 BHK Apartments');
 
                   return (
                     <motion.div

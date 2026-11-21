@@ -52,8 +52,7 @@ export default function RunningPillBadge({
         border
         border-[#f12131]/80
         h-[34px]
-        w-[180px]
-        px-3
+        px-3.5
         shadow-xs
         text-xs
         font-semibold
@@ -62,7 +61,7 @@ export default function RunningPillBadge({
         select-none
         relative
         ${isDark ? 'bg-black text-white' : 'bg-white text-slate-800'}
-        ${className}
+        ${className || 'w-[180px]'}
       `}>
       <motion.div
         className="flex w-max items-center"
